@@ -4,7 +4,7 @@
 # @Last Modified by:   Admin
 # @Last Modified time: 2022-05-14 18:57:55
 
-""" This Function is made by luna"""
+""" This Function is made by Faith"""
 # Basic Module
 import sys,inspect,logging,logging.handlers
 

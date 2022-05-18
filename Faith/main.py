@@ -40,6 +40,20 @@ if __name__ == "__main__":
     draw_comp("Root", None)
     build_from_selection()
 
+    # test
+    
+    weights = skinFn.getWeights(path,component,indices)
+    weightData = {}
+    weightData["skin_shape"] = om.MFnDependencyNode(path.node()).name()
+    weightData["jointList"] = jointList
+    weightData["indices"] = [indices[i] for i in range(len(indices))]
+    weightData["weights"] = [weights[i] for i in range(len(weights))]
+
+    fileName = "C:/Users/Admin/Desktop/weights.json"
+    fp = open(fileName, 'w')
+    json.dump(weightData, fp=fp,indent=4)
+
+
 
 
 

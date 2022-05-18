@@ -64,7 +64,21 @@ def getSkinInfluence(SkinNode):
 
     return jointList
 
-
+def get():
+    selection = om.MGlobal.getActiveSelectionList()
+    path, component = selection.getComponent(0)
+    shapePath = path.extendToShape()
+    dgIt = om.MItDependencyGraph(path.node(), om.MFn.kSkinClusterFilter, om.MItDependencyGraph.kUpstream)
+    skinFn = aom.MFnSkinCluster(dgIt.currentNode())
+    indices = om.MIntArray()
+    influences = skinFn.influenceObjects()
+    jointList = []
+    for i in range(len(influences)):
+        joint = om.MFnDependencyNode(influences[i].node()).name()
+        jointList.append(joint)
+        indices.append(i)
+        
+    return path, component, indices, skinFn, jointList
 
 
 

@@ -54,12 +54,12 @@ def getSkinInfluence(SkinNode):
     path_array = om.MDagPathArray()
     try:
         skin = aom.MFnSkinCluster(skin_node)
-        path_array = fnSkin.influenceObjects()
+        path_array = skin.influenceObjects()
     except TypeError:
         om.MGlobal.displayError("API Type Erro !")
 
-    for i in range(len(array)):
-        dependency_node = om.MFnDependencyNode(array[i].node())
+    for i in range(len(path_array)):
+        dependency_node = om.MFnDependencyNode(path_array[i].node())
         jointList.append(dependency_node.name())
 
     return jointList

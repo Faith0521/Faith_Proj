@@ -64,7 +64,11 @@ def getSkinInfluence(SkinNode):
 
     return jointList
 
-def get():
+def getSkinData():
+    """
+
+    :return: 
+    """
     selection = om.MGlobal.getActiveSelectionList()
     path, component = selection.getComponent(0)
     shapePath = path.extendToShape()

@@ -8,14 +8,18 @@
 Collections of weights functions
 """
 
-import re
-import pymel.core as pm
+from logging import exception
+import re,json,time
+import pymel.core as pm,maya.cmds as cmds
 import maya.api.OpenMaya as om
 import maya.api.OpenMayaAnim as aom
 
-def getMeshPoints(node, ifPrint = False):
+# FAITH
+from Faith.Core import utils
+
+def getMeshPointsV01(node, ifPrint = False):
     """
-    api2.0 获取模型所有的点的坐标,比pymel快将近20倍
+    api2.0 获取模型所有的点的坐标
     :param node:
     :return:
     """
@@ -72,7 +76,11 @@ def getSkinData():
     selection = om.MGlobal.getActiveSelectionList()
     path, component = selection.getComponent(0)
     shapePath = path.extendToShape()
-    dgIt = om.MItDependencyGraph(path.node(), om.MFn.kSkinClusterFilter, om.MItDependencyGraph.kUpstream)
+    try:
+        dgIt = om.MItDependencyGraph(path.node(), om.MFn.kSkinClusterFilter, om.MItDependencyGraph.kUpstream)
+    except Exception:
+        om.MGlobal.displayError("Selected obj does not have any skinClusters, Please check.")
+        return
     skinFn = aom.MFnSkinCluster(dgIt.currentNode())
     indices = om.MIntArray()
     influences = skinFn.influenceObjects()
@@ -83,6 +91,36 @@ def getSkinData():
         indices.append(i)
         
     return path, component, indices, skinFn, jointList
+
+@utils.timeFunc
+def writeSkinCluster(fileName):
+
+    # get skin data
+    path, component, indices, skinFn, jointList = getSkinData()
+
+    # get mesh skin weights of MDoubleArray
+    weights = skinFn.getWeights(path,component,indices)
+
+    skinClusterNode = skinFn.name()
+    skin_shape = om.MFnDependencyNode(path.node()).name()
+
+    # dict of data
+    weightData = {}
+    weightData["skin_node"] = skinClusterNode
+    weightData["skin_shape"] = skin_shape
+    weightData["jointList"] = jointList
+    weightData["indices"] = str([indices[i] for i in range(len(indices))])
+    weightData["weights"] = str([(weights[i]) for i in range(len(weights))])
+
+    # output file
+    try:
+        with open(fileName, 'w') as fp:
+            json.dump(weightData, fp=fp,indent=2)
+    except:
+        om.MGlobal.displayError("Open file : %s failed ." % fileName)
+    
+    return True
+
 
 
 

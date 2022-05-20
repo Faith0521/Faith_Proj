@@ -9,7 +9,11 @@ Collections of weights functions
 """
 
 from logging import exception
-import re,json,time
+import re,json,time,sys
+if sys.version_info < (3, 0):
+    import cPickle
+else:
+    import _pickle as cPickle
 import pymel.core as pm,maya.cmds as cmds
 import maya.api.OpenMaya as om
 import maya.api.OpenMayaAnim as aom
@@ -109,13 +113,13 @@ def writeSkinCluster(fileName):
     weightData["skin_node"] = skinClusterNode
     weightData["skin_shape"] = skin_shape
     weightData["jointList"] = jointList
-    weightData["indices"] = str([indices[i] for i in range(len(indices))])
-    weightData["weights"] = str([(weights[i]) for i in range(len(weights))])
+    weightData["indices"] = [indices[i] for i in range(len(indices))]
+    weightData["weights"] = [(weights[i]) for i in range(len(weights))]
 
     # output file
     try:
-        with open(fileName, 'w') as fp:
-            json.dump(weightData, fp=fp,indent=2)
+        with open(fileName, 'wb') as fp:
+            fp.write(cPickle.dumps(weightData))
     except:
         om.MGlobal.displayError("Open file : %s failed ." % fileName)
     

@@ -114,7 +114,7 @@ def writeSkinCluster(fileName):
     weightData["skin_shape"] = skin_shape
     weightData["jointList"] = jointList
     weightData["indices"] = [indices[i] for i in range(len(indices))]
-    weightData["weights"] = [(weights[i]) for i in range(len(weights))]
+    weightData["weights"] = [weights[i] for i in range(len(weights))]
 
     # output file
     try:
@@ -125,7 +125,13 @@ def writeSkinCluster(fileName):
     
     return True
 
-
+def getIndexByName(blsNode, targetName):
+    attr = blsNode + '.w[{}]'
+    weightCount = cmds.blendShape(blsNode, q=True, wc=True)
+    for index in range(weightCount):
+        if cmds.aliasAttr(attr.format(index), q=True) == targetName:
+            return index
+    return -1
 
 
 

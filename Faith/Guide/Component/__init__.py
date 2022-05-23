@@ -92,8 +92,6 @@ class Rigging(object):
                                  {"self": self})
                             for i in range(len(self.steps))]
 
-    # def connect_standard(self):
-    #     self.parent.addChild(self.root)
 
     def step00(self):
         """
@@ -212,6 +210,7 @@ class Rigging(object):
             )
         self.parent = self.rig.findRelative(parent_name)
         self.parent_comp = self.rig.findComponent(parent_name)
+        print("parent is : " + self.parent)
 
     @property
     def connect(self):
@@ -314,7 +313,38 @@ class Rigging(object):
                             self.fullName)
 
                     oParent_comp = oParent_comp.parent_comp
-    
+
+        for jpo in  self.jnt_pos:
+            if len(jpo) >= 3 and self.options["joint_rig"]:
+                if jpo[2] == "component_jnt_org":
+                    newActiveJnt = self.component_jnt_org
+                elif jpo[2] == "parent_relative_jnt":
+                    newActiveJnt = self.parent_relative_jnt
+                else:
+                    try:
+                        newActiveJnt = self.jointList[
+                            self.jointRelatives[jpo[2]]
+                        ]
+
+                    except Exception:
+                        if jpo[2]:
+                            pm.displayWarning("This object : %s can nnot be found."%jpo[2])
+
+                        newActiveJnt = None
+            else:
+                newActiveJnt = None
+            if len(jpo) >= 4 and self.options["joint_rig"]:
+                uniScale = jpo[4]
+            else:
+                uniScale = False
+
+            if len(jpo) >= 5 and self.options["joint_rig"]:
+                gearMulMatrix = jpo[4]
+            else:
+                gearMulMatrix = False
+            
+            # self.jointList.append(self.asd)
+
     @property
     def setRelation(self):
         """
@@ -334,14 +364,6 @@ class Rigging(object):
 
         """
         return self.guide.fullName
-
-    @property
-    def connect_standard(self):
-        """
-
-        :return:
-        """
-        self.parent.addChild(self.root)
     
     @property
     def getType(self):
@@ -377,6 +399,10 @@ class Rigging(object):
         return attr
 
     @property
+    def connect_orientCns(self):
+        self.parent.addChild(self.root)
+
+    @property
     def addParams(self):
         """
 
@@ -390,6 +416,12 @@ class Rigging(object):
 
         return self.uihost
 
+    def connect_standard(self):
+        """
+
+        :return:
+        """
+        self.parent.addChild(self.root)
 
     def getName(self, name="",
                 side=None,
@@ -551,6 +583,49 @@ class Rigging(object):
 
         return attr
 
+    def addJoint(self,
+                 obj,
+                 name,
+                 newActiveJnt=None,
+                 UniScale=False,
+                 segComp=False,
+                 gearMulMatrix=False,
+                 rot_off=None,
+                 vanilla_nodes=False):
+        
+        if vanilla_nodes:
+            return self.addJoint_vanilla(obj,
+                                         name,
+                                         newActiveJnt=newActiveJnt,
+                                         UniScale=UniScale,
+                                         segComp=segComp,
+                                         gearMulMatrix=gearMulMatrix)
+        else:
+            return self._addJoint(obj,
+                                  name,
+                                  newActiveJnt=newActiveJnt,
+                                  UniScale=UniScale,
+                                  segComp=segComp,
+                                  rot_off=rot_off)
+
+    def _addJoint(self,
+                  obj,
+                  name,
+                  newActiveJnt=None,
+                  UniScale=False,
+                  segComp=False,
+                  rot_off=None):
+        return
+
+    def addJoint_vanilla(self,
+                         obj,
+                         name,
+                         newActiveJnt=None,
+                         UniScale=False,
+                         segComp=False,
+                         gearMulMatrix=False):
+        return
+
     def getRelation(self, name):
         """
 
@@ -562,6 +637,12 @@ class Rigging(object):
             #           + self.fullName + "." + name, mgear.sev_error)
             return False
         return self.relatives[name]
+    
+    def getJointName(self, jointIndex):
+        names = self.guide.values["joint_names"]
+        if len(names) > jointIndex:
+            return names[jointIndex].strip()
+        return ""
 
     def addCtrl(self,
                 parent,
@@ -622,13 +703,13 @@ class Rigging(object):
             ctrl, "side", "string", keyable=False,value=self.side
         )
         aboutAttribute.addAttribute(
-            ctrl, "L_side_name", "string", keyable=False,value=self.options["left_specificate"]
+            ctrl, "L_side_name", "string", keyable=False, value=self.options["left_specificate"]
         )
         aboutAttribute.addAttribute(
-            ctrl, "R_side_name", "string", keyable=False,value=self.options["right_specificate"]
+            ctrl, "R_side_name", "string", keyable=False, value=self.options["right_specificate"]
         )
         aboutAttribute.addAttribute(
-            ctrl, "C_side_name", "string", keyable=False,value=self.options["center_specificate"]
+            ctrl, "C_side_name", "string", keyable=False, value=self.options["center_specificate"]
         )
 
         aboutAttribute.add_mirror_config_channels(ctrl, mirrorConf)

@@ -39,7 +39,21 @@ class Rigging(Component.Rigging):
             d = self.settings["ctrlSize"] * self.size * 10
         )
 
-        return
+        if self.settings["k_ro"]:
+            rotOderList = ["XYZ", "YZX", "ZXY", "XZY", "YXZ", "ZYX"]
+            aboutAttribute.setRotOrder(
+                self.ctrl, rotOderList[self.settings["rotOrder"]]
+            )
+
+        params = [s for s in 
+                 ["tx", "ty", "tz", "ro", "rx", "ry", "rz", "sx", "sy", "sz"]
+                 if self.settings["k_" + s]]
+        aboutAttribute.setKeyableAttributes(self.ctrl, params)
+
+        if self.settings["joint"]:
+            self.jnt_pos.append(
+                [self.ctrl, self.name, None, self.settings["unitSca"]]
+            )
 
     @property
     def setRelation(self):
@@ -61,6 +75,14 @@ class Rigging(Component.Rigging):
     @property
     def addOperators(self):
         return
+    
+    @property
+    def addConnections(self):
+        self.connections["standard"] = self.connect_standard
+        self.connections["orientation"] = self.connect_orientation
+    
+    def connect_orientation(self):
+        self.connect_orientCns
 
 
 

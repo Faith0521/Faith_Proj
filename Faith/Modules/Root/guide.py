@@ -60,8 +60,8 @@ class Guide(guide.ComponentGuide):
         self.leafJoint = self.addAttr("leafJoint" , "bool" , False)
         self.joint = self.addAttr("unitSca", "bool", False)
 
-        # for s in ["tx", "ty", "tz", "ro", "rx", "ry", "rz", "sx", "sy", "sz"]:
-        #     self.addAttr("k_" + s, "bool", True)
+        for s in ["tx", "ty", "tz", "ro", "rx", "ry", "rz", "sx", "sy", "sz"]:
+            self.addAttr("k_" + s, "bool", True)
 
         self.rotOrder = self.addAttr("rotOrder" , "long" , 0 , 0 , 5)
         self.NeutralRotation = self.addAttr("NeutralRotation" , "bool" , True)

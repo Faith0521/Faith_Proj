@@ -12,6 +12,9 @@ try:
 except ImportError():
     use_maya = False
 
+"""
+Install Maya module with drag into
+"""
 TITLE = "Install Faith"
 VERSION = 0.1
 FAITH_MOD_PATH = "FAITH_MODULE_PATH"
@@ -33,7 +36,9 @@ def maya_main_window():
         return wrapInstance(long(main_window_ptr), QtWidgets.QWidget)
 
 class UI(QtWidgets.QDialog):
-
+    """
+    Crate Simple UI
+    """
     def __init__(self, parent = maya_main_window()):
         super(UI, self).__init__(parent)
 

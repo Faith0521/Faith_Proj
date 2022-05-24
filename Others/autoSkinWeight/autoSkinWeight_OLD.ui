@@ -1,0 +1,397 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>autoSkinWeight_Window</class>
+ <widget class="QMainWindow" name="autoSkinWeight_Window">
+  <property name="enabled">
+   <bool>true</bool>
+  </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>208</width>
+    <height>237</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="cursor">
+   <cursorShape>ArrowCursor</cursorShape>
+  </property>
+  <property name="windowTitle">
+   <string>autoSkinWeight</string>
+  </property>
+  <property name="layoutDirection">
+   <enum>Qt::LeftToRight</enum>
+  </property>
+  <property name="iconSize">
+   <size>
+    <width>24</width>
+    <height>24</height>
+   </size>
+  </property>
+  <property name="toolButtonStyle">
+   <enum>Qt::ToolButtonIconOnly</enum>
+  </property>
+  <property name="documentMode">
+   <bool>false</bool>
+  </property>
+  <property name="tabShape">
+   <enum>QTabWidget::Rounded</enum>
+  </property>
+  <property name="dockNestingEnabled">
+   <bool>false</bool>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QGridLayout" name="gridLayout" rowstretch="0,0,0,0,0,0,0,0,0,0,0,0,0,0,0" columnstretch="1,0,0,0">
+    <property name="margin">
+     <number>0</number>
+    </property>
+    <property name="spacing">
+     <number>0</number>
+    </property>
+    <item row="4" column="0" colspan="2">
+     <widget class="QLineEdit" name="geometryVtx_lineEdit">
+      <property name="text">
+       <string/>
+      </property>
+      <property name="placeholderText">
+       <string>geometryVtx</string>
+      </property>
+     </widget>
+    </item>
+    <item row="5" column="2" colspan="2">
+     <widget class="QPushButton" name="joint_pushButton">
+      <property name="text">
+       <string>Load</string>
+      </property>
+      <property name="+command" stdset="0">
+       <string>autoWeightClass.use.joint_pushButton_cmd</string>
+      </property>
+     </widget>
+    </item>
+    <item row="6" column="2" colspan="2">
+     <widget class="QPushButton" name="nurbs_pushButton">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
+      <property name="text">
+       <string>Load</string>
+      </property>
+      <property name="+command" stdset="0">
+       <string>autoWeightClass.use.nurbs_pushButton_cmd</string>
+      </property>
+     </widget>
+    </item>
+    <item row="5" column="0" colspan="2">
+     <widget class="QLineEdit" name="joint_lineEdit">
+      <property name="text">
+       <string/>
+      </property>
+      <property name="placeholderText">
+       <string>joint</string>
+      </property>
+     </widget>
+    </item>
+    <item row="10" column="0" rowspan="3" colspan="4">
+     <widget class="QPushButton" name="apply_pushButton">
+      <property name="text">
+       <string>Apply</string>
+      </property>
+      <property name="+command" stdset="0">
+       <string>autoWeightClass.use.apply_pushButton_cmd</string>
+      </property>
+     </widget>
+    </item>
+    <item row="6" column="0" colspan="2">
+     <widget class="QLineEdit" name="nurbs_lineEdit">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="placeholderText">
+       <string>nurbsSurface</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="2" colspan="2">
+     <widget class="QPushButton" name="geometryVtx_pushButton">
+      <property name="text">
+       <string>Load</string>
+      </property>
+      <property name="+command" stdset="0">
+       <string>autoWeightClass.use.geometryVtx_pushButton_cmd</string>
+      </property>
+     </widget>
+    </item>
+    <item row="13" column="0" colspan="4">
+     <widget class="QProgressBar" name="QProgressBar">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
+      <property name="value">
+       <number>0</number>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+      <property name="textVisible">
+       <bool>true</bool>
+      </property>
+      <property name="invertedAppearance">
+       <bool>false</bool>
+      </property>
+      <property name="textDirection">
+       <enum>QProgressBar::TopToBottom</enum>
+      </property>
+      <property name="format">
+       <string>%p%</string>
+      </property>
+     </widget>
+    </item>
+    <item row="7" column="2" rowspan="2" colspan="2">
+     <widget class="QDoubleSpinBox" name="startExpand_doubleSpinBox">
+      <property name="buttonSymbols">
+       <enum>QAbstractSpinBox::NoButtons</enum>
+      </property>
+      <property name="prefix">
+       <string/>
+      </property>
+      <property name="suffix">
+       <string>%</string>
+      </property>
+      <property name="minimum">
+       <double>-200.000000000000000</double>
+      </property>
+      <property name="maximum">
+       <double>200.000000000000000</double>
+      </property>
+     </widget>
+    </item>
+    <item row="9" column="2" colspan="2">
+     <widget class="QDoubleSpinBox" name="endExpand_doubleSpinBox">
+      <property name="buttonSymbols">
+       <enum>QAbstractSpinBox::NoButtons</enum>
+      </property>
+      <property name="prefix">
+       <string/>
+      </property>
+      <property name="suffix">
+       <string>%</string>
+      </property>
+      <property name="minimum">
+       <double>-200.000000000000000</double>
+      </property>
+      <property name="maximum">
+       <double>200.000000000000000</double>
+      </property>
+     </widget>
+    </item>
+    <item row="7" column="0" rowspan="2" colspan="2">
+     <widget class="QLabel" name="label">
+      <property name="text">
+       <string>startExpand:</string>
+      </property>
+      <property name="textFormat">
+       <enum>Qt::AutoText</enum>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item row="9" column="0" colspan="2">
+     <widget class="QLabel" name="label_2">
+      <property name="text">
+       <string>endExpand:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="0">
+     <widget class="QLabel" name="label_3">
+      <property name="text">
+       <string>algorithm:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="0">
+     <widget class="QLabel" name="label_4">
+      <property name="text">
+       <string>calculation pattern:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="2" colspan="2">
+     <widget class="QComboBox" name="calculation_comboBox">
+      <item>
+       <property name="text">
+        <string>distance</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>nurbs</string>
+       </property>
+      </item>
+     </widget>
+    </item>
+    <item row="14" column="1" colspan="2">
+     <widget class="QWidget" name="hide" native="true">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="contextMenuPolicy">
+       <enum>Qt::NoContextMenu</enum>
+      </property>
+      <widget class="QLineEdit" name="startExpand_convert">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>30</y>
+         <width>133</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>0.00%</string>
+       </property>
+      </widget>
+      <widget class="QLineEdit" name="endExpand_convert">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>10</y>
+         <width>133</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>0.00%</string>
+       </property>
+      </widget>
+     </widget>
+    </item>
+    <item row="3" column="2" colspan="2">
+     <widget class="QComboBox" name="algorithm_comboBox">
+      <item>
+       <property name="text">
+        <string>linear</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>smooth</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>after</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>before</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>formula</string>
+       </property>
+      </item>
+     </widget>
+    </item>
+   </layout>
+   <zorder>geometryVtx_lineEdit</zorder>
+   <zorder>geometryVtx_pushButton</zorder>
+   <zorder>joint_lineEdit</zorder>
+   <zorder>joint_pushButton</zorder>
+   <zorder>nurbs_lineEdit</zorder>
+   <zorder>nurbs_pushButton</zorder>
+   <zorder>startExpand_doubleSpinBox</zorder>
+   <zorder>QProgressBar</zorder>
+   <zorder>label</zorder>
+   <zorder>apply_pushButton</zorder>
+   <zorder>endExpand_doubleSpinBox</zorder>
+   <zorder>label_2</zorder>
+   <zorder>hide</zorder>
+   <zorder>algorithm_comboBox</zorder>
+   <zorder>label_3</zorder>
+   <zorder>calculation_comboBox</zorder>
+   <zorder>label_4</zorder>
+  </widget>
+  <widget class="QStatusBar" name="statusbar">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="layoutDirection">
+    <enum>Qt::LeftToRight</enum>
+   </property>
+   <property name="sizeGripEnabled">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>208</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="layoutDirection">
+    <enum>Qt::LeftToRight</enum>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>startExpand_doubleSpinBox</sender>
+   <signal>valueChanged(QString)</signal>
+   <receiver>startExpand_convert</receiver>
+   <slot>setText(QString)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>171</x>
+     <y>146</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>209</x>
+     <y>262</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>endExpand_doubleSpinBox</sender>
+   <signal>valueChanged(QString)</signal>
+   <receiver>endExpand_convert</receiver>
+   <slot>setText(QString)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>171</x>
+     <y>167</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>209</x>
+     <y>242</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

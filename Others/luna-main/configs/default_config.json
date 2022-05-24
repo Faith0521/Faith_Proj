@@ -1,0 +1,44 @@
+{
+    "assetTypes": [
+        "character",
+        "prop",
+        "vehicle",
+        "enviroment",
+        "other"
+    ],
+    "project.recent": [],
+    "project.previous": "",
+    "project.maxRecent": 3,
+    "python.commandPort": -1,
+    "logging.level": 20,
+    "hud.block": 5,
+    "hud.section": 7,
+    "tests.deleteFiles": true,
+    "tests.deleteDirs": true,
+    "tests.tempDir": "",
+    "tests.bufferOutput": true,
+    "tests.newFile": true,
+    "unreal.project": "",
+    "naming.templates": {
+        "default": "{side}_{name}_{suffix}",
+        "alternavive": "{name}_{side}_{suffix}",
+        "unreal": "{suffix}_{name}_{side}"
+    },
+    "naming.profile.indexPadding": 2,
+    "naming.profile.template": "default",
+    "naming.profile.startIndex": 0,
+    "rig.export.skin.fileFormat": "pickle",
+    "rig.io.nglayers.fileFormat": "pickle",
+    "rig.display.lineWidth": 2.0,
+    "markingMenu.mode": 1,
+    "builder.titleFont": [
+        "Roboto",
+        10
+    ],
+    "builder.socketFont": [
+        "Roboto",
+        10
+    ],
+    "builder.historyEnabled": true,
+    "builder.historySize": 32
+}

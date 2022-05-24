@@ -1,0 +1,10 @@
+<!-- XML Definition of the core hierachy of the rig -->
+<brigks>
+	<controller key="global" part="Global" icon="circle" size="50">
+		<controller key="local" part="Local" icon="circle" size="30"/>
+	</controller>
+	<organizer key="setup" part="Setup"/>
+	<organizer key="mesh" part="Mesh"/>
+	<organizer key="joints" part="Joints"/>
+	<organizer key="user" part="User"/>
+</brigks>

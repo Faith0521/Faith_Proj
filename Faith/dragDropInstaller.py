@@ -160,28 +160,102 @@ class UI(QtWidgets.QDialog):
 
         # -- look in install directory for files of same name
         # -- construct path names
-        full_path = [os.path.join(install_path, x) for x in DEFAULT_ITEMS]
-        print(full_path)
-        # # -- files of the same name
-        # found = self.files_exist(full_path)
-        # if found:
-        #     message = "mGear files already exist in the install location.\n"
-        #     message += "Would you like to overwrite them?"
-        #     message_box = QtWidgets.QMessageBox.warning(
-        #         self,
-        #         "Delete Existing Files",
-        #         message,
-        #         QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Close)
-        #
-        #     # -- don't save was clicked
-        #     if message_box == QtWidgets.QMessageBox.Close:
-        #         self.update_logging_widget("Installation Cancelled.")
-        #         return
-        #
-        # # -- iterate over folders and remove them
-        # self.start_uninstall(install_path)
-        # # -- let's copy the folder over
-        # shutil.copytree(mgear_folder, mgear_install_path)
+        full_path = [os.path.join(install_path, x) for x in ITEMS]
+        # -- files of the same name
+        file_found = []
+        for item in full_path:
+            if os.path.exists(item):
+                found = item
+                file_found.append(found)
+                self.update_logging_widget(
+                    "Found existing files : {0}".format(found)
+                )
+
+        if file_found:
+            message = "Files already exist in the install path.\n"
+            message += "Do you want to overwrite them?"
+            message_box = QtWidgets.QMessageBox.warning(
+                self,
+                "Delete Existing Files",
+                message,
+                QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Close)
+
+            # -- don't save was clicked
+            if message_box == QtWidgets.QMessageBox.Close:
+                self.update_logging_widget("Cancelled.")
+                return
+
+        # -- iterate over folders and remove them
+        self._uninstall(install_path)
+        # -- let's copy the folder over
+        shutil.copytree(faith_folder, faith_install_path)
+
+        for item in os.listdir(faith_folder):
+            shutil.move(os.path.join(
+                install_path, "Faith", item), install_path)
+            self.update_logging_widget("Move file : {0}".format(os.path.join(install_path, item)))
+
+        self.remove_dictionary(faith_install_path)
+
+        if not os.path.join(install_path, "scripts") in sys.path:
+            sys.path.append(os.path.join(install_path, "scripts"))
+            self.update_logging_widget("ADD {0} TO PYTHON PATH".format(
+                os.path.join(install_path, "scripts")
+            ))
+        cmds.loadModule(scan = True)
+        cmds.loadModule(allModules=True)
+
+        self.loadPlugins()
+        basic.executeUserSetup()
+
+        self.update_logging_widget("Install successfully!")
+
+    def _uninstall(self, path):
+        """
+
+        :param path:
+        :return:
+        """
+        self.unloadPlugins()
+
+        for item in ITEMS:
+            if os.path.exists(os.path.join(path, item)):
+                if os.path.isfile(os.path.join(path, item)):
+                    self.remove_file(os.path.join(path, item))
+                elif os.path.isdir(os.path.join(path, item)):
+                    self.remove_dictionary(os.path.join(path, item))
+        self.update_logging_widget("Uninstall successfully.")
+
+    def remove_file(self, fileName):
+        """
+
+        :param fileName:
+        :return:
+        """
+        try:
+            os.remove(fileName)
+            self.update_logging_widget("Delete file : {0} successfully.".format(fileName))
+        except:
+            message = "Delete file : {0} failed.".format(fileName)
+            self.update_logging_widget(message)
+            return  False
+        return True
+
+    def remove_dictionary(self, path):
+        """
+
+        :param path:
+        :return:
+        """
+        if os.path.exists(path):
+            try:
+                shutil.rmtree(path)
+                self.update_logging_widget("Remove dictionary: {0} successfully.".format(path))
+            except:
+                pass
+        else:
+            return  False
+        return True
 
     def _path_btn_clicked(self):
         file_path = QtWidgets.QFileDialog.getExistingDirectory(
@@ -193,7 +267,9 @@ class UI(QtWidgets.QDialog):
             self.path_le.setText(file_path)
 
     def _uninstall_btn_clicked(self):
-        pass
+        self._uninstall(self.getPath_le(
+            self.path_le
+        ))
     
     def setPath_le(self, le, text):
         le.setText(text)
@@ -227,6 +303,34 @@ class UI(QtWidgets.QDialog):
         :rtype: str
         """
         return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    def unloadPlugins(self):
+        """
+
+        :return:
+        """
+        for plug in PLUGINS:
+            if cmds.pluginInfo(plug, query = True, loaded = True):
+                try:
+                    cmds.unloadPlugin(plug)
+                except:
+                    pass
+                self.update_logging_widget("Unload plugin : {0} successfully!"
+                                           .format(plug))
+
+    def loadPlugins(self):
+        """
+
+        :return:
+        """
+        for plug in PLUGINS:
+            if not cmds.pluginInfo(plug, query = True, loaded = True):
+                try:
+                    cmds.loadPlugin(plug)
+                except:
+                    pass
+                self.update_logging_widget("Load plugin : {0} successfully!"
+                                           .format(plug))
 
     def remove_directory(self, path):
         """

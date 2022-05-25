@@ -10,11 +10,7 @@ from functools import partial
 import pymel.core as pm
 import Faith
 from Faith.Guide.Component import guide
-from imp import reload
 from Faith.Core import aboutTransform, aboutAttribute
-reload(aboutTransform)
-reload(aboutAttribute)
-reload(guide)
 
 # guide info
 AUTHOR = "Yin Yu Fei(Copyright by mgear)"

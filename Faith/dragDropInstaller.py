@@ -1,4 +1,5 @@
-import os,sys,shutil,re,datetime
+import os,sys,shutil,re
+from datetime import datetime
 
 try:
     from maya.app.startup import basic
@@ -43,7 +44,7 @@ class UI(QtWidgets.QDialog):
         super(UI, self).__init__(parent)
 
         self.setWindowTitle(TITLE)
-        self.setFixedSize(500,300)
+        self.setFixedSize(550,300)
         self.setWindowFlags(QtCore.Qt.WindowType.Window)
 
         self.create_widgets()
@@ -90,7 +91,7 @@ class UI(QtWidgets.QDialog):
         main_layout.setContentsMargins(6, 6, 6, 6)
 
         install_group_layout = QtWidgets.QGroupBox("Paths:")
-        progress_group_layout = QtWidgets.QGroupBox("Progress:")
+        progress_group_layout = QtWidgets.QGroupBox("Infos:")
 
         install_layout = QtWidgets.QGridLayout()
         install_layout.addWidget(self.install_lb, 1, 0)
@@ -136,7 +137,51 @@ class UI(QtWidgets.QDialog):
         self.title_label.setPixmap(pixmap)
 
     def _install_btn_clicked(self):
-        pass
+        """
+
+        :return:
+        """
+        faith_folder = os.path.normpath(
+            os.path.join(CURRENT_FOLDER, "source"))
+
+        cmds.flushUndo()
+
+        cmds.file(new = True, force = True)
+
+        install_path = self.getPath_le(self.path_le)
+
+        faith_install_path = os.path.join(install_path, "Faith")
+
+        self.update_logging_widget("{0}".format(faith_install_path))
+
+        # -- in case there is a left over folder
+        if os.path.exists(faith_install_path):
+            self.remove_directory(mgear_install_path)
+
+        # -- look in install directory for files of same name
+        # -- construct path names
+        full_path = [os.path.join(install_path, x) for x in DEFAULT_ITEMS]
+        print(full_path)
+        # # -- files of the same name
+        # found = self.files_exist(full_path)
+        # if found:
+        #     message = "mGear files already exist in the install location.\n"
+        #     message += "Would you like to overwrite them?"
+        #     message_box = QtWidgets.QMessageBox.warning(
+        #         self,
+        #         "Delete Existing Files",
+        #         message,
+        #         QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Close)
+        #
+        #     # -- don't save was clicked
+        #     if message_box == QtWidgets.QMessageBox.Close:
+        #         self.update_logging_widget("Installation Cancelled.")
+        #         return
+        #
+        # # -- iterate over folders and remove them
+        # self.start_uninstall(install_path)
+        # # -- let's copy the folder over
+        # shutil.copytree(mgear_folder, mgear_install_path)
 
     def _path_btn_clicked(self):
         file_path = QtWidgets.QFileDialog.getExistingDirectory(
@@ -153,9 +198,48 @@ class UI(QtWidgets.QDialog):
     def setPath_le(self, le, text):
         le.setText(text)
 
+    def getPath_le(self, le):
+        return le.text()
+
     def get_custom_mooudle_folder(self):
         return os.path.normpath(os.path.join(os.environ["MAYA_APP_DIR"],
         "modules"))
+
+    def update_logging_widget(self, message = ""):
+        """
+
+        :param message:
+        :return:
+        """
+        if not len(message):
+            message = " "
+        lines = message if isinstance(message, list) else [message]
+        for i in range(len(lines)):
+            lines[i] = "{} : {}".format(self.current_time(), lines[i])
+        message = "\n".join(lines)
+
+        self.logging_widget.appendPlainText(message)
+        QtCore.QCoreApplication.processEvents()
+
+    def current_time(self):
+        """Return the current time as a nice formatted string.
+        :return: The current date and time.
+        :rtype: str
+        """
+        return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    def remove_directory(self, path):
+        """
+
+        :param path:
+        :return:
+        """
+        if os.path.exists(path):
+            shutil.rmtree(path)
+            self.update_logging_widget("Remove dictionary : {0}".format(path))
+        else:
+            return False
+        return True
 
 def drag_install():
     win = UI()

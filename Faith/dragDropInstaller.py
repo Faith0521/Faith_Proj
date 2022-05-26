@@ -21,7 +21,7 @@ VERSION = 0.1
 FAITH_MOD_PATH = "FAITH_MODULE_PATH"
 MAYA_MOD_PATH = "MAYA_MODULE_PATH"
 PLUGINS = ["FaithNodes.mll"]
-ITEMS = ["platforms", "Faith.mod", "scripts", "icons"]
+ITEMS = ["Faith", "Faith.mod"]
 CURRENT_FOLDER = os.path.dirname(__file__)
 
 def onMayaDroppedPythonFile(*args, **kwargs):
@@ -127,6 +127,7 @@ class UI(QtWidgets.QDialog):
     def create_title_lb(self):
         image_path = os.path.normpath(os.path.join(CURRENT_FOLDER,
                                                    "source",
+                                                   "Faith",
                                                    "icons",
                                                    "Faith_logo.png"))
 
@@ -150,13 +151,13 @@ class UI(QtWidgets.QDialog):
 
         install_path = self.getPath_le(self.path_le)
 
-        faith_install_path = os.path.join(install_path, "Faith")
+        faith_install_path = os.path.join(install_path, "Faith_module")
 
         self.update_logging_widget("{0}".format(faith_install_path))
 
         # -- in case there is a left over folder
         if os.path.exists(faith_install_path):
-            self.remove_directory(mgear_install_path)
+            self.remove_directory(faith_install_path)
 
         # -- look in install directory for files of same name
         # -- construct path names
@@ -192,15 +193,15 @@ class UI(QtWidgets.QDialog):
 
         for item in os.listdir(faith_folder):
             shutil.move(os.path.join(
-                install_path, "Faith", item), install_path)
+                faith_install_path, item), install_path)
             self.update_logging_widget("Move file : {0}".format(os.path.join(install_path, item)))
 
         self.remove_dictionary(faith_install_path)
 
-        if not os.path.join(install_path, "scripts") in sys.path:
-            sys.path.append(os.path.join(install_path, "scripts"))
+        if not os.path.join(install_path, "Faith", "scripts") in sys.path:
+            sys.path.append(os.path.join(install_path, "Faith", "scripts"))
             self.update_logging_widget("ADD {0} TO PYTHON PATH".format(
-                os.path.join(install_path, "scripts")
+                os.path.join(install_path, "Faith", "scripts")
             ))
         cmds.loadModule(scan = True)
         cmds.loadModule(allModules=True)

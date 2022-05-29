@@ -47,6 +47,9 @@
     <ClCompile Include="SplitWeights.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="BlendMatrix.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Faith_solvers.h">

@@ -240,5 +240,21 @@ public:
 	static MObject weightList;
 	static MObject weights;
 };
+
+class BlendMatrix : public MPxNode
+{
+public:
+							BlendMatrix();
+	virtual					~BlendMatrix() override;
+	virtual MStatus			compute(const MPlug& plug, MDataBlock& data) override;
+	static  void*			creator();
+	static  MStatus			initialize();
+	static  MString			NodeName;
+	static  MTypeId			NodeID;
+
+
+};
+
+
 #endif // !IKNODE_H
 

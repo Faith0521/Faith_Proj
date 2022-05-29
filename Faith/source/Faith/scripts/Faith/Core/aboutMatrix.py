@@ -2,23 +2,16 @@
 # @Author: YinYuFei
 # @Date:   2022-05-11 19:14:47
 # @Last Modified by:   Admin
-# @Last Modified time: 2022-05-14 18:58:06
+# @Last Modified time: 2022-05-29 12:45:18
 
 """
 Make Matrix Constraint
 """
-from imp import  reload
 import pymel.core as pm
 import maya.cmds as mc
 
-from . import aboutPublic
-from . import aboutUI
-reload(aboutUI)
-reload(aboutPublic)
-
-class abouMatrix(aboutUI.aboutUI):
-    def __init__(self):
-        pass
+class abouMatrix(object):
+    
     # ------------------------------------------------------------------------------------------------------------------------------------------------------#
     def loadMatrixPlugin(self):
         pluginList = ['matrixNodes.mll', 'quatNodes.mll']

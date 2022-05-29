@@ -15,6 +15,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BlendMatrix.cpp" />
     <ClCompile Include="Drum.cpp" />
     <ClCompile Include="IKNode.cpp" />
     <ClCompile Include="pluginMain.cpp" />

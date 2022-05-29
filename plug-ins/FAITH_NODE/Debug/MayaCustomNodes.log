@@ -1,7 +1,4 @@
 ﻿C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V140\Microsoft.CppBuild.targets(392,5): warning MSB8028: The intermediate directory (Debug\) contains files shared from another project (MayaCustomNodes.vcxproj).  This can lead to incorrect clean and rebuild behavior.
-  SplitWeights.cpp
-  正在生成代码...
-  正在编译...
   utils.cpp
   transferSkinWeights.cpp
 transferSkinWeights.cpp(109): warning C4305: “return”: 从“int”到“bool”截断
@@ -11,11 +8,13 @@ transferSkinWeights.cpp(124): warning C4996: 'fopen': This function or variable 
 transferSkinWeights.cpp(126): warning C4477: “printf”: 格式字符串“%s”需要类型“char *”的参数，但可变参数 1 拥有了类型“Autodesk::Maya::OpenMaya20180000::MString”
   Swing.cpp
   SquashNode.cpp
+  SplitWeights.cpp
   pluginMain.cpp
   IKNode.cpp
   Drum.cpp
+  BlendMatrix.cpp
   正在生成代码...
-C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V140\Microsoft.CppBuild.targets(1189,5): warning MSB8012: TargetPath(C:\Users\Admin\Downloads\FAITH_NODE\Debug\Faith_Node.mll) does not match the Linker's OutputFile property value (C:\Users\Admin\Downloads\FAITH_NODE\Debug\FaithNodes.mll). This may cause your project to build incorrectly. To correct this, please make sure that $(OutDir), $(TargetName) and $(TargetExt) property values match the value specified in %(Link.OutputFile).
+C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V140\Microsoft.CppBuild.targets(1189,5): warning MSB8012: TargetPath(E:\bd\Code\Faith_Proj\plug-ins\FAITH_NODE\Debug\Faith_Node.mll) does not match the Linker's OutputFile property value (E:\bd\Code\Faith_Proj\plug-ins\FAITH_NODE\Debug\FaithNodes.mll). This may cause your project to build incorrectly. To correct this, please make sure that $(OutDir), $(TargetName) and $(TargetExt) property values match the value specified in %(Link.OutputFile).
 C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V140\Microsoft.CppBuild.targets(1191,5): warning MSB8012: TargetName(Faith_Node) does not match the Linker's OutputFile property value (FaithNodes). This may cause your project to build incorrectly. To correct this, please make sure that $(OutDir), $(TargetName) and $(TargetExt) property values match the value specified in %(Link.OutputFile).
 LINK : warning LNK4075: 忽略“/INCREMENTAL”(由于“/FORCE”规范)
 SquashNode.obj : warning LNK4006: "double __cdecl linearInterpolate(double,double,double)" (?linearInterpolate@@YANNNN@Z) 已在 IKNode.obj 中定义；已忽略第二个定义
@@ -32,5 +31,5 @@ utils.obj : warning LNK4006: "double __cdecl clamp(double,double,double)" (?clam
 utils.obj : warning LNK4006: "int __cdecl clamp(int,int,int)" (?clamp@@YAHHHH@Z) 已在 IKNode.obj 中定义；已忽略第二个定义
     正在创建库 Debug\MayaCustomNodes.lib 和对象 Debug\MayaCustomNodes.exp
 Debug\FaithNodes.mll : warning LNK4088: 因 /FORCE 选项生成了映像；映像可能不能运行
-  MayaCustomNodes.vcxproj -> C:\Users\Admin\Downloads\FAITH_NODE\Debug\Faith_Node.mll
+  MayaCustomNodes.vcxproj -> E:\bd\Code\Faith_Proj\plug-ins\FAITH_NODE\Debug\Faith_Node.mll
   MayaCustomNodes.vcxproj -> Debug\MayaCustomNodes.pdb (Full PDB)

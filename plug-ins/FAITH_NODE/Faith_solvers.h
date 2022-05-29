@@ -252,6 +252,16 @@ public:
 	static  MString			NodeName;
 	static  MTypeId			NodeID;
 
+	static  MObject			outputMatrix;
+	static  MObject			offsetMatrix;
+	static  MObject			restMatrix;
+	static  MObject			blendInputMatrix;
+	static  MObject			blendOffsetMatrix;
+	static  MObject			blendTranslateWeight;
+	static  MObject			blendRotateWeight;
+	static  MObject			blendScaleWeight;
+	static  MObject			blendShearWeight;
+	static  MObject			blendMatrix;
 
 };
 

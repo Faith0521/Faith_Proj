@@ -2,7 +2,7 @@
 # @Author: YinYuFei
 # @Date:   2022-05-06 20:03:09
 # @Last Modified by:   Admin
-# @Last Modified time: 2022-05-08 10:01:00
+# @Last Modified time: 2022-05-29 12:19:16
 #################################################################
 #################Component Rigging Basic Class###################
 #################################################################
@@ -339,9 +339,9 @@ class Rigging(object):
                 uniScale = False
 
             if len(jpo) >= 5 and self.options["joint_rig"]:
-                gearMulMatrix = jpo[4]
+                MulMatrix = jpo[4]
             else:
-                gearMulMatrix = False
+                MulMatrix = False
             
             # self.jointList.append(self.asd)
 
@@ -589,7 +589,7 @@ class Rigging(object):
                  newActiveJnt=None,
                  UniScale=False,
                  segComp=False,
-                 gearMulMatrix=False,
+                 MulMatrix=False,
                  rot_off=None,
                  vanilla_nodes=False):
         
@@ -599,7 +599,7 @@ class Rigging(object):
                                          newActiveJnt=newActiveJnt,
                                          UniScale=UniScale,
                                          segComp=segComp,
-                                         gearMulMatrix=gearMulMatrix)
+                                         MulMatrix=MulMatrix)
         else:
             return self._addJoint(obj,
                                   name,
@@ -623,8 +623,38 @@ class Rigging(object):
                          newActiveJnt=None,
                          UniScale=False,
                          segComp=False,
-                         gearMulMatrix=False):
-        return
+                         MulMatrix=False):
+        customName = self.getCustomName(len(self.jointList))
+
+        if self.options["joint_rig"]:
+            if newActiveJnt:
+                self.active_jnt = newActiveJnt
+
+            jnt = aboutAdd.addJoint(self.active_jnt,
+                                    customName or self.getName(
+                                        str(name) + "_jnt"),
+                                    aboutTransform.getTransform(obj))
+
+            # Disconnect inversScale
+            if isinstance(self.active_jnt, pm.nodetypes.Joint):
+                try:
+                    pm.disconnectAttr(self.active_jnt.scale, jnt.inverseScale)
+
+                except RuntimeError:
+                    pm.ungroup(jnt.getParent())
+
+            self.active_jnt = jnt
+
+            if MulMatrix:
+                pass
+
+
+    def getCustomName(self, jointIndex):
+        names = self.guide.values["joint_names"].split(",")
+        if len(names) > jointIndex:
+            return names[jointIndex].strip()
+
+        return ""
 
     def getRelation(self, name):
         """

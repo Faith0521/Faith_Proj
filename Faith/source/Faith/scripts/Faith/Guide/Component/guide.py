@@ -2,7 +2,7 @@
 # @Author: YinYuFei
 # @Date:   2022-04-27 08:55:58
 # @Last Modified by:   Admin
-# @Last Modified time: 2022-05-02 22:34:26
+# @Last Modified time: 2022-05-28 17:12:48
 
 """
 Component guide class.
@@ -223,6 +223,9 @@ class ComponentGuide(guide.MainGuide):
             parent (dagNode): the parent of the component.
 
         """
+        # if not self.isGuidePos():
+        #     return False
+            
         self.draw(parent)
         aboutTransform.resetTransform(self.root, r = False, s = False)
 
@@ -230,6 +233,16 @@ class ComponentGuide(guide.MainGuide):
         self.root.scale.set(1, 1, 1)
 
         return True
+
+    def isGuidePos(self):
+        self.sections_number = None
+        self.dir_axis = None
+        self.spacing = None
+
+        # for name in self.save_transform:
+
+        #     if "#" in name:
+        #         init_window = 
 
     def get_divisions(self):
         """

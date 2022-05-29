@@ -68,7 +68,9 @@ class DockableMainUI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.setLayout(self.gmc_layout)
 
     def create_connections(self):
-        pass
+        self.mainUI.options_btn.clicked.connect(
+            rig_manager.initial_settings
+            )
 
     def refreshList(self):
         pass
@@ -82,12 +84,12 @@ class DockableMainUI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         else:
             pm.displayWarning("Object is not a valid guide module.")
 
-    def draw_guide(self):
-        pass
+    def draw_guide(self, parent = None):
+        for x in self.mainUI.component_listView.selectedIndexes():
+            rig_manager.draw_comp(x.data(), parent)
 
 def show_guide_component_manager(*args):
     aboutUI.showDialog(DockableMainUI, dockable=True)
-
 
 if __name__ == "__main__":
 

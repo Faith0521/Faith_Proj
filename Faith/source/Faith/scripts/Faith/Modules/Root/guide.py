@@ -2,7 +2,7 @@
 # @Author: YinYuFei
 # @Date:   2022-04-27 08:55:58
 # @Last Modified by:   Admin
-# @Last Modified time: 2022-05-14 18:56:16
+# @Last Modified time: 2022-05-28 17:27:40
 
 """Guide base root module"""
 
@@ -11,6 +11,11 @@ import pymel.core as pm
 import Faith
 from Faith.Guide.Component import guide
 from Faith.Core import aboutTransform, aboutAttribute
+
+# ui import
+from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
+from maya.app.general.mayaMixin import MayaQDockWidget
+
 
 # guide info
 AUTHOR = "Yin Yu Fei(Copyright by mgear)"
@@ -84,7 +89,12 @@ class Guide(guide.ComponentGuide):
                            [self.root.leafJoint, self.root.joint],
                            width = 0.1 / size)
 
-
+class GuideSettings(object):
+    """docstring for GuideSettings"""
+    def __init__(self, arg):
+        super(GuideSettings, self).__init__()
+        self.arg = arg
+        
 
 
 

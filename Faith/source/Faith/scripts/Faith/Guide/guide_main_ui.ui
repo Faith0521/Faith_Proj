@@ -207,7 +207,7 @@ QSlider::handle:vertical:pressed {
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
+    <layout class="QHBoxLayout" name="title_vlayout">
      <item>
       <widget class="QPushButton" name="icon_btn">
        <property name="sizePolicy">
@@ -325,7 +325,7 @@ QLineEdit:focus {
     </widget>
    </item>
    <item>
-    <widget class="QPushButton" name="pushButton">
+    <widget class="QPushButton" name="options_btn">
      <property name="font">
       <font>
        <family>Segoe UI</family>

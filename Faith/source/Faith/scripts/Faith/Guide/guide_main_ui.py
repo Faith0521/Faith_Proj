@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file '.\guide_main_ui.ui'
 #
-# Created: Sat May 28 10:27:52 2022
+# Created: Sat May 28 17:15:18 2022
 #      by: pyside2-uic  running on PySide2 2.0.0~alpha0
 #
 # WARNING! All changes made in this file will be lost!
@@ -205,8 +205,8 @@ class Ui_Form(object):
 "")
         self.verticalLayout = QtWidgets.QVBoxLayout(Form)
         self.verticalLayout.setObjectName("verticalLayout")
-        self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
+        self.title_vlayout = QtWidgets.QHBoxLayout()
+        self.title_vlayout.setObjectName("title_vlayout")
         self.icon_btn = QtWidgets.QPushButton(Form)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         sizePolicy.setHorizontalStretch(0)
@@ -221,7 +221,7 @@ class Ui_Form(object):
 "background-repeat: no-repeat;")
         self.icon_btn.setText("")
         self.icon_btn.setObjectName("icon_btn")
-        self.horizontalLayout_2.addWidget(self.icon_btn)
+        self.title_vlayout.addWidget(self.icon_btn)
         self.titile_lb = QtWidgets.QLabel(Form)
         font = QtGui.QFont()
         font.setFamily("Brush Script Std")
@@ -230,8 +230,8 @@ class Ui_Form(object):
         self.titile_lb.setStyleSheet("color: rgb(170, 255, 255);\n"
 "background-color: rgb(39, 44, 54);")
         self.titile_lb.setObjectName("titile_lb")
-        self.horizontalLayout_2.addWidget(self.titile_lb)
-        self.verticalLayout.addLayout(self.horizontalLayout_2)
+        self.title_vlayout.addWidget(self.titile_lb)
+        self.verticalLayout.addLayout(self.title_vlayout)
         self.search_lineEdit = QtWidgets.QLineEdit(Form)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -271,12 +271,12 @@ class Ui_Form(object):
         self.component_listView.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
         self.component_listView.setObjectName("component_listView")
         self.verticalLayout.addWidget(self.component_listView)
-        self.pushButton = QtWidgets.QPushButton(Form)
+        self.options_btn = QtWidgets.QPushButton(Form)
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(12)
-        self.pushButton.setFont(font)
-        self.pushButton.setStyleSheet("QPushButton {\n"
+        self.options_btn.setFont(font)
+        self.options_btn.setStyleSheet("QPushButton {\n"
 "    color: rgb(85, 255, 255);\n"
 "    border: 2px solid rgb(52, 59, 72);\n"
 "    border-radius: 10px;    \n"
@@ -291,8 +291,8 @@ class Ui_Form(object):
 "    background-color: rgb(35, 40, 49);\n"
 "    border: 2px solid rgb(43, 50, 61);\n"
 "}")
-        self.pushButton.setObjectName("pushButton")
-        self.verticalLayout.addWidget(self.pushButton)
+        self.options_btn.setObjectName("options_btn")
+        self.verticalLayout.addWidget(self.options_btn)
         self.build_btn = QtWidgets.QPushButton(Form)
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
@@ -323,7 +323,7 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         Form.setWindowTitle(QtWidgets.QApplication.translate("Form", "Form", None, -1))
         self.titile_lb.setText(QtWidgets.QApplication.translate("Form", "Module Rigging Manager", None, -1))
-        self.pushButton.setText(QtWidgets.QApplication.translate("Form", "Options", None, -1))
+        self.options_btn.setText(QtWidgets.QApplication.translate("Form", "Options", None, -1))
         self.build_btn.setToolTip(QtWidgets.QApplication.translate("Form", "<html><head/><body><p>Draw selected component.</p></body></html>", None, -1))
         self.build_btn.setText(QtWidgets.QApplication.translate("Form", "Build Rig", None, -1))
 

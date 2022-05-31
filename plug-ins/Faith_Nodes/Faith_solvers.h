@@ -16,6 +16,7 @@
 #include <maya/MQuaternion.h>
 #include <maya/MMatrix.h>
 #include <maya/MTime.h>
+#include <maya/MDagModifier.h>
 #include <maya/MFnNumericAttribute.h>
 #include <maya/MFnMatrixAttribute.h>
 #include <maya/MStringArray.h>
@@ -44,6 +45,7 @@ using namespace Eigen;
 using namespace std;
 
 #define PI 3.14159265
+#define lerp(a,b,t) ((1 - (t))* (a)+((t) * (b)))
 
 struct IK_INfo
 {
@@ -56,10 +58,16 @@ struct IK_INfo
 	double soft;
 	double slide;
 	double reverse;
+	double pin;
 	bool negate;
 	MTransformationMatrix root;
 	MTransformationMatrix eff;
 	MTransformationMatrix pole;
+};
+
+struct FK_Info
+{
+
 };
 
 struct MatrixComponents {
@@ -117,8 +125,10 @@ public:
 	static MObject negate;
 	static MObject slide;
 	static MObject roll;
+	static MObject pin;
 	static MObject outMid;
 	static MObject outEnd;
+
 };
 
 class SquashNode : public MPxNode

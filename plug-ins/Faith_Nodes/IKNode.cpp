@@ -20,6 +20,7 @@ MObject IKNode::reverse;
 MObject IKNode::negate;
 MObject IKNode::slide;
 MObject IKNode::roll;
+MObject IKNode::pin;
 MObject IKNode::outMid;
 MObject IKNode::outEnd;
 
@@ -55,6 +56,7 @@ MStatus IKNode::compute(const MPlug& plug, MDataBlock& data)
 	ikData.reverse = (double)data.inputValue(reverse).asFloat();
 	ikData.roll = (double)data.inputValue(roll).asFloat();
 	ikData.stretch = (double)data.inputValue(stretchly).asFloat();
+	ikData.pin = (double)data.inputValue(pin).asFloat();
 
 	MStringArray outNameArray;
 	plug.name().split('.', outNameArray);
@@ -199,8 +201,24 @@ MTransformationMatrix IKNode::GetIKInfo(IK_INfo values, MString outputName)
 		{
 			xAxis = rotateVectorAlongAxis(xAxis, zAxis, -angleA);
 		}
-		JointPos = xAxis * values.lengthA;
-		JointPos += rootPos;
+		if (values.pin > 0.0)
+		{
+			if (values.pin == 1.0)
+			{
+				JointPos = polePos;
+			}
+			else
+			{
+				JointPos = xAxis * values.lengthA;
+				JointPos += rootPos;
+				JointPos = lerp(JointPos, polePos, values.pin);
+			}
+		}
+		else
+		{
+			JointPos = xAxis * values.lengthA;
+			JointPos += rootPos;
+		}
 
 		if (angleB != 0.0)
 		{
@@ -242,9 +260,25 @@ MTransformationMatrix IKNode::GetIKInfo(IK_INfo values, MString outputName)
 		{
 			xAxis = rotateVectorAlongAxis(xAxis, zAxis, -(angleB - PI));
 		}
-		JointPos = xAxis * values.lengthB;
-		effPos += JointPos;
-
+		if (values.pin > 0.0)
+		{
+			if (values.pin == 1.0)
+			{
+				effPos = values.eff.getTranslation(MSpace::kWorld);
+			}
+			else
+			{
+				JointPos = xAxis * values.lengthB;
+				effPos += JointPos;
+				JointPos = lerp(effPos, values.eff.getTranslation(MSpace::kWorld), values.pin);
+			}
+		}
+		else
+		{
+			JointPos = xAxis * values.lengthB;
+			effPos += JointPos;
+		}
+		
 		// output the rotation
 		result = values.eff;
 		result.setTranslation(effPos, MSpace::kWorld);
@@ -358,6 +392,12 @@ MStatus IKNode::initialize()
 	addAttribute(roll);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
+	pin = nAttr.create("pin", "pin", MFnNumericData::kFloat, 0.0);
+	nAttr.setKeyable(true);
+	nAttr.setStorable(true);
+	addAttribute(pin);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
+
 	outMid = mAttr.create("outMid", "outMid");
 	mAttr.setKeyable(false);
 	mAttr.setStorable(false);
@@ -387,6 +427,7 @@ MStatus IKNode::initialize()
 	attributeAffects(inMidParent, outMid);
 	attributeAffects(inEndParent, outMid);
 	attributeAffects(roll, outMid);
+	attributeAffects(pin, outMid);
 
 	attributeAffects(lengthA, outEnd);
 	attributeAffects(lengthB, outEnd);
@@ -403,6 +444,7 @@ MStatus IKNode::initialize()
 	attributeAffects(inMidParent, outEnd);
 	attributeAffects(inEndParent, outEnd);
 	attributeAffects(roll, outEnd);
+	attributeAffects(pin, outEnd);
 	
 	return MS::kSuccess;
 }

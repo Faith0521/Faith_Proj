@@ -29,6 +29,11 @@ MStatus initializePlugin( MObject obj )
 	status = plugin.registerCommand("transferSkin", transferSkinWeights::creator, transferSkinWeights::syntax);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
+	status = plugin.registerNode(SplitWeights::NodeName, SplitWeights::NodeID,
+		SplitWeights::creator, SplitWeights::initialize,
+		MPxNode::kDependNode);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
+
 	status = plugin.registerNode(BlendMatrix::NodeName, BlendMatrix::NodeID,
 		BlendMatrix::creator, BlendMatrix::initialize,
 		MPxNode::kDependNode);
@@ -57,7 +62,12 @@ MStatus uninitializePlugin( MObject obj )
 	status = plugin.deregisterCommand("transferSkin");
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
+	status = plugin.deregisterNode(SplitWeights::NodeID);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
+
 	status = plugin.deregisterNode(BlendMatrix::NodeID);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
+
+
 	return status;
 }

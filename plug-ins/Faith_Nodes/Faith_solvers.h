@@ -24,10 +24,25 @@
 #include <maya/MDoubleArray.h>
 #include <maya/MFnCompoundAttribute.h>
 #include <maya/MFnUnitAttribute.h>
+#include <maya/MFnTypedAttribute.h>
+#include <maya/MRampAttribute.h>
+#include <maya/MFnComponentListData.h>
 #include <maya/MPxCommand.h>
 #include <maya/MSyntax.h>
 #include <maya/MArgDatabase.h>
 #include <maya/MSelectionList.h>
+#include <maya/MArrayDataBuilder.h>
+#include <maya/MFnSingleIndexedComponent.h>
+#include <maya/MFnMesh.h>
+#include <maya/MMatrixArray.h>
+#include <maya/MPointArray.h>
+#include <maya/MFloatVectorArray.h>
+#include <maya/MFloatMatrix.h>
+#include <maya/MFloatPointArray.h>
+#include <maya/MRenderUtil.h>
+#include <maya/MMeshIntersector.h>
+#include <maya/MBoundingBox.h>
+#include <maya/MFnNurbsCurve.h>
 #include <maya/MGlobal.h>
 #include <maya/MDagPathArray.h>
 #include <maya/MItDependencyGraph.h>
@@ -35,8 +50,11 @@
 #include <maya/MFnSkinCluster.h>
 #include <maya/MItGeometry.h>
 #include <maya/MTypes.h>
+#include <maya/MEulerRotation.h>
 #include <Eigen/Dense>
 #include <Eigen/Eigenvalues>
+#include <tbb/parallel_for.h>
+#include <tbb/blocked_range.h>
 #include "rapidjson/document.h"
 #include "rapidjson/prettywriter.h"
 #include "rapidjson/stringbuffer.h"
@@ -67,7 +85,13 @@ struct IK_INfo
 
 struct FK_Info
 {
-
+	double lengthA;
+	double lengthB;
+	bool negate;
+	MTransformationMatrix root;
+	MTransformationMatrix bone1;
+	MTransformationMatrix bone2;
+	MTransformationMatrix eff;
 };
 
 struct MatrixComponents {
@@ -101,33 +125,45 @@ public:
 	virtual MStatus			compute(const MPlug& plug, MDataBlock& data) override;
 	
 	MTransformationMatrix	GetIKInfo(IK_INfo values , MString outputName);
-	//double					GetSoftInfo(IK_Stretch data);
+	MTransformationMatrix	GetFKInfo(FK_Info values, MString outputName);
 	
 	static  void*			creator();
 	static  MStatus			initialize();
 
-	static MString			GetNodeName();
-	static MTypeId			GetNodeID();
+	static  MString			GetNodeName();
+	static  MTypeId			GetNodeID();
 
 	//Attributes
-	static MObject inRoot;
-	static MObject inIKEnd;
-	static MObject inPole;
-	static MObject inMidParent;
-	static MObject inEndParent;
-	static MObject lengthA;
-	static MObject lengthB;
-	static MObject fatnessA;
-	static MObject fatnessB;
-	static MObject softness;
-	static MObject stretchly;
-	static MObject reverse;
-	static MObject negate;
-	static MObject slide;
-	static MObject roll;
-	static MObject pin;
-	static MObject outMid;
-	static MObject outEnd;
+	static  MObject			blend;
+
+	static  MObject			inRoot;
+	static  MObject			inEnd;
+	static  MObject			inPole;
+	static  MObject			fkA;
+	static  MObject			fkB;
+	static  MObject			fkC;
+
+	static  MObject			inAParent;
+	static  MObject			inBParent;
+	static  MObject			inCenterParent;
+	static  MObject			inEndParent;
+
+	static  MObject			lengthA;
+	static  MObject			lengthB;
+	static  MObject			fatnessA;
+	static  MObject			fatnessB;
+	static  MObject			softness;
+	static  MObject			stretchly;
+	static  MObject			reverse;
+	static  MObject			negate;
+	static  MObject			slide;
+	static  MObject			roll;
+	static  MObject			pin;
+
+	static  MObject			outputA;
+	static  MObject			outputB;
+	static  MObject			outputCenter;
+	static  MObject			outputEnd;
 
 };
 
@@ -229,37 +265,46 @@ public:
 
 	void					postConstructor();
 	MStatus					postConstructor_init_curveRamp(MObject& nodeObj,
-														   MObject& rampObj,
-														   int index,
-														   float position,
-														   float value,
-														   int interpolation);
-
-	static  MString			NodeName;
-	static  MTypeId			NodeID;
-
-
-	// attributs
-	static MObject axis;
-	static MObject centered;
-	static MObject clamp;
+							MObject& rampObj,
+							int index,
+							float position,
+							float value,
+							int interpolation);
+	static MString NodeName;
+	static MTypeId NodeID;
+	static MObject active;
+	static MObject alpha;
+	static MObject colorR;
+	static MObject colorG;
+	static MObject colorB;
+	static MObject colorA;
 	static MObject curve;
 	static MObject curveRamp;
-	static MObject end;
+	static MObject curveRampUVal;
+	static MObject globalInfluenceScale;
+	static MObject globalRadius;
+	static MObject globalScale;
+	static MObject influence;
 	static MObject inputComponentsList;
 	static MObject inputComponents;
+	static MObject inputTransfer;
 	static MObject invert;
 	static MObject invertList;
+	static MObject matrix;
 	static MObject matrixList;
 	static MObject mesh;
-	static MObject mirror;
-	static MObject multiply;
-	static MObject offset;
-	static MObject placementMatrixList;
-	static MObject start;
-	static MObject useTransform;
-	static MObject weightList;
+	static MObject outputTransfer;
+	static MObject radius;
+	static MObject restParentMatrix;
+	static MObject scale;
+	static MObject texture;
+	static MObject transferWeights;
+	static MObject useShape;
+	static MObject useTransfer;
+	static MObject useUV;
 	static MObject weights;
+	static MObject weightList;
+	static MObject worldSpace;
 };
 
 class BlendMatrix : public MPxNode

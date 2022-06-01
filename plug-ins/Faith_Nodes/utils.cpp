@@ -55,9 +55,52 @@ double clamp(double d, double min_value, double max_value) {
 	d = std::min(d, max_value);
 	return d;
 }
+
 int clamp(int d, int min_value, int max_value) {
 
 	d = std::max(d, min_value);
 	d = std::min(d, max_value);
 	return d;
+}
+
+MTransformationMatrix mapWorldPoseToObjectSpace(MTransformationMatrix objectSpace, MTransformationMatrix pose) {
+	return MTransformationMatrix(pose.asMatrix() * objectSpace.asMatrixInverse());
+}
+
+MTransformationMatrix  mapObjectPoseToWorldSpace(MTransformationMatrix objectSpace, MTransformationMatrix pose) {
+	return MTransformationMatrix(pose.asMatrix() * objectSpace.asMatrix());
+}
+
+MTransformationMatrix interpolateTransform(MTransformationMatrix xf1, MTransformationMatrix xf2, double blend) {
+
+	if (blend == 1.0)
+		return xf2;
+	else if (blend == 0.0)
+		return xf1;
+
+	// translate
+	MVector t = linearInterpolate(xf1.getTranslation(MSpace::kWorld), xf2.getTranslation(MSpace::kWorld), blend);
+
+	// scale
+	double threeDoubles[3];
+	xf1.getScale(threeDoubles, MSpace::kWorld);
+	MVector xf1_scl(threeDoubles[0], threeDoubles[1], threeDoubles[2]);
+
+	xf2.getScale(threeDoubles, MSpace::kWorld);
+	MVector xf2_scl(threeDoubles[0], threeDoubles[1], threeDoubles[2]);
+
+	MVector vs = linearInterpolate(xf1_scl, xf2_scl, blend);
+	double s[3] = { vs.x, vs.y, vs.z };
+
+	// rotate
+	MQuaternion q = slerp(xf1.rotation(), xf2.rotation(), blend);
+
+	// out
+	MTransformationMatrix result;
+
+	result.setTranslation(t, MSpace::kWorld);
+	result.setRotationQuaternion(q.x, q.y, q.z, q.w);
+	result.setScale(s, MSpace::kWorld);
+
+	return result;
 }

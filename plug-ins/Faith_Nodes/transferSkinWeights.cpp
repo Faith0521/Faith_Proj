@@ -1,7 +1,4 @@
 #include "Faith_solvers.h"
-using namespace rapidjson;
-
-MString helpText = "Description: The command exports and imports the skinCluster from selected mesh to/from a file.";
 
 transferSkinWeights::transferSkinWeights()
 {
@@ -11,163 +8,564 @@ transferSkinWeights::~transferSkinWeights()
 {
 }
 
-MStatus transferSkinWeights::doIt(const MArgList& args)
-{
-	double modArg = 0;
-	MString fileName = "";
-	MArgDatabase argData(syntax(), args);
-	
-	if (argData.isFlagSet("-h"))
-	{
-		MPxCommand::setResult(helpText);
-		return MS::kSuccess;
-	}
-
-	if (argData.isFlagSet("-mod"))
-	{
-		modArg = argData.flagArgumentDouble("-mod", 0);
-	}
-	if (argData.isFlagSet("-f"))
-	{
-		fileName = argData.flagArgumentString("-f", 0);
-	}
-	else
-	{
-		MGlobal::displayError("transferSkin needs file name flag.");
-	}
-
-	if (fileName == "")
-	{
-		MGlobal::displayError("transferSkin file name is not specified.");
-	}
-
-	if (modArg == 0)
-	{
-		writeWeights(fileName);
-	}
-	if (modArg == 1)
-	{
-		readWeights(fileName);
-	}
-
-	
-	return MS::kSuccess;
-}
-
-MSyntax transferSkinWeights::syntax()
-{
-	MSyntax syntax;
-	syntax.addFlag("-h", "-help");
-	syntax.addFlag("-f", "-file", MSyntax::kString);
-	syntax.addFlag("-mod", "-mode", MSyntax::kLong);
-	return syntax;
-}
-
 void* transferSkinWeights::creator()
 {
 	return new transferSkinWeights();
 }
 
-bool transferSkinWeights::writeWeights(MString fileName)
+bool  transferSkinWeights::canBeOpened() const
 {
-	clock_t start_time, end_time;
-	start_time = clock();
+	return false;
+}
 
-	StringBuffer buf;
-	PrettyWriter<rapidjson::StringBuffer> writer(buf); // it can word wrap
-
-	writer.StartObject();
-
-	writer.Key("weights_data");
-	writer.StartArray();
-
-	MDagPath path;
-	MObject component;
-	MIntArray influences;
-	MFnSkinCluster skinFn;
-	getSelected_skinData(path, component, influences, skinFn);
-	MFnDependencyNode node(path.node());
-	MDagPathArray infs;
-	unsigned int nInfs = skinFn.influenceObjects(infs);
-
-	MDoubleArray weights;
-	skinFn.getWeights(path, component, weights, nInfs);
-	for (unsigned i = 0; i < weights.length(); i++)
-	{
-		writer.Double(weights[i]);
-	}
-
-	writer.EndArray();
-	writer.EndObject();
-
-	string json_content = buf.GetString();
-
-	ofstream outfile;
-	outfile.open(fileName.asChar(), ios::out|ios::binary);
-	if (!outfile.is_open()) {
-		fprintf(stderr, "fail to open file to write: %s\n", fileName);
-		return -1;
-	}
-
-	outfile.write(json_content.c_str(), sizeof(char)*json_content.size());
-	
-	outfile.close();
-
-	end_time = clock();
-	printf("%lf ", (double)(end_time - start_time) / CLOCKS_PER_SEC);
-
+bool  transferSkinWeights::haveReadMethod() const
+{
 	return true;
 }
 
-bool transferSkinWeights::readWeights(MString fileName)
+bool  transferSkinWeights::haveWriteMethod() const
 {
-	FILE* fp = fopen(fileName.asChar(), "rb");
-	if (!fp) {
-		printf("open failed! file: %s", fileName);
-	}
-
-	char buf[1024 * 16];
-	string result;
-
-	while (int n = fgets(buf, 1024 * 16, fp) != NULL)
-	{
-		result.append(buf);
-	}
-	fclose(fp);
-
-	Document d;
-	d.Parse(result.c_str());
-	const Value& obj = d["weights_data"];
-	MDoubleArray weights;
-	for (SizeType i=0; i<obj.Size();i++)
-	{
-		double node = obj[i].GetDouble();
-		weights.append(node);
-	}
-
-	MDagPath path;
-	MObject component;
-	MIntArray influences;
-	MFnSkinCluster skinFn;
-	getSelected_skinData(path, component, influences, skinFn);
-
-	skinFn.setWeights(path, component, influences, weights);
-
 	return true;
 }
 
-MStatus transferSkinWeights::getSelected_skinData(MDagPath& path, MObject& component, MIntArray& influences, MFnSkinCluster& skinFn)
+MString  transferSkinWeights::defaultExtension() const
 {
-	MSelectionList selection;
-	MGlobal::getActiveSelectionList(selection);
-	selection.getDagPath(0, path, component);
-	path.extendToShape();
-	MItDependencyGraph dgIt(path.node(), MFn::kSkinClusterFilter, MItDependencyGraph::kUpstream);
-	skinFn.setObject(dgIt.currentItem());
-	MDagPathArray infPathArray;
-	skinFn.influenceObjects(infPathArray);
-	for (unsigned i = 0; i < infPathArray.length(); i++)
-		influences.append(skinFn.indexForInfluenceObject(infPathArray[i]));
+	return "skin";
+}
+
+MPxFileTranslator::MFileKind  transferSkinWeights::identifyFile(
+	const  MFileObject& fileName,
+	const  char* buffer,
+	short  size) const
+{
+	MStatus  status;
+	MString  name = fileName.name();
+
+	unsigned int nameLength = name.numChars();
+	name.toLowerCase();
+	MStringArray tokens;
+	status = name.split('.', tokens);
+	CHECK_MSTATUS(status);
+	MString  lastToken = tokens[tokens.length() - 1];
+
+	if (nameLength > 4 && lastToken == defaultExtension())
+	{
+		return MPxFileTranslator::kIsMyFileType;
+	}
+	else
+	{
+		return MPxFileTranslator::kNotMyFileType;
+	}
+}
+
+
+MStatus  transferSkinWeights::writer(
+	const MFileObject& file,
+	const MString& optionsString,
+	FileAccessMode  mode)
+{
+	MStatus  status;
+
+	status = parseOptionsString(optionsString);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
+
+	const char* fileName = file.fullName().asChar();
+	std::ofstream  output(fileName, ios::binary);
+	if (!output.is_open())
+	{
+		return MS::kFailure;
+	}
+
+	if (mode == MPxFileTranslator::kExportActiveAccessMode)
+	{
+		status = exportSelected(output);
+		CHECK_MSTATUS_AND_RETURN_IT(status);
+	}
+
+	output.close();
+	return MS::kSuccess;
+}
+
+
+MStatus  transferSkinWeights::parseOptionsString(const MString& optionsString)
+{
+	MStatus status;
 
 	return MS::kSuccess;
+}
+
+
+MStatus  transferSkinWeights::exportSelected(std::ofstream& output)
+{
+	MStatus status;
+
+	MSelectionList sList;
+	MGlobal::getActiveSelectionList(sList);
+	if (sList.length() == 0)
+	{
+		return MS::kFailure;
+	}
+	MItSelectionList itList(sList);
+
+	MDagPath pathDag;
+	for (; !itList.isDone(); itList.next())
+	{
+		status = itList.getDagPath(pathDag);
+		if (MFAIL(status))
+		{
+			continue;
+		}
+		status = exportWeightInfo(pathDag, output);
+		CHECK_MSTATUS_AND_RETURN_IT(status);
+	}
+	return MS::kSuccess;
+}
+
+
+MStatus  transferSkinWeights::exportWeightInfo(
+	MDagPath& pathDag, std::ofstream& output)
+{
+	MStatus status;
+
+	MMatrix transformMatrix = pathDag.inclusiveMatrix();
+	float writeMatrix[16];
+	for (int i = 0; i < 4; i++)
+	{
+		for (int j = 0; j < 4; j++)
+			writeMatrix[i * 4 + j] = (float)transformMatrix(i, j);
+	}
+
+	MFnDependencyNode fnSkinClusterNode;
+	status = getSkinClusterNodeFromPath(pathDag, fnSkinClusterNode);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
+
+	MSelectionList jointsLs;
+	MObject skinNode;
+	jointsLs.add(fnSkinClusterNode.name());
+	status = jointsLs.getDependNode(0, skinNode);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
+
+	MDagPathArray skinJointsArray;
+	MFnSkinCluster skinFn(skinNode);
+	unsigned int numJoint = skinFn.influenceObjects(skinJointsArray);
+
+	MPlug matrixPlug = fnSkinClusterNode.findPlug("matrix");
+
+	MMatrix eachMatrix;
+	MPoint  eachPoint;
+	MFnMatrixData eachMatrixData;
+	
+
+	output.write((char*)writeMatrix, sizeof(float) * 16);
+	output.write((char*)&numJoint, sizeof(unsigned int));
+	int logicalIndex = 0;
+	double point[3];
+	for (unsigned int i = 0; i < numJoint; i++)
+	{
+		logicalIndex = matrixPlug[i].logicalIndex();
+		eachMatrixData.setObject(matrixPlug[i].asMObject());
+		eachMatrix = eachMatrixData.matrix();
+		point[0] = eachMatrix(3, 0);
+		point[1] = eachMatrix(3, 1);
+		point[2] = eachMatrix(3, 2);
+		MString jntName = MFnDependencyNode(skinJointsArray[i].node()).name();
+		output.write((char*)&logicalIndex, sizeof(unsigned int));
+		output.write((char*)point, sizeof(double) * 3);
+		exportString(output, jntName);
+	}
+
+	MPointArray shapeVtxPoints;
+	MFnMesh fnMesh(pathDag, &status);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
+
+	unsigned int numVertices = fnMesh.numVertices();
+	unsigned int numPolygons = fnMesh.numPolygons();
+	unsigned int numFaceVertices = fnMesh.numFaceVertices();
+	const float* points = fnMesh.getRawPoints(&status);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
+	int* polyCounts = new int[numPolygons];
+	int* faceVertices = new int[numFaceVertices];
+	MIntArray vertexList;
+	int index = 0;
+	for (unsigned int i = 0; i < numPolygons; i++)
+	{
+		status = fnMesh.getPolygonVertices(i, vertexList);
+		CHECK_MSTATUS_AND_RETURN_IT(status);
+		polyCounts[i] = (int)vertexList.length();
+		for (unsigned int j = 0; j < vertexList.length(); j++)
+		{
+			faceVertices[index++] = vertexList[j];
+		}
+	}
+
+	output.write((char*)&numVertices, sizeof(unsigned int));
+	output.write((char*)&numPolygons, sizeof(unsigned int));
+	output.write((char*)points, sizeof(float) * numVertices * 3);
+	output.write((char*)polyCounts, sizeof(int) * numPolygons);
+	output.write((char*)&numFaceVertices, sizeof(unsigned int));
+	output.write((char*)faceVertices, sizeof(int) * numFaceVertices);
+
+	MPlug weightListPlug = fnSkinClusterNode.findPlug("weightList");
+
+	unsigned int numVtx = weightListPlug.numElements();
+	for (unsigned int i = 0; i < numVtx; i++)
+	{
+		MPlug plugWeights = weightListPlug[i].child(0);
+		unsigned int numElements = plugWeights.numElements();
+		output.write((char*)&numElements, sizeof(unsigned int));
+		unsigned int logicalIndex;
+		float weight;
+		for (unsigned int j = 0; j < plugWeights.numElements(); j++)
+		{
+			logicalIndex = plugWeights[j].logicalIndex();
+			weight = plugWeights[j].asFloat();
+			output.write((char*)&logicalIndex, sizeof(unsigned int));
+			output.write((char*)&weight, sizeof(float));
+		}
+	}
+
+	return MS::kSuccess;
+}
+
+
+
+MStatus  transferSkinWeights::reader(const MFileObject& file,
+	const MString& optionsString,
+	FileAccessMode mode)
+{
+	MStatus status;
+	const char* fileName = file.fullName().asChar();
+	std::ifstream inFile(fileName, ios::binary);
+
+	if (!inFile.is_open())
+	{
+		return MS::kFailure;
+	}
+
+	std::streamoff current = inFile.tellg();
+	inFile.seekg(0, ios::end);
+	std::streamoff length = inFile.tellg();
+	inFile.seekg(0, ios::beg);
+
+	MSelectionList selList;
+	MGlobal::getActiveSelectionList(selList);
+
+	if (!selList.length())
+		return MS::kFailure;
+
+	MDagPath mDagPath;
+	for (int i = 0; i < selList.length(); i++)
+	{
+		selList.getDagPath(i, mDagPath);
+		status = importWeightInfo(inFile, mDagPath);
+		CHECK_MSTATUS_AND_RETURN_IT(status);
+	}
+	return MS::kSuccess;
+}
+
+
+MStatus  transferSkinWeights::getShape(MDagPath& targetPath)
+{
+	MStatus status;
+	MDagModifier mdagModifier;
+
+	unsigned int numShape;
+	targetPath.numberOfShapesDirectlyBelow(numShape);
+
+	bool shapeExists = false;
+	for (int i = 0; i < numShape; i++)
+	{
+		status = targetPath.extendToShapeDirectlyBelow(i);
+		CHECK_MSTATUS_AND_RETURN_IT(status);
+		if (targetPath.apiType() == MFn::kMesh)
+		{
+			return MS::kSuccess;
+		}
+		targetPath.pop();
+	}
+	return MS::kFailure;
+}
+
+MString transferSkinWeights::importString(ifstream& inFile)
+{
+	unsigned int numChars = 0;
+	inFile.read((char*)&numChars, sizeof(unsigned int));
+	char* pStr = new char[numChars + 1];
+	inFile.read(pStr, sizeof(char) * numChars);
+	pStr[numChars] = '\0';
+	MString str = pStr;
+	return str;
+}
+
+void transferSkinWeights::exportString(ofstream& out, MString& str)
+{
+	unsigned int numChars = str.numChars();
+	out.write((char*)&numChars, sizeof(unsigned int));
+	const char* name = str.asChar();
+	out.write(name, sizeof(char) * numChars);
+}
+
+
+
+MStatus  transferSkinWeights::importWeightInfo(std::ifstream& inFile, MDagPath& targetPath)
+{
+	MStatus status;
+
+	MDagModifier mdagModifier;
+	MMatrix targetMatrix;
+	fileInfo weightInfo;
+	MFnTransform tempTransform;
+
+	tempTransform.create(MObject::kNullObj, &status);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
+
+	status = getFileInfo(inFile, &weightInfo, tempTransform, targetMatrix);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
+
+	MObject oTempMesh = tempTransform.child(0, &status);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
+
+	MFnTransform targetNode = targetPath.node();
+	status = getShape(targetPath);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
+
+	MTransformationMatrix transformMtx(targetMatrix);
+	tempTransform.set(transformMtx);
+
+	char deformBuffer[512];
+	sprintf(deformBuffer, "deformer -type skinCluster %s;", tempTransform.fullPathName().asChar());
+	MGlobal::executeCommand(deformBuffer);
+
+	MDagPath tempTransformPath;
+	status = tempTransform.getPath(tempTransformPath);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
+
+	MFnDependencyNode skinNode;
+	status = getSkinClusterNodeFromPath(tempTransformPath, skinNode);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
+
+	MObjectArray oJoints;
+	status = setInfoToSkinNode(weightInfo, skinNode, oJoints);
+	char copySkinBuffer[512];
+	sprintf(copySkinBuffer, "copySkinWeights -noMirror -surfaceAssociation closestPoint -influenceAssociation closestJoint -normalize %s %s;",
+		tempTransform.fullPathName().asChar(), targetNode.fullPathName().asChar());
+	MGlobal::executeCommand(copySkinBuffer);
+
+	MDagModifier modifier;
+	modifier.deleteNode(tempTransform.object());
+
+	for (int i = 0; i < oJoints.length(); i++)
+		modifier.deleteNode(oJoints[i]);
+	modifier.doIt();
+
+	return MS::kSuccess;
+}
+
+
+MStatus transferSkinWeights::setInfoToSkinNode(fileInfo& weightInfo,
+	MFnDependencyNode& skinNode, MObjectArray& oJoints)
+{
+	MStatus status;
+
+	MDagModifier dagModifier;
+
+	MTransformationMatrix mtx, inv;
+	MFnMatrixData mtxData, invData;
+
+	MPlug matrixPlug = skinNode.findPlug("matrix");
+	MPlug bindPrePlug = skinNode.findPlug("bindPreMatrix");
+	MPlug weightListPlug = skinNode.findPlug("weightList");
+
+	oJoints.setLength(weightInfo.matrixIndices.length());
+
+	for (int i = 0; i < weightInfo.matrixIndices.length(); i++)
+	{
+		mtx.setTranslation(weightInfo.matrixPositions[i], MSpace::kTransform);
+		inv.setTranslation(weightInfo.matrixPositions[i] * -1, MSpace::kTransform);
+
+		mtxData.create(mtx, &status);
+		invData.create(inv, &status);
+
+		int logicalIndex = weightInfo.matrixIndices[i];
+
+		oJoints[i] = dagModifier.createNode("joint");
+		dagModifier.doIt();
+		MFnTransform fnJoint = oJoints[i];
+		MPlug jntMatrixPlug = fnJoint.findPlug("matrix", status);
+		CHECK_MSTATUS_AND_RETURN_IT(status);
+		fnJoint.translateBy(weightInfo.matrixPositions[i], MSpace::kTransform);
+
+		MPlug matrixElement = matrixPlug.elementByLogicalIndex(logicalIndex);
+		MPlug bindPreElement = bindPrePlug.elementByLogicalIndex(logicalIndex);
+		dagModifier.connect(jntMatrixPlug, matrixElement);
+
+		bindPreElement.setMObject(invData.object());
+		dagModifier.doIt();
+	}
+
+
+	for (int i = 0; i < weightInfo.weightListIndices.size(); i++)
+	{
+		MIntArray& weightIndices = weightInfo.weightListIndices[i];
+		MFloatArray& weightValues = weightInfo.weightListValues[i];
+
+		MPlug weightListElement = weightListPlug.elementByLogicalIndex(i);
+		MPlug weightPlug = weightListElement.child(0);
+
+		for (int j = 0; j < weightIndices.length(); j++)
+		{
+			MPlug weightElement = weightPlug.elementByLogicalIndex(weightIndices[j]);
+			weightElement.setFloat(weightValues[j]);
+		}
+	}
+
+	return MS::kSuccess;
+}
+
+
+MStatus transferSkinWeights::getFileInfo(std::ifstream& inFile, fileInfo* pInfo,
+	MFnTransform& targetTransform, MMatrix& getMatrix)
+{
+	MStatus status;
+
+	float transformMatrix[16];
+	inFile.read((char*)transformMatrix, sizeof(float) * 16);
+
+	for (int i = 0; i < 4; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			getMatrix[i][j] = transformMatrix[i * 4 + j];
+		}
+	}
+
+	unsigned int numJoint = 0;
+	inFile.read((char*)&numJoint, sizeof(unsigned int));
+
+	MIntArray& matrixIndices = pInfo->matrixIndices;
+	MPointArray& matrixPositions = pInfo->matrixPositions;
+	MPointArray& vtxPoints = pInfo->vtxPoints;
+	MStringArray& jntStrArray = pInfo->skinJoints;
+	vector< MIntArray >& weightListIndices = pInfo->weightListIndices;
+	vector< MFloatArray >& weightListValues = pInfo->weightListValues;
+
+	matrixIndices.setLength(numJoint);
+	matrixPositions.setLength(numJoint);
+	jntStrArray.setLength(numJoint);
+
+	unsigned int matrixIndex;
+	double matrixPoint[3];
+	
+
+	for (unsigned int i = 0; i < numJoint; i++)
+	{
+		inFile.read((char*)&matrixIndex, sizeof(unsigned int));
+		inFile.read((char*)matrixPoint, sizeof(double) * 3);
+		MString jnt_str = importString(inFile);
+		matrixIndices[i] = matrixIndex;
+		matrixPositions[i].x = matrixPoint[0];
+		matrixPositions[i].y = matrixPoint[1];
+		matrixPositions[i].z = matrixPoint[2];
+		matrixPositions[i].w = 1.0;
+		jntStrArray[i] = jnt_str;
+	}
+
+	unsigned int numVertices = 0;
+	unsigned int numPolygons = 0;
+	inFile.read((char*)&numVertices, sizeof(unsigned int));
+	inFile.read((char*)&numPolygons, sizeof(unsigned int));
+
+	float* pPoints = new float[numVertices * 3];
+	inFile.read((char*)pPoints, sizeof(float) * numVertices * 3);
+	MFloatPointArray points(numVertices);
+	for (unsigned int i = 0; i < numVertices; i++)
+	{
+		points[i].x = pPoints[i * 3];
+		points[i].y = pPoints[i * 3 + 1];
+		points[i].z = pPoints[i * 3 + 2];
+	}
+
+	int* pPolyCounts = new int[numPolygons];
+	inFile.read((char*)pPolyCounts, sizeof(int) * numPolygons);
+	MIntArray polyCounts(pPolyCounts, numPolygons);
+
+	unsigned int numFaceVertices = 0;
+	inFile.read((char*)&numFaceVertices, sizeof(unsigned int));
+	int* pFaceVertices = new int[numFaceVertices];
+	inFile.read((char*)pFaceVertices, sizeof(int) * numFaceVertices);
+	MIntArray faceVertices(pFaceVertices, numFaceVertices);
+
+	MObject targetObj = targetTransform.object();
+	MFnMesh fnMesh;
+	MObject oResultMesh = fnMesh.create(numVertices, numPolygons, points, polyCounts, faceVertices, targetObj, &status);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
+
+	vtxPoints.setLength(numVertices);
+	weightListIndices.resize(numVertices);
+	weightListValues.resize(numVertices);
+
+	unsigned int numWeights;
+	for (unsigned int i = 0; i < numVertices; i++)
+	{
+		inFile.read((char*)&numWeights, sizeof(unsigned int));
+
+		weightListIndices[i].setLength(numWeights);
+		weightListValues[i].setLength(numWeights);
+
+		unsigned int weightIndex;
+		float weight;
+		for (unsigned int j = 0; j < numWeights; j++)
+		{
+			inFile.read((char*)&weightIndex, sizeof(unsigned int));
+			inFile.read((char*)&weight, sizeof(float));
+			weightListIndices[i][j] = weightIndex;
+			weightListValues[i][j] = weight;
+		}
+	}
+	return MS::kSuccess;
+}
+
+
+MStatus transferSkinWeights::getSkinClusterNodeFromPath(
+	MDagPath& pathDag, MFnDependencyNode& skinNode)
+{
+	MStatus status;
+
+	if (pathDag.apiType() != MFn::kMesh)
+	{
+		unsigned int numShapes;
+		status = pathDag.numberOfShapesDirectlyBelow(numShapes);
+		CHECK_MSTATUS_AND_RETURN_IT(status);
+		if (!numShapes)
+			return MS::kFailure;
+		bool shapeExists = false;
+		for (int i = 0; i < numShapes; i++)
+		{
+			status = pathDag.extendToShapeDirectlyBelow(i);
+			if (pathDag.hasFn(MFn::kMesh))
+			{
+				shapeExists = true;
+				break;
+			}
+			pathDag.pop();
+		}
+		if (!shapeExists) return MS::kFailure;
+	}
+
+	MObject oMesh = pathDag.node();
+	MItDependencyGraph itGraph(oMesh, MFn::kInvalid, MItDependencyGraph::kUpstream,
+		MItDependencyGraph::kDepthFirst, MItDependencyGraph::kNodeLevel, &status);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
+
+	while (!itGraph.isDone())
+	{
+		skinNode.setObject(itGraph.currentItem());
+		if (skinNode.typeName() == "skinCluster")
+		{
+			return MS::kSuccess;
+		}
+		itGraph.next();
+	}
+
+	return MS::kFailure;
 }

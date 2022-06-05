@@ -2,7 +2,7 @@
 # @Author: YinYuFei
 # @Date:   2022-05-06 20:03:08
 # @Last Modified by:   Admin
-# @Last Modified time: 2022-05-14 18:58:41
+# @Last Modified time: 2022-06-03 10:49:29
 
 
 """
@@ -783,3 +783,6 @@ def gear_inverseRotorder_op(out_obj, in_obj):
     pm.connectAttr(node + ".output", out_obj + ".ro")
 
     return node
+
+def createMuscle(self, start, end):
+    pass

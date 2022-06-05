@@ -26,8 +26,12 @@ MStatus initializePlugin( MObject obj )
 		MPxNode::kDependNode);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
-	status = plugin.registerCommand("transferSkin", transferSkinWeights::creator, transferSkinWeights::syntax);
+	status = plugin.registerFileTranslator(
+		"skin", "none", transferSkinWeights::creator,
+		(char*)optionScript,
+		(char*)defaultOptions);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
+	MGlobal::executeCommand("global proc int exportWeightOptions( string $parent,string $action,string $initialSettings,string $resultCallback ){return 0;}");
 
 	status = plugin.registerNode(BlendMatrix::NodeName, BlendMatrix::NodeID,
 		BlendMatrix::creator, BlendMatrix::initialize,
@@ -59,7 +63,7 @@ MStatus uninitializePlugin( MObject obj )
 	status = plugin.deregisterNode(Drum::NodeID);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
-	status = plugin.deregisterCommand("transferSkin");
+	status = plugin.deregisterFileTranslator("skin");
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
 	status = plugin.deregisterNode(BlendMatrix::NodeID);
@@ -67,5 +71,6 @@ MStatus uninitializePlugin( MObject obj )
 
 	status = plugin.deregisterNode(SwingAmplitude::NodeID);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
+	
 	return status;
 }

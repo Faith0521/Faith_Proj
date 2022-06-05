@@ -9,6 +9,8 @@
 #include <time.h>
 #include <cmath>
 #include <cstdlib>
+#include <vector>
+#include <string>
 #include <maya/MPxNode.h>
 #include <maya/MTransformationMatrix.h>
 #include <maya/MQuaternion.h>
@@ -48,13 +50,15 @@
 #include <maya/MItDependencyGraph.h>
 #include <maya/MDagPath.h>
 #include <maya/MFnSkinCluster.h>
+#include <maya/MFnTransform.h>
 #include <maya/MItGeometry.h>
 #include <maya/MTypes.h>
 #include <maya/MEulerRotation.h>
+#include <maya/MPxFileTranslator.h>
+#include <maya/MItSelectionList.h>
+#include <maya/MFnMatrixData.h>
 #include <Eigen/Dense>
 #include <Eigen/Eigenvalues>
-#include <tbb/parallel_for.h>
-#include <tbb/blocked_range.h>
 #include "rapidjson/document.h"
 #include "rapidjson/prettywriter.h"
 #include "rapidjson/stringbuffer.h"
@@ -64,6 +68,9 @@ using namespace std;
 
 #define PI 3.14159265
 #define lerp(a,b,t) ((1 - (t))* (a)+((t) * (b)))
+
+const char* const optionScript = "exportWeightOptions";
+const char* const defaultOptions = "";
 
 struct IK_INfo
 {
@@ -101,20 +108,57 @@ struct MatrixComponents {
 	Vector3d shear;
 };
 
-class transferSkinWeights :public MPxCommand
+struct fileInfo
+{
+	MIntArray				matrixIndices;
+	MPointArray				matrixPositions;
+	MPointArray				vtxPoints;
+	MStringArray			skinJoints;
+	vector< MIntArray >		weightListIndices;
+	vector< MFloatArray >	weightListValues;
+};
+
+class transferSkinWeights : public MPxFileTranslator
 {
 public:
-	transferSkinWeights();
-	virtual				~transferSkinWeights() override;
-	virtual MStatus		doIt(const MArgList& args) override;
-	static  MSyntax		syntax();
-	static  void*		creator();
+							transferSkinWeights();
+	virtual					~transferSkinWeights();
+	static  void*			creator();
 
-	bool				writeWeights(MString fileName);
-	bool				readWeights(MString fileName);
-	static  MStatus		getSelected_skinData(MDagPath& path, MObject& component, MIntArray& influences, MFnSkinCluster& skinFn);
+	virtual bool			haveReadMethod() const;
+	virtual bool			haveWriteMethod() const;
+	virtual bool			canBeOpened() const;
+	virtual MString			defaultExtension() const;
 
+	virtual MStatus			reader(const MFileObject& file,
+							const MString& optionsString,
+							FileAccessMode mode);
 
+	virtual MStatus			writer(const MFileObject& file,
+							const MString& optionsString,
+							FileAccessMode mode);
+
+	MFileKind				identifyFile(const MFileObject& fileName,
+							const char* buffer,
+							short size) const;
+
+	MStatus					parseOptionsString(const MString& optionsString);
+	MStatus					exportAll(std::ofstream& out);
+	MStatus					exportSelected(std::ofstream& out);
+	MStatus					exportWeightInfo(MDagPath& pathDag, std::ofstream& out);
+	MStatus					getFileInfo(std::ifstream& inFile, fileInfo* pInfo, MFnTransform& targetTransform, MMatrix& getMatrix);
+	MStatus					getSkinClusterNodeFromPath(MDagPath& pathDag, MFnDependencyNode& skinNode);
+
+	MStatus					setInfoToSkinNode(fileInfo& info, MFnDependencyNode& skinNode, MObjectArray& oJoints);
+	MStatus					importWeightInfo(std::ifstream& inFile, MDagPath& targetPath);
+
+	MStatus					getShape(MDagPath& dagPath);
+	MString					importString(ifstream& inFile);
+	void					exportString(ofstream& out, MString& str);
+
+private:
+	bool					m_exportNormals;
+	bool					m_exportUVs;
 };
 
 class IKNode :public MPxNode
@@ -254,59 +298,6 @@ public:
 
 };
 
-class SplitWeights : public MPxNode
-{
-public:
-							SplitWeights();
-	virtual					~SplitWeights() override;
-	virtual MStatus			compute(const MPlug& plug, MDataBlock& data) override;
-	static  void*			creator();
-	static  MStatus			initialize();
-
-	void					postConstructor();
-	MStatus					postConstructor_init_curveRamp(MObject& nodeObj,
-							MObject& rampObj,
-							int index,
-							float position,
-							float value,
-							int interpolation);
-	static MString NodeName;
-	static MTypeId NodeID;
-	static MObject active;
-	static MObject alpha;
-	static MObject colorR;
-	static MObject colorG;
-	static MObject colorB;
-	static MObject colorA;
-	static MObject curve;
-	static MObject curveRamp;
-	static MObject curveRampUVal;
-	static MObject globalInfluenceScale;
-	static MObject globalRadius;
-	static MObject globalScale;
-	static MObject influence;
-	static MObject inputComponentsList;
-	static MObject inputComponents;
-	static MObject inputTransfer;
-	static MObject invert;
-	static MObject invertList;
-	static MObject matrix;
-	static MObject matrixList;
-	static MObject mesh;
-	static MObject outputTransfer;
-	static MObject radius;
-	static MObject restParentMatrix;
-	static MObject scale;
-	static MObject texture;
-	static MObject transferWeights;
-	static MObject useShape;
-	static MObject useTransfer;
-	static MObject useUV;
-	static MObject weights;
-	static MObject weightList;
-	static MObject worldSpace;
-};
-
 class BlendMatrix : public MPxNode
 {
 public:
@@ -338,6 +329,41 @@ private:
 							const Vector3d& scale,
 							const Vector3d& shear
 	);
+
+};
+
+class SwingAmplitude : public MPxNode
+{
+public:
+							SwingAmplitude();
+	virtual					~SwingAmplitude() override;
+	virtual MStatus			compute(const MPlug& plug, MDataBlock& data) override;
+	static  void*			creator();
+	static  MStatus			initialize();
+	static  MString			NodeName;
+	static  MTypeId			NodeID;
+
+	static  MObject			inputTransform;
+	static  MObject			intranslateX;
+	static  MObject			intranslateY;
+	static  MObject			outTransform;
+	static  MObject			outtranslateX;
+	static  MObject			outtranslateY;
+
+private:
+
+};
+
+class MatrixMult : public MPxNode
+{
+public:
+	MatrixMult();
+	virtual	~MatrixMult() override;
+	virtual MStatus	compute(const MPlug& plug, MDataBlock& data) override;
+	static  void* creator();
+	static  MStatus			initialize();
+	static  MString			NodeName;
+	static  MTypeId			NodeID;
 
 };
 

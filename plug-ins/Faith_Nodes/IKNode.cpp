@@ -1,9 +1,9 @@
 #include "Faith_solvers.h"
 #include "utils.cpp"
 
-MString NodeName = "FAITH_IKFKCalculate";
+MString IKNode::NodeName = "FAITH_IKFKCalculate";
 
-MTypeId NodeID = MTypeId(0x0015);
+MTypeId IKNode::NodeID = MTypeId(0x0015);
 
 MObject IKNode::blend;
 MObject IKNode::inRoot;
@@ -777,14 +777,5 @@ MStatus IKNode::initialize()
 	return MS::kSuccess;
 }
 
-MString IKNode::GetNodeName()
-{
-	return NodeName;
-}
-
-MTypeId IKNode::GetNodeID()
-{
-	return NodeID;
-}
 
 

@@ -7,7 +7,7 @@ MStatus initializePlugin( MObject obj )
 	MStatus   status;
 	MFnPlugin plugin( obj, "YinYuFei", "2020", "Any");
 	
-	status = plugin.registerNode(IKNode::GetNodeName(), IKNode::GetNodeID() ,
+	status = plugin.registerNode(IKNode::NodeName, IKNode::NodeID ,
 		IKNode::creator, IKNode::initialize, MPxNode::kDependNode);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
@@ -43,6 +43,11 @@ MStatus initializePlugin( MObject obj )
 		MPxNode::kDependNode);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
+	status = plugin.registerNode(MatrixMult::NodeName, MatrixMult::NodeID,
+		MatrixMult::creator, MatrixMult::initialize,
+		MPxNode::kDependNode);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
+
 	return status;
 }
 
@@ -51,7 +56,7 @@ MStatus uninitializePlugin( MObject obj )
 	MStatus   status;
 	MFnPlugin plugin( obj );
 
-	status = plugin.deregisterNode(IKNode::GetNodeID());
+	status = plugin.deregisterNode(IKNode::NodeID);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
 	status = plugin.deregisterNode(SquashNode::NodeID);
@@ -70,6 +75,9 @@ MStatus uninitializePlugin( MObject obj )
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
 	status = plugin.deregisterNode(SwingAmplitude::NodeID);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
+
+	status = plugin.deregisterNode(MatrixMult::NodeID);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 	
 	return status;

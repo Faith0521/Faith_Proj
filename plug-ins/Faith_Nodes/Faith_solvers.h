@@ -174,8 +174,8 @@ public:
 	static  void*			creator();
 	static  MStatus			initialize();
 
-	static  MString			GetNodeName();
-	static  MTypeId			GetNodeID();
+	static MString			NodeName;
+	static MTypeId			NodeID;
 
 	//Attributes
 	static  MObject			blend;
@@ -364,6 +364,10 @@ public:
 	static  MStatus			initialize();
 	static  MString			NodeName;
 	static  MTypeId			NodeID;
+
+	static  MObject			inMatrixA;
+	static  MObject			inMatrixB;
+	static  MObject			outMatrix;
 
 };
 

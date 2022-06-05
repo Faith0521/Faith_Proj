@@ -2,7 +2,7 @@
 # @Author: YinYuFei
 # @Date:   2022-05-06 20:03:08
 # @Last Modified by:   Admin
-# @Last Modified time: 2022-06-03 10:49:29
+# @Last Modified time: 2022-06-05 21:14:07
 
 
 """
@@ -398,33 +398,17 @@ def gear_spring_op(in_obj, goal=False):
     return node
 
 
-def gear_mulmatrix_op(mA, mB, target=False, transform='srt'):
-    """Create mGear multiply Matrix node.
+def create_mulmatrix(mA, mB, target=False, transform='srt', name=""):
 
-    Note:
-        This node have same functionality as the default Maya matrix
-        multiplication.
-
-    Arguments:
-        mA (matrix): input matrix A.
-        mB (matrix): input matrix B.
-        target (dagNode): object target to apply the transformation
-        transform (str): if target is True. out transform  to SRT valid
-            value s r t
-
-    Returns:
-        pyNode: Newly created mGear_multMatrix node
-
-    """
-    node = pm.createNode("mgear_mulMatrix")
-    for m, mi in zip([mA, mB], ['matrixA', 'matrixB']):
+    node = pm.createNode("FAITH_MatrixMult", n = name + "_multMa")
+    for m, mi in zip([mA, mB], ['inMatrixA', 'inMatrixB']):
         if isinstance(m, datatypes.Matrix):
             pm.setAttr(node.attr(mi), m)
         else:
             pm.connectAttr(m, node.attr(mi))
     if target:
-        dm_node = pm.createNode("decomposeMatrix")
-        pm.connectAttr(node + ".output", dm_node + ".inputMatrix")
+        dm_node = pm.createNode("decomposeMatrix", n = name + "_decomp")
+        pm.connectAttr(node + ".outMatrix", dm_node + ".inputMatrix")
         if 't' in transform:
             pm.connectAttr(dm_node + ".outputTranslate",
                            target.attr("translate"), f=True)

@@ -54,7 +54,7 @@ def initial_settings(tabIndex = 0, *args):
     if comp_type:
         guide = Guide.importComponentGuide(comp_type)
         wind = aboutUI.showDialog(guide.)
-        wind.tabs
+        # wind.tabs
 
 
 

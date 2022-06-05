@@ -2,7 +2,7 @@
 # @Author: YinYuFei
 # @Date:   2022-05-06 20:03:09
 # @Last Modified by:   Admin
-# @Last Modified time: 2022-05-29 12:19:16
+# @Last Modified time: 2022-06-05 22:00:53
 #################################################################
 #################Component Rigging Basic Class###################
 #################################################################
@@ -15,7 +15,7 @@ from pymel import versions
 # Base
 import Faith
 from Faith.Core import aboutAdd, aboutAttribute, aboutLog, aboutTransform, \
-aboutNode, aboutPy, aboutIcon, aboutVector
+aboutNode, aboutPy, aboutIcon, aboutVector, aboutRig
 
 from Faith.Guide import naming
 
@@ -313,7 +313,7 @@ class Rigging(object):
                             self.fullName)
 
                     oParent_comp = oParent_comp.parent_comp
-
+        
         for jpo in  self.jnt_pos:
             if len(jpo) >= 3 and self.options["joint_rig"]:
                 if jpo[2] == "component_jnt_org":
@@ -334,7 +334,7 @@ class Rigging(object):
             else:
                 newActiveJnt = None
             if len(jpo) >= 4 and self.options["joint_rig"]:
-                uniScale = jpo[4]
+                uniScale = jpo[3]
             else:
                 uniScale = False
 
@@ -343,7 +343,10 @@ class Rigging(object):
             else:
                 MulMatrix = False
             
-            # self.jointList.append(self.asd)
+            self.jointList.append(
+                self.addJoint(jpo[0], jpo[1], newActiveJnt, uniScale,
+                              MulMatrix=MulMatrix)
+                )
 
     @property
     def setRelation(self):
@@ -615,7 +618,7 @@ class Rigging(object):
                   UniScale=False,
                   segComp=False,
                   rot_off=None):
-        return
+        print("_addJoint Func")
 
     def addJoint_vanilla(self,
                          obj,
@@ -646,7 +649,24 @@ class Rigging(object):
             self.active_jnt = jnt
 
             if MulMatrix:
-                pass
+                mulmat_node = aboutRig.create_mulmatrix(
+                    obj + ".worldMatrix", jnt + ".parentInverseMatrix",
+                    name = "{0}_{1}".format(obj, jnt)
+                    )
+                dm_node = aboutNode.createDecomposeMatrixNode(
+                    mulmat_node + ".outMatrix", name = jnt)
+                m = mulmat_node.attr('outMatrix').get()
+            else:
+                mulmat_node = aboutNode.createDecomposeMatrixNode(
+                    obj + ".worldMatrix", jnt + ".parentInverseMatrix",
+                    name = "{0}_{1}".format(obj, jnt)
+                    )
+                dm_node = aboutNode.createDecomposeMatrixNode(
+                    mulmat_node + ".matrixSum", name = jnt
+                    )
+                m = mulmat_node.attr('matrixSum').get()
+            pm.connectAttr(dm_node + ".outputTranslate", jnt + ".t")
+            pm.connectAttr(dm_node + ".outputRotate", jnt + ".r")
 
 
     def getCustomName(self, jointIndex):

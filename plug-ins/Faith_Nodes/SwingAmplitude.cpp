@@ -1,7 +1,7 @@
 #include "Faith_solvers.h"
 
 MString SwingAmplitude::NodeName = "FAITH_SwingAmplitude";
-MTypeId SwingAmplitude::NodeID = MTypeId(0x00125);
+MTypeId SwingAmplitude::NodeID = MTypeId(0x0018);
 
 MObject SwingAmplitude::inputTransform;
 MObject SwingAmplitude::intranslateX;

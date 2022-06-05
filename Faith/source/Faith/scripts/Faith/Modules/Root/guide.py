@@ -2,7 +2,7 @@
 # @Author: YinYuFei
 # @Date:   2022-04-27 08:55:58
 # @Last Modified by:   Admin
-# @Last Modified time: 2022-05-28 17:27:40
+# @Last Modified time: 2022-06-05 21:54:01
 
 """Guide base root module"""
 
@@ -57,7 +57,7 @@ class Guide(guide.ComponentGuide):
     def addAttributes(self):
         self.icon = self.addAttr("icon" , "string" , "COG")
         # self.ikRefArray = self.addAttr("ikRefArray" , "string" , "")
-        self.joint = self.addAttr("joint" , "bool" , False)
+        self.joint = self.addAttr("joint" , "bool" , True)
         self.leafJoint = self.addAttr("leafJoint" , "bool" , False)
         self.joint = self.addAttr("unitSca", "bool", False)
 

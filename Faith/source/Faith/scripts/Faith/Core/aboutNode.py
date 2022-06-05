@@ -2,7 +2,7 @@
 # @Author: YinYuFei
 # @Date:   2022-05-06 20:03:08
 # @Last Modified by:   Admin
-# @Last Modified time: 2022-05-14 18:58:14
+# @Last Modified time: 2022-06-05 21:21:06
 
 """Functions to create and connect nodes."""
 
@@ -59,7 +59,7 @@ def createMultMatrixNode(mA, mB, target=False, transform='srt'):
     return node
 
 
-def createDecomposeMatrixNode(m):
+def createDecomposeMatrixNode(m, name = ""):
     """
     Create and connect a decomposeMatrix node.
 
@@ -72,7 +72,7 @@ def createDecomposeMatrixNode(m):
     >>> dm_node = nod.createDecomposeMatrixNode(mulmat_node+".output")
 
     """
-    node = pm.createNode("decomposeMatrix")
+    node = pm.createNode("decomposeMatrix", n = name + "_decomp")
 
     pm.connectAttr(m, node + ".inputMatrix")
 

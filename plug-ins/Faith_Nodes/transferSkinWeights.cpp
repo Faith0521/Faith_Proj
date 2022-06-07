@@ -154,7 +154,7 @@ MStatus  transferSkinWeights::exportWeightInfo(
 	MMatrix eachMatrix;
 	MPoint  eachPoint;
 	MFnMatrixData eachMatrixData;
-	
+
 
 	output.write((char*)writeMatrix, sizeof(float) * 16);
 	output.write((char*)&numJoint, sizeof(unsigned int));
@@ -455,7 +455,9 @@ MStatus transferSkinWeights::getFileInfo(std::ifstream& inFile, fileInfo* pInfo,
 
 	unsigned int matrixIndex;
 	double matrixPoint[3];
-	
+
+	MDagPath shapePath;
+	MFnDependencyNode skinNode;
 
 	for (unsigned int i = 0; i < numJoint; i++)
 	{
@@ -468,6 +470,32 @@ MStatus transferSkinWeights::getFileInfo(std::ifstream& inFile, fileInfo* pInfo,
 		matrixPositions[i].z = matrixPoint[2];
 		matrixPositions[i].w = 1.0;
 		jntStrArray[i] = jnt_str;
+
+		MFnDagNode dagFn;
+		bool isObjectExists = false;
+		for (MItDag itDag(MItDag::kDepthFirst, MFn::kInvalid); !itDag.isDone(); itDag.next()) {
+			dagFn.setObject(itDag.currentItem());
+			if (dagFn.name() == jnt_str) {
+				isObjectExists = true;
+				break;
+			}
+		}
+		if (!isObjectExists) {
+			MGlobal::displayError(jnt_str + " is not exists in the scene.");
+			return MS::kFailure;
+		}
+
+		/*status = getShape(shapePath);
+		CHECK_MSTATUS_AND_RETURN_IT(status);
+		status = getSkinClusterNodeFromPath(shapePath, skinNode);
+		if (status == MS::kSuccess)
+		{
+			MGlobal::executePythonCommand("cmds.delete(" + skinNode.name() + ")");
+		}
+		else
+		{
+
+		}*/
 	}
 
 	unsigned int numVertices = 0;
@@ -522,6 +550,8 @@ MStatus transferSkinWeights::getFileInfo(std::ifstream& inFile, fileInfo* pInfo,
 			weightListValues[i][j] = weight;
 		}
 	}
+
+	MGlobal::displayInfo("8");
 	return MS::kSuccess;
 }
 

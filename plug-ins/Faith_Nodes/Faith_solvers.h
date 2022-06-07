@@ -57,6 +57,7 @@
 #include <maya/MPxFileTranslator.h>
 #include <maya/MItSelectionList.h>
 #include <maya/MFnMatrixData.h>
+#include <maya/MItDag.h>
 #include <Eigen/Dense>
 #include <Eigen/Eigenvalues>
 #include "rapidjson/document.h"

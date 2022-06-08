@@ -945,3 +945,69 @@ def lock_first_point(crv):
     pm.connectAttr(mul_mtrx.matrixSum, dm_node.inputMatrix)
     pm.connectAttr(dm_node.outputTranslate,
                    crv.getShape().controlPoints[0])
+
+def NoneZero(value):
+    """
+
+    :param value:
+    :return:
+    """
+    if value == 0.0:
+        return 1.0
+    else:
+        return value
+
+def get_knots(n, degree):
+    """
+
+    :param n:
+    :param degree:
+    :return:
+    """
+    return [i*1.0/(degree - 1) for i in range(n)]
+
+def getSpline_w(knots, degree, param, i):
+    """
+
+    :param knots:
+    :param degree:
+    :param param:
+    :param i:
+    :return:
+    """
+    if degree == 0:
+        if(knots[i] <= param < knots[i+1]):
+            return 1.0
+        else:
+            return 0.0
+    else:
+        return (param - knots[i])/NoneZero((knots[i + degree] - knots[i]))\
+               *getSpline_w(knots, degree-1, param, i) + \
+                (knots[i+degree+1] - param)/NoneZero((knots[i+degree+1]-knots[i+1]))* \
+                getSpline_w(knots, degree-1, param, i+1)
+
+def getSpline_ws(knots, degree, param, n):
+    return [getSpline_w(knots, degree, param, i) for i in range(n)]
+
+
+if __name__ == '__main__':
+    print(get_knots(10, 2))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

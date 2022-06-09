@@ -2,7 +2,7 @@
 # @Author: YinYuFei
 # @Date:   2022-05-06 20:03:08
 # @Last Modified by:   Admin
-# @Last Modified time: 2022-05-14 18:57:55
+# @Last Modified time: 2022-06-09 19:44:43
 
 import math
 from pymel.core.datatypes import Vector,Point,Matrix,Quaternion,EulerRotation
@@ -113,6 +113,8 @@ class Aim(object):
     def __init__(self, ):
 
 
+localXform = Matrix()
+localXform[3][0] = length / sampleCount
 
 
 

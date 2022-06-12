@@ -2,7 +2,7 @@
 # @Author: YinYuFei
 # @Date:   2022-05-06 20:03:08
 # @Last Modified by:   Admin
-# @Last Modified time: 2022-06-05 21:14:07
+# @Last Modified time: 2022-06-12 22:04:43
 
 
 """
@@ -290,12 +290,15 @@ def gear_raycast(in_mesh,
     return node
 
 
-def gear_matrix_cns(in_obj,
-                    out_obj=None,
-                    connect_srt='srt',
-                    rot_off=[0, 0, 0],
-                    rot_mult=[1, 1, 1],
-                    scl_mult=[1, 1, 1]):
+def _matrix_cns(in_objs,
+                out_obj=None,
+                connect_srt='srt',
+                t_weightList=[],
+                r_weightList=[],
+                s_weightList=[],
+                sh_weightList=[],
+                offset_mat=None,
+                name = ""):
     """Create and connect matrix constraint node
 
     Args:
@@ -309,52 +312,48 @@ def gear_matrix_cns(in_obj,
     Returns:
         PyNode: The matrix constraint node
     """
-    node = pm.createNode("mgear_matrixConstraint")
-    if isinstance(in_obj, pm.PyNode) and in_obj.type() == "matrix":
-        pm.connectAttr(
-            in_obj, node + ".driverMatrix", force=True)
-    else:
-        pm.connectAttr(
-            in_obj + ".worldMatrix[0]", node + ".driverMatrix", force=True)
+    if not isinstance(in_objs, list):
+        raise TypeError("Input objects is not the type of list.")
+    node = pm.createNode("FAITH_BlendMatrix", n = name + "_matrixConstraint")
+    for i,in_obj in enumerate(in_objs): 
+        if isinstance(in_obj, pm.PyNode) and in_obj.type() == "matrix":
+            pm.connectAttr(
+                in_obj, "%s.blendMatrix[%d].blendInputMatrix"%(node, i), force=True)
+        else:
+            pm.connectAttr(
+                in_obj + ".worldMatrix[0]", "%s.blendMatrix[%d].blendInputMatrix"%(node, i), force=True)
+        
+        if t_weightList and len(t_weightList) == len(in_objs):
+            pm.setAttr("%s.blendMatrix[%d].blendTranslateWeight"%(node, i), t_weightList[i])
+        if r_weightList and len(r_weightList) == len(in_objs):
+            pm.setAttr("%s.blendMatrix[%d].blendRotateWeight"%(node, i), r_weightList[i])
+        if s_weightList and len(s_weightList) == len(in_objs):
+            pm.setAttr("%s.blendMatrix[%d].blendScaleWeight"%(node, i), s_weightList[i])
+        if sh_weightList and len(sh_weightList) == len(in_objs):
+            pm.setAttr("%s.blendMatrix[%d].blendShearWeight"%(node, i), sh_weightList[i])
 
-    # setting rot and scl config
-    node.driverRotationOffsetX.set(rot_off[0])
-    node.driverRotationOffsetY.set(rot_off[1])
-    node.driverRotationOffsetZ.set(rot_off[2])
-
-    node.rotationMultX.set(rot_mult[0])
-    node.rotationMultY.set(rot_mult[1])
-    node.rotationMultZ.set(rot_mult[2])
-
-    node.scaleMultX.set(scl_mult[0])
-    node.scaleMultY.set(scl_mult[1])
-    node.scaleMultZ.set(scl_mult[2])
+        # setting rot and scl config
+        if offset_mat is not None:
+            pm.setAttr("%s.blendMatrix[%d].blendOffsetMatrix"%(node, i), offset_mat)
 
     if out_obj:
         pm.connectAttr(out_obj + ".parentInverseMatrix[0]",
-                       node + ".drivenParentInverseMatrix", force=True)
-
-        # calculate rest pose
-        # we use the  outputDriverOffsetMatrix to have in account the offset
-        # rotation when the rest pose is calculated
-        driver_m = om.MMatrix(pm.getAttr(
-            node + ".outputDriverOffsetMatrix"))
-        driven_m = om.MMatrix(pm.getAttr(
-            out_obj + ".parentInverseMatrix[0]"))
-        mult = driver_m * driven_m
-        pm.setAttr(node + ".drivenRestMatrix", mult, type="matrix")
+                       node + ".ParentInverseMatrix", force=True)
 
         # connect srt (scale, rotation, translation)
+        decompose = pm.createNode("decomposeMatrix", n = name + "_decom")
+        pm.connectAttr(node + ".outputMatrix",
+                       decompose + ".inputMatrix", force=True)
         if 't' in connect_srt:
-            pm.connectAttr(node.translate,
+            pm.connectAttr(decompose.outputTranslate,
                            out_obj.attr("translate"), f=True)
         if 'r' in connect_srt:
-            pm.connectAttr(node.rotate,
+            pm.connectAttr(decompose.outputRotate,
                            out_obj.attr("rotate"), f=True)
         if 's' in connect_srt:
-            pm.connectAttr(node.scale,
+            pm.connectAttr(decompose.outputScale,
                            out_obj.attr("scale"), f=True)
-            pm.connectAttr(node.shear,
+            pm.connectAttr(decompose.outputShear,
                            out_obj.attr("shear"), f=True)
 
     return node

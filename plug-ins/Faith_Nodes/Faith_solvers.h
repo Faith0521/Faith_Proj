@@ -313,6 +313,7 @@ public:
 	static  MObject			aOutputMatrix;
 	static  MObject			aOffsetMatrix;
 	static  MObject			aRestMatrix;
+	static  MObject			aParentInverseMatrix;
 	static  MObject			aBlendInputMatrix;
 	static  MObject			aBlendOffsetMatrix;
 	static  MObject			aBlendTranslateWeight;
@@ -371,7 +372,6 @@ public:
 	static  MObject			outMatrix;
 
 };
-
 
 #endif // !IKNODE_H
 

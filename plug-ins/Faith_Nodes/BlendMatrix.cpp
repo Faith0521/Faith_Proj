@@ -6,6 +6,7 @@ MTypeId BlendMatrix::NodeID = MTypeId(0x0019);
 MObject BlendMatrix::aOutputMatrix;
 MObject BlendMatrix::aOffsetMatrix;
 MObject BlendMatrix::aRestMatrix;
+MObject BlendMatrix::aParentInverseMatrix;
 MObject BlendMatrix::aBlendInputMatrix;
 MObject BlendMatrix::aBlendOffsetMatrix;
 MObject BlendMatrix::aBlendTranslateWeight;
@@ -44,6 +45,13 @@ MStatus BlendMatrix::initialize() {
 	mAttr.setReadable(false);
 	addAttribute(aRestMatrix);
 	attributeAffects(aRestMatrix, aOutputMatrix);
+
+	aParentInverseMatrix = mAttr.create("ParentInverseMatrix", "ParentInverseMatrix");
+	mAttr.setWritable(true);
+	mAttr.setStorable(true);
+	mAttr.setReadable(false);
+	addAttribute(aParentInverseMatrix);
+	attributeAffects(aParentInverseMatrix, aOutputMatrix);
 
 	aBlendInputMatrix = mAttr.create("blendInputMatrix", "blendInputMatrix");
 	mAttr.setWritable(true);
@@ -147,9 +155,10 @@ MStatus BlendMatrix::compute(const MPlug& plug, MDataBlock& data) {
 
 	// extract offset matrix
 	MMatrix offsetMatrix = data.inputValue(aOffsetMatrix).asMatrix();
+	MMatrix parentInverse = data.inputValue(aParentInverseMatrix).asMatrix();
 
 	MDataHandle hOut = data.outputValue(aOutputMatrix);
-	hOut.setMMatrix(offsetMatrix * outputMatrix);
+	hOut.setMMatrix(offsetMatrix * outputMatrix * parentInverse);
 	hOut.setClean();
 
 	return MS::kSuccess;

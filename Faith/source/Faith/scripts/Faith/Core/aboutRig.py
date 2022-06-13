@@ -2,7 +2,7 @@
 # @Author: YinYuFei
 # @Date:   2022-05-06 20:03:08
 # @Last Modified by:   Admin
-# @Last Modified time: 2022-06-12 22:04:43
+# @Last Modified time: 2022-06-13 21:10:15
 
 
 """
@@ -297,7 +297,7 @@ def _matrix_cns(in_objs,
                 r_weightList=[],
                 s_weightList=[],
                 sh_weightList=[],
-                offset_mat=None,
+                offset_mat=True,
                 name = ""):
     """Create and connect matrix constraint node
 
@@ -322,6 +322,7 @@ def _matrix_cns(in_objs,
         else:
             pm.connectAttr(
                 in_obj + ".worldMatrix[0]", "%s.blendMatrix[%d].blendInputMatrix"%(node, i), force=True)
+        pm.setAttr("%s.blendMatrix[%d].blendOffsetMatrix"%(node, i), pm.getAttr(in_obj + ".worldInverseMatrix[0]"))
         
         if t_weightList and len(t_weightList) == len(in_objs):
             pm.setAttr("%s.blendMatrix[%d].blendTranslateWeight"%(node, i), t_weightList[i])
@@ -332,14 +333,12 @@ def _matrix_cns(in_objs,
         if sh_weightList and len(sh_weightList) == len(in_objs):
             pm.setAttr("%s.blendMatrix[%d].blendShearWeight"%(node, i), sh_weightList[i])
 
-        # setting rot and scl config
-        if offset_mat is not None:
-            pm.setAttr("%s.blendMatrix[%d].blendOffsetMatrix"%(node, i), offset_mat)
-
     if out_obj:
         pm.connectAttr(out_obj + ".parentInverseMatrix[0]",
                        node + ".ParentInverseMatrix", force=True)
 
+        if offset_mat:
+            pm.setAttr("%s.offsetMatrix"%(node), pm.getAttr("%s.worldMatrix[0]"%out_obj))
         # connect srt (scale, rotation, translation)
         decompose = pm.createNode("decomposeMatrix", n = name + "_decom")
         pm.connectAttr(node + ".outputMatrix",
@@ -355,6 +354,8 @@ def _matrix_cns(in_objs,
                            out_obj.attr("scale"), f=True)
             pm.connectAttr(decompose.outputShear,
                            out_obj.attr("shear"), f=True)
+
+        
 
     return node
 

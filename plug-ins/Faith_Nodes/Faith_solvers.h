@@ -316,6 +316,10 @@ public:
 	static  MObject			aParentInverseMatrix;
 	static  MObject			aBlendInputMatrix;
 	static  MObject			aBlendOffsetMatrix;
+	static  MObject			aDriverRotationOffset;
+	static  MObject			aDriverRotationOffsetX;
+	static  MObject			aDriverRotationOffsetY;
+	static  MObject			aDriverRotationOffsetZ;
 	static  MObject			aBlendTranslateWeight;
 	static  MObject			aBlendRotateWeight;
 	static  MObject			aBlendScaleWeight;

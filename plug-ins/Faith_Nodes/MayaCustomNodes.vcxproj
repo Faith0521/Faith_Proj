@@ -79,7 +79,7 @@
       <MinimalRebuild>true</MinimalRebuild>
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <AdditionalOptions>%(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>E:\bd\eigen-3.3.9;C:\Program Files\Autodesk\Maya2018\include;C:\Qt\Qt5.12.5\5.12.5\msvc2017_64\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>E:\bd\eigen-3.3.9;C:\Program Files\Autodesk\Maya2022\include;C:\Qt\Qt5.12.5\5.12.5\msvc2017_64\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeaderOutputFile>$(Configuration)\MayaCustomNodes.pch</PrecompiledHeaderOutputFile>
     </ClCompile>
     <Link>
@@ -88,7 +88,7 @@
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <AdditionalOptions>/export:initializePlugin /export:uninitializePlugin  /FORCE:MULTIPLE %(AdditionalOptions)</AdditionalOptions>
       <AdditionalDependencies>Foundation.lib;OpenMaya.lib;OpenMayaUI.lib;OpenMayaAnim.lib;OpenMayaFX.lib;OpenMayaRender.lib;Image.lib;libMocap.lib;OpenGL32.lib;Qt5Core.lib;Qt5Gui.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>E:\bd\eigen-3.3.9;C:\Program Files\Autodesk\Maya2018\lib;C:\Qt\Qt5.12.5\5.12.5\msvc2017_64\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>E:\bd\eigen-3.3.9;C:\Program Files\Autodesk\Maya2022\lib;C:\Qt\Qt5.12.5\5.12.5\msvc2017_64\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <OutputFile>$(Configuration)\FaithNodes.mll</OutputFile>
       <ImportLibrary>$(Configuration)\MayaCustomNodes.lib</ImportLibrary>
       <ProgramDatabaseFile>$(Configuration)\MayaCustomNodes.pdb</ProgramDatabaseFile>

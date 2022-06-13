@@ -111,3 +111,10 @@ MTransformationMatrix interpolateTransform(MTransformationMatrix xf1, MTransform
 
 	return result;
 }
+
+double radians2degrees(double a) {
+	return a * 57.2957795;
+}
+double degrees2radians(double a) {
+	return a * 0.0174532925;
+}

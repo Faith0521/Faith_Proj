@@ -2,7 +2,7 @@
 # @Author: YinYuFei
 # @Date:   2022-05-06 20:03:09
 # @Last Modified by:   Admin
-# @Last Modified time: 2022-06-05 22:00:53
+# @Last Modified time: 2022-06-14 19:22:02
 #################################################################
 #################Component Rigging Basic Class###################
 #################################################################
@@ -81,7 +81,7 @@ class Rigging(object):
         self.jnt_pos = []
         self.jointList = []
 
-        # self.transform2Lock = []
+        self.transform2Lock = []
 
         # Data collector
         self.build_data = {}
@@ -148,6 +148,9 @@ class Rigging(object):
 
         :return:
         """
+        self.final
+        self.postScript
+        self.collect_build_data
         return
     
     @property
@@ -415,9 +418,86 @@ class Rigging(object):
 
     @property
     def getHost(self):
+        """
+
+        :return:
+        """
         self.uihost = self.rig.findRelative(self.settings["host"])
 
         return self.uihost
+
+    @property
+    def final(self):
+        """
+
+        :return:
+        """
+        for t in self.transform2Lock:
+            aboutAttribute.lockAttribute()
+
+        return
+
+    @property
+    def postScript(self):
+        """
+
+        :return:
+        """
+        return
+
+    @property
+    def collect_build_data(self):
+        """
+
+        :return:
+        """
+        self.build_data["FullName"] = self.fullName
+        self.build_data["Name"] = self.name
+        self.build_data["Type"] = self.guide.type
+        self.build_data["Side"] = self.side
+        self.build_data["Index"] = self.index
+        self.build_data["DataContracts"] = []
+        self.build_data["Joints"] = []
+        self.build_data["Controls"] = []
+        self.build_data["IK"] = []
+        self.build_data["Twist"] = []
+
+        for j in self.jointList:
+            jnt_dict = {}
+            jnt_dict["Name"] = j.name()
+            jnt_dict.update(self.transform_info(j))
+            self.build_data["Joints"].append(jnt_dict)
+
+        for c in self.controlers:
+            ctl_dict = {}
+            ctl_dict["Name"] = c.name()
+            # ctl_dict["Role"] = c.ctl_
+            ctl_dict.update(self.transform_info(c))
+            self.build_data["Controls"].append(ctl_dict)
+
+    def transform_info(self, obj):
+        """
+
+        :param obj:
+        :return:
+        """
+        trans_info = {}
+
+        world_position = obj.getTranslation(space='world')
+        temp_dict_position = {}
+        temp_dict_position['x'] = world_position.x
+        temp_dict_position['y'] = world_position.y
+        temp_dict_position['z'] = world_position.z
+        trans_info['WorldPosition'] = temp_dict_position
+
+        temp_dict_rotation = {}
+        world_rotation = obj.getRotation(space='world')
+        temp_dict_rotation['x'] = world_rotation.x
+        temp_dict_rotation['y'] = world_rotation.y
+        temp_dict_rotation['z'] = world_rotation.z
+        trans_info['WorldRotation'] = temp_dict_rotation
+
+        return trans_info
 
     def connect_standard(self):
         """
@@ -618,7 +698,135 @@ class Rigging(object):
                   UniScale=False,
                   segComp=False,
                   rot_off=None):
-        print("_addJoint Func")
+        
+        if not rot_off:
+            rot_off = [
+                self.settings["joint_rot_offset_x"],
+                self.settings["joint_rot_offset_y"],
+                self.settings["joint_rot_offset_z"]
+            ]
+        customName = self.getCustomName(len(self.jointList))
+
+        if self.options["joint_rig"]:
+            if newActiveJnt:
+                self.active_jnt = newActiveJnt
+            rule_name = self.getName(
+                str(name),
+                rule=self.options["joint_specificate"],
+                ext="jnt",
+                letter_case=self.options["joint_description"]
+            )
+            if rule_name[0] in "0123456789":
+                pm.displayWarning("Name : {0} starts with a invalid name."
+                                  .format(rule_name))
+                rule_name = self.name + rule_name
+
+            if pm.ls(customName) and self.options["joint_connection"]:
+                jnt = pm.ls(customName)[0]
+                keep_off = True
+
+            elif pm.ls(rule_name) and self.options["joint_connection"]:
+                jnt = pm.ls(rule_name[0])
+                keep_off = True
+            else:
+                if isinstance(obj, datatypes.Matrix):
+                    t = obj
+                else:
+                    t = aboutTransform.getTransform(obj)
+                jnt = aboutAdd.addJoint(self.active_jnt,
+                                        customName or rule_name,
+                                        t)
+                keep_off = False
+
+            if not jnt.translate.listConnections(d = False):
+                if isinstance(self.active_jnt, pm.nodetypes.Joint):
+                    try:
+                        pm.disconnectAttr(
+                            self.active_jnt.scale, jnt.inverseScale
+                        )
+                    except RuntimeError:
+                        if not isinstance(jnt, pm.nodetypes.Joint):
+                            pm.ungroup(jnt.getParent())
+
+                self.active_jnt = jnt
+
+                if keep_off:
+                    driver = aboutAdd.addTransform(
+                        obj,
+                        name=obj.name() + "_con_off")
+                    aboutTransform.matchWorldTransform(jnt, driver)
+                    rot_off = [0, 0, 0]
+
+                else:
+                    if isinstance(obj, datatypes.Matrix):
+                        driver = None
+                        jnt.setMatrix(obj, worldSpace=True)
+
+                    else:
+                        driver = obj
+                        rot_off = rot_off
+
+                if driver:
+                    cns_m = aboutRig._matrix_cns(
+                        [driver], jnt, rot_off=rot_off, name = driver)
+
+                    # # invert negative scaling in Joints. We only inver Z axis,
+                    # # so is the only axis that we are checking
+                    # if jnt.scaleZ.get() < 0:
+                    #     cns_m.scaleMultZ.set(-1.0)
+                    #     cns_m.rotationMultX.set(-1.0)
+                    #     cns_m.rotationMultY.set(-1.0)
+
+                    # if unifor scale is False by default. It can be forced
+                    # using uniScale arg or set from the ui
+                    # if self.options["joint_uniSca"]:
+                    #     UniScale = True
+                    # if UniScale:
+                    #     jnt.disconnectAttr("scale")
+                    #     pm.connectAttr(cns_m.scaleZ, jnt.sx)
+                    #     pm.connectAttr(cns_m.scaleZ, jnt.sy)
+                    #     pm.connectAttr(cns_m.scaleZ, jnt.sz)
+                else:
+                    cns_m = None
+
+                    # Segment scale compensate Off to avoid issues with the
+                    # global scale
+                jnt.setAttr("segmentScaleCompensate", segComp)
+
+                if not keep_off:
+                    # setting the joint orient compensation in order to
+                    # have clean rotation channels
+                    jnt.setAttr("jointOrient", 0, 0, 0)
+                    if cns_m:
+                        m = cns_m.restMatrix.get()
+                    else:
+                        driven_m = pm.getAttr(jnt + ".parentInverseMatrix[0]")
+                        m = t * driven_m
+                        jnt.attr("rotateX").set(0)
+                        jnt.attr("rotateY").set(0)
+                        jnt.attr("rotateZ").set(0)
+                        if jnt.scaleZ.get() < 0:
+                            jnt.scaleZ.set(1)
+                    tm = datatypes.TransformationMatrix(m)
+                    r = datatypes.degrees(tm.getRotation())
+                    jnt.attr("jointOrientX").set(r[0])
+                    jnt.attr("jointOrientY").set(r[1])
+                    jnt.attr("jointOrientZ").set(r[2])
+
+                # set not keyable
+                aboutAttribute.setNotKeyableAttributes(jnt)
+
+            else:
+                jnt = aboutAdd.addJoint(obj,
+                                         customName or self.getName(
+                                             str(name) + "_jnt"),
+                                         aboutTransform.getTransform(obj))
+                pm.connectAttr(self.rig.jntVis, jnt.attr("visibility"))
+                aboutAttribute.lockAttribute(jnt)
+
+            self.addToGroup(jnt, "deformers")
+
+            return jnt
 
     def addJoint_vanilla(self,
                          obj,

@@ -67,6 +67,7 @@ def liner_regression(data_x, data_y):
     return weights
 
 def computeVertPos(self, vertexIndex, locator=None):
+    pass
     
 
 

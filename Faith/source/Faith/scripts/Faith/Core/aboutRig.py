@@ -298,6 +298,7 @@ def _matrix_cns(in_objs,
                 s_weightList=[],
                 sh_weightList=[],
                 offset_mat=True,
+                rot_off = [0,0,0],
                 name = ""):
     """Create and connect matrix constraint node
 
@@ -354,9 +355,8 @@ def _matrix_cns(in_objs,
                            out_obj.attr("scale"), f=True)
             pm.connectAttr(decompose.outputShear,
                            out_obj.attr("shear"), f=True)
-
-        
-
+    if rot_off:
+        pm.setAttr("%s.driverRotationOffset"%(node), rot_off)
     return node
 
 

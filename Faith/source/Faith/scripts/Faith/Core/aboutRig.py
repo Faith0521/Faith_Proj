@@ -2,7 +2,7 @@
 # @Author: YinYuFei
 # @Date:   2022-05-06 20:03:08
 # @Last Modified by:   Admin
-# @Last Modified time: 2022-06-13 21:10:15
+# @Last Modified time: 2022-06-15 20:08:38
 
 
 """
@@ -770,3 +770,83 @@ def gear_inverseRotorder_op(out_obj, in_obj):
 
 def createMuscle(self, start, end):
     pass
+
+def Skirt(plane = "", jntList = []):
+    for i,jnt in enumerate(jntList):
+        loc = pm.spaceLocator(n = jnt + "_PosLoc")
+        pm.delete(pm.pointConstraint(jnt, loc))
+
+        _cps = pm.createNode("closestPointOnSurface", n = jnt + "_cps")
+        plane.worldSpace[0].connect(_cps.inputSurface)
+        pos = loc.t.get()
+        _cps.inPosition.set(pos)
+
+        u = _cps.parameterU.get()
+        v = _cps.parameterV.get()
+
+        pm.addAttr(loc, ln = "paramU", at = "double", dv = u, k = 1)
+        pm.addAttr(loc, ln="paramV", at="double", dv=v, k=1)
+        pm.setAttr(loc.paramU, lock=True)
+        pm.setAttr(loc.paramV, lock=True)
+        pm.delete(_cps)
+
+        _psi = pm.createNode("pointOnSurfaceInfo", n = jnt + "_psi")
+        plane.worldSpace[0].connect(_psi.inputSurface)
+        loc.paramU.connect(_psi.parameterU)
+        loc.paramV.connect(_psi.parameterV)
+        _psi.position.connect(loc.t)
+
+        posAim = pm.createNode("aimConstraint", n = jnt + "_posAim")
+        pm.parent(posAim, loc)
+        _psi.normal.connect(posAim.target[0].targetTranslate)
+        _psi.tangentV.connect(posAim.worldUpVector)
+
+        posAim.aimVector.set(1,0,0)
+        posAim.aimVector.set(0,1,0)
+
+        posAim.constraintRotate.connect(loc.rotate)
+
+        # ctrls
+        zero = pm.createNode("transform", n = jnt + "_posZeroGrp")
+        aimRot = pm.createNode("transform", n = jnt + "_posAimGrp",p=zero)
+        sdk = pm.createNode("transform", n = jnt + "_posSdkGrp",p=aimRot)
+        con = pm.createNode("transform", n = jnt + "_posCtrl",p=sdk)
+
+        pm.parentConstraint(loc, zero)
+        pm.scaleConstraint(loc, sdk)
+        # pm.delete(pm.pointConstraint(jnt, aimRot))
+        pm.delete(pm.orientConstraint(con, jnt))
+
+        pm.makeIdentity(jnt, apply = True, t=0,r=1,s=0)
+
+        pm.parentConstraint(con, jnt)
+        pm.scaleConstraint(con, jnt)
+
+def Control2(jntList, mainCtrl):
+    for i,jnt in enumerate(jntList):
+        zero = pm.createNode("transform", n=jnt + "_posZeroGrp")
+        aimRot = pm.createNode("transform", n=jnt + "_posAimGrp", p=zero)
+        sdk = pm.createNode("transform", n=jnt + "_posSdkGrp", p=aimRot)
+        con = pm.createNode("transform", n=jnt + "_posCtrl", p=sdk)
+
+        pm.delete(pm.parentConstraint(jnt, zero))
+
+        posRotA = pm.createNode("transform", n = jnt + "_PosRotGrpA")
+        posRot = pm.createNode("transform", n = jnt + "_PosRotGrp",p=posRotA)
+        pm.delete(pm.parentConstraint(jnt, posRotA))
+        pm.parent(posRotA, jnt + "_PosLoc")
+
+        pm.parentConstraint(posRot, zero)
+        pm.scaleConstraint(mainCtrl, sdk)
+
+        pm.parentConstraint(con, jnt)
+        con.s.connect(jnt.s)
+
+
+
+
+
+
+
+
+

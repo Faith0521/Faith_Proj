@@ -129,15 +129,13 @@ def getMultSDKs(attr):
                 sdkDrivers.append([sPair[0], pairs[1]])
     return sdkDrivers
 
-def createSDKFromDict(sdkInfo_dict):
+def createSDKFromDict(sdkInfo_dict, name):
     """
 
     :param sdkInfo_dict:
     :return:
     """
-    sdkName = "{0}_{1}".format(sdkInfo_dict["drivenNode"],
-                               sdkInfo_dict["drivenAttr"])
-    sdkNode = pm.createNode(sdkInfo_dict["type"], name=sdkName, ss=True)
+    sdkNode = pm.createNode(sdkInfo_dict["type"], name=name, ss=True)
     pm.connectAttr("{0}.{1}".format(sdkInfo_dict["driverNode"],
                                     sdkInfo_dict["driverAttr"]),
                    "{0}.input".format(sdkNode), f=True)
@@ -147,6 +145,26 @@ def createSDKFromDict(sdkInfo_dict):
 
     if pm.listConnections(drivenAttrPlug):
         targetAttrPlug = getBlendNodes(drivenAttrPlug)
+    else:
+        targetAttrPlug = drivenAttrPlug
+
+    pm.connectAttr(sdkNode.output, targetAttrPlug, f=True)
+
+    animKeys = sdkInfo_dict["keys"]
+    for index in range(0, len(animKeys)):
+        frameValue = animKeys[index]
+        pm.setKeyframe(sdkNode,
+                       float=frameValue[0],
+                       value=frameValue[1],
+                       itt=frameValue[2],
+                       ott=frameValue[3])
+
+    sdkNode.setAttr("preInfinity", sdkInfo_dict["preInfinity"])
+    sdkNode.setAttr("postInfinity", sdkInfo_dict["postInfinity"])
+    pm.keyTangent(sdkNode)
+    sdkNode.setWeighted(sdkInfo_dict["weightedTangents"])
+
+    return sdkNode
 
 def getBlendNodes(attrPlug):
     """
@@ -157,7 +175,18 @@ def getBlendNodes(attrPlug):
     blendNode = pm.listConnections(attrPlug, scn = True)
     if pm.nodeType(blendNode[0]) in SDK_ANIMCURVES_TYPE:
         existingAnimNode = blendNode[0]
-
+        blendNodeName = "{0}_blw".format(attrPlug.replace(".","_"))
+        blendNode = [pm.createNode("blendWeighted", n = blendNodeName)]
+        pm.connectAttr(blendNode[0].attr("output"), attrPlug, f = True)
+        destPlug = "{0}.input[0]".format(blendNode[0].name())
+        pm.connectAttr(existingAnimNode.attr("output"), destPlug, f = True)
+    if pm.nodeType(blendNode[0]) in SDK_UTILITY_TYPE:
+        blendNode = blendNode[0]
+    if type(blendNode) == list:
+        blendNode = blendNode[0]
+    numOfInputs = len(blendNode.getAttr("input"))
+    destPlug = "{0}.input[{1}]".format(blendNode.name(), numOfInputs)
+    return destPlug
 
 def getSDKInfo(animNode):
     """
@@ -280,6 +309,82 @@ def getConnectedSDKs(attr = "",
 
     return retrievedSDKNodes
 
+def mirrorSDKs(nodes, expType="front", attributes=[], invertDriver=True, invertDriven=True):
+    """
+
+    :param nodes:
+    :param expType:
+    :return:
+    """
+    for node in nodes:
+        node = getPynodes([node])[0]
+        sdkInfo_dict = getSDKInfoFromNode(node, expType=expType)
+        for sdkName,info_dict in sdkInfo_dict.items():
+            mirrorKeys(sdkName, info_dict, attributes, invertDriver, invertDriven)
+
+def mirrorKeys(node, sourceSDKInfo, attributes=[], invertDriver=True, invertDriven=True):
+    """
+
+    :param node:
+    :param attributes:
+    :param invertDriver:
+    :param invertDriven:
+    :return:
+    """
+    if not attributes:
+        attributes = pm.listAttr(node, connectable=True)
+    for source, dest in sourceSDKInfo:
+        if dest.plugAttr(longName=True) not in attributes:
+            continue
+        invertKeyValues(source,
+                        invertDriver=invertDriver,
+                        invertDriven=invertDriven)
+
+def invertKeyValues(newKeyNode, invertDriver=True, invertDriven=True):
+    """Mirror keyframe node procedure, in case you need to flip your SDK's.
+
+    Args:
+        newKeyNode (PyNode): sdk node to invert values on
+        invertDriver (bool, optional): should the drivers values be inverted
+        invertDriven (bool, optional): should the drivens values be inverted
+    """
+    sdkInfo_dict = getSDKInfo(newKeyNode)
+    stripKeys(newKeyNode)
+    animKeys = sdkInfo_dict["keys"]
+
+    newAnimNode = pm.createNode(sdkInfo_dict["type"], n = "")
+
+    for index in range(0, len(animKeys)):
+        frameValue = animKeys[index]
+        if invertDriver and invertDriven:
+            timeValue = frameValue[0] * -1
+            value = frameValue[1] * -1
+        elif invertDriver and not invertDriven:
+            timeValue = frameValue[0] * -1
+            value = frameValue[1]
+        elif not invertDriver and invertDriven:
+            timeValue = frameValue[0]
+            value = frameValue[1] * -1
+        else:
+            timeValue = frameValue[0]
+            value = frameValue[1]
+
+        pm.setKeyframe(newAnimNode,
+                       float=timeValue,
+                       value=value,
+                       itt=frameValue[2],
+                       ott=frameValue[3])
+
+def stripKeys(animNode):
+    """remove animation keys from the provided sdk node
+
+    Args:
+        animNode (pynode): sdk/anim node
+    """
+    numKeys = len(pm.listAttr(animNode + ".ktv", multi=True)) / 3
+    for x in range(0, numKeys):
+        animNode.remove(0)
+
 def exportSDKs(nodes, filePath, expType="front"):
     """exports the sdk information based on the provided nodes to a json file
 
@@ -312,7 +417,7 @@ def importSDKs(filePath):
             pm.listConnections(sdkName, p = True):
             continue
         try:
-            createdNodes.append(createSDKFromDict(sdkInfo_dict))
+            createdNodes.append(createSDKFromDict(sdkInfo_dict, sdkName))
         except Exception as e:
             failedNodes.append(sdkName)
             print("{0}:{1}".format(sdkName, e))

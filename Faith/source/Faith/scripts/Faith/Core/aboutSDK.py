@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: YinYuFei
 # @Date:   2022-06-19 16:49:53
-# @Last Modified by:   Admin
-# @Last Modified time: 2022-06-19 17:06:05
+# @Last Modified by:   yinyufei
+# @Last Modified time: 2022-06-23 13:56:50
 
 from Faith.Core import aboutPy, utils
 import json
@@ -318,11 +318,21 @@ def mirrorSDKs(nodes, expType="front", attributes=[], invertDriver=True, invertD
     """
     for node in nodes:
         node = getPynodes([node])[0]
-        sdkInfo_dict = getSDKInfoFromNode(node, expType=expType)
-        for sdkName,info_dict in sdkInfo_dict.items():
-            mirrorKeys(sdkName, info_dict, attributes, invertDriver, invertDriven)
+        if pm.nodeType(node) == "blendShape":
+            AllAlias = pm.aliasAttr(node, q = True)
+            AttrsList = [AllAlias[i] for i in range(
+                0, len(AllAlias), 2
+            )]
+        else:
+            AttrsList = pm.listAttr(node, k = True)
+        for eachAttr in AttrsList:
+            if pm.objExists("%s.%s"%(node, eachAttr)):
+                testConnections = pm.listConnections("%s.%s"%(node, eachAttr),
+                                                     plugs = True)
+                if testConnections:
+                    mirrorKeys("%s.%s"%(node, eachAttr), attributes=attributes, invertDriver=invertDriver, invertDriven=invertDriven)
 
-def mirrorKeys(node, sourceSDKInfo, attributes=[], invertDriver=True, invertDriven=True):
+def mirrorKeys(attr, attributes=[], invertDriver=True, invertDriven=True):
     """
 
     :param node:
@@ -331,29 +341,53 @@ def mirrorKeys(node, sourceSDKInfo, attributes=[], invertDriver=True, invertDriv
     :param invertDriven:
     :return:
     """
+    
+    sourceSDKInfo = getConnectedSDKs(attr,"front")
+    sourceSDKInfo.extend(getMultSDKs(attr))
     if not attributes:
-        attributes = pm.listAttr(node, connectable=True)
+        attributes = pm.listAttr(attr, connectable=True)
     for source, dest in sourceSDKInfo:
         if dest.plugAttr(longName=True) not in attributes:
             continue
-        invertKeyValues(source,
-                        invertDriver=invertDriver,
-                        invertDriven=invertDriven)
 
-def invertKeyValues(newKeyNode, invertDriver=True, invertDriven=True):
-    """Mirror keyframe node procedure, in case you need to flip your SDK's.
+        try:
+            invertKeyValues(source.node(),
+                            invertDriver=invertDriver,
+                            invertDriven=invertDriven)
 
-    Args:
-        newKeyNode (PyNode): sdk node to invert values on
-        invertDriver (bool, optional): should the drivers values be inverted
-        invertDriven (bool, optional): should the drivens values be inverted
-    """
-    sdkInfo_dict = getSDKInfo(newKeyNode)
-    stripKeys(newKeyNode)
+        except:
+            return
+
+
+def invertKeyValues(KeyNode, invertDriver=True, invertDriven=True):
+
+    LeftKey = ['left_', '_left', 'Left_', '_Left', 'lt_', '_lt', 'Lt_', '_Lt', 'lft_', '_lft', 
+    'Lft_', '_Lft', 'Lf_', '_Lf', 'lf_', '_lf', 'l_', '_l', 'L_', '_L']
+    RightKey = ['right_', '_right', 'Right_', '_Right', 'rt_', '_rt', 
+    'Rt_', '_Rt', 'rgt_', '_rgt', 'Rgt_', '_Rgt', 'Rg_', '_Rg', 'rg_', '_rg', 'r_', '_r', 'R_', '_R']
+
+    sdkInfo_dict = getSDKInfo(KeyNode)
+    # stripKeys(KeyNode)
     animKeys = sdkInfo_dict["keys"]
+    driverNode = sdkInfo_dict['driverNode']
+    driverAttr = sdkInfo_dict['driverAttr']
 
-    newAnimNode = pm.createNode(sdkInfo_dict["type"], n = "")
+    drivenNode = sdkInfo_dict['drivenNode']
+    drivenAttr = sdkInfo_dict['drivenAttr']
 
+    # rightKeyNode = KeyNode
+
+    for i in range(len(LeftKey)):
+        if LeftKey[i] in driverNode:
+            driverNode = driverNode.replace(LeftKey[i],RightKey[i])
+        if LeftKey[i] in drivenNode:
+            drivenNode = drivenNode.replace(LeftKey[i],RightKey[i])
+    #     if LeftKey[i] in KeyNode.name():
+    #         rightKeyNode = KeyNode.name().replace(LeftKey[i],RightKey[i])
+
+    # if pm.objExists(rightKeyNode):
+    #     return
+    # newAnimNode = pm.createNode(sdkInfo_dict['type'],name=rightKeyNode)
     for index in range(0, len(animKeys)):
         frameValue = animKeys[index]
         if invertDriver and invertDriven:
@@ -369,11 +403,19 @@ def invertKeyValues(newKeyNode, invertDriver=True, invertDriven=True):
             timeValue = frameValue[0]
             value = frameValue[1]
 
-        pm.setKeyframe(newAnimNode,
-                       float=timeValue,
-                       value=value,
-                       itt=frameValue[2],
-                       ott=frameValue[3])
+        print(timeValue)
+        pm.setDrivenKeyframe(drivenNode, at=drivenAttr, cd=driverNode+'.'+driverAttr, dv=timeValue,
+                             itt=frameValue[2], ott=frameValue[3], value=value)
+        
+        # pm.setKeyframe(newAnimNode,
+        #                float=timeValue,
+        #                value=value,
+        #                itt=frameValue[2],
+        #                ott=frameValue[3])
+        # pm.connectAttr(source, destination)
+
+    return newAnimNode
+
 
 def stripKeys(animNode):
     """remove animation keys from the provided sdk node
@@ -413,9 +455,8 @@ def importSDKs(filePath):
     createdNodes = []
     failedNodes = []
     for sdkName, sdkInfo_dict in allSDKInfo_dict.items():
-        if pm.objExists(sdkName) and \
-            pm.listConnections(sdkName, p = True):
-            continue
+        if pm.objExists(sdkName):
+            pm.delete(sdkName)
         try:
             createdNodes.append(createSDKFromDict(sdkInfo_dict, sdkName))
         except Exception as e:

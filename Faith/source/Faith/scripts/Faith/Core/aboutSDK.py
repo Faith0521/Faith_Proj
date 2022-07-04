@@ -2,7 +2,7 @@
 # @Author: YinYuFei
 # @Date:   2022-06-19 16:49:53
 # @Last Modified by:   yinyufei
-# @Last Modified time: 2022-06-23 13:56:50
+# @Last Modified time: 2022-06-29 14:13:22
 
 from Faith.Core import aboutPy, utils
 import json
@@ -332,6 +332,7 @@ def mirrorSDKs(nodes, expType="front", attributes=[], invertDriver=True, invertD
                 if testConnections:
                     mirrorKeys("%s.%s"%(node, eachAttr), attributes=attributes, invertDriver=invertDriver, invertDriven=invertDriven)
 
+
 def mirrorKeys(attr, attributes=[], invertDriver=True, invertDriven=True):
     """
 
@@ -341,80 +342,54 @@ def mirrorKeys(attr, attributes=[], invertDriver=True, invertDriven=True):
     :param invertDriven:
     :return:
     """
-    
+    info = {}
     sourceSDKInfo = getConnectedSDKs(attr,"front")
     sourceSDKInfo.extend(getMultSDKs(attr))
     if not attributes:
         attributes = pm.listAttr(attr, connectable=True)
     for source, dest in sourceSDKInfo:
-        if dest.plugAttr(longName=True) not in attributes:
-            continue
+        info[source.nodeName()] = getSDKInfo(source.node())
+    # print(info)
+    invertKeyValues(info,
+                    invertDriver=invertDriver,
+                    invertDriven=invertDriven)
 
-        try:
-            invertKeyValues(source.node(),
-                            invertDriver=invertDriver,
-                            invertDriven=invertDriven)
+def invertKeyValues(sdkInfo, invertDriver=True, invertDriven=True):
 
-        except:
-            return
+    LeftKey = ['L_']
+    RightKey = ['R_']
+    for animNode,infoDict in sdkInfo.items():
+        animKeys = infoDict["keys"]
+        driverNode = infoDict['driverNode']
+        driverAttr = infoDict['driverAttr']
 
+        drivenNode = infoDict['drivenNode']
+        drivenAttr = infoDict['drivenAttr']
 
-def invertKeyValues(KeyNode, invertDriver=True, invertDriven=True):
+        for i in range(len(LeftKey)):
+            if LeftKey[i] in driverNode:
+                driverNode = driverNode.replace(LeftKey[i],RightKey[i])
+            if LeftKey[i] in drivenNode:
+                drivenNode = drivenNode.replace(LeftKey[i],RightKey[i])
 
-    LeftKey = ['left_', '_left', 'Left_', '_Left', 'lt_', '_lt', 'Lt_', '_Lt', 'lft_', '_lft', 
-    'Lft_', '_Lft', 'Lf_', '_Lf', 'lf_', '_lf', 'l_', '_l', 'L_', '_L']
-    RightKey = ['right_', '_right', 'Right_', '_Right', 'rt_', '_rt', 
-    'Rt_', '_Rt', 'rgt_', '_rgt', 'Rgt_', '_Rgt', 'Rg_', '_Rg', 'rg_', '_rg', 'r_', '_r', 'R_', '_R']
-
-    sdkInfo_dict = getSDKInfo(KeyNode)
-    # stripKeys(KeyNode)
-    animKeys = sdkInfo_dict["keys"]
-    driverNode = sdkInfo_dict['driverNode']
-    driverAttr = sdkInfo_dict['driverAttr']
-
-    drivenNode = sdkInfo_dict['drivenNode']
-    drivenAttr = sdkInfo_dict['drivenAttr']
-
-    # rightKeyNode = KeyNode
-
-    for i in range(len(LeftKey)):
-        if LeftKey[i] in driverNode:
-            driverNode = driverNode.replace(LeftKey[i],RightKey[i])
-        if LeftKey[i] in drivenNode:
-            drivenNode = drivenNode.replace(LeftKey[i],RightKey[i])
-    #     if LeftKey[i] in KeyNode.name():
-    #         rightKeyNode = KeyNode.name().replace(LeftKey[i],RightKey[i])
-
-    # if pm.objExists(rightKeyNode):
-    #     return
-    # newAnimNode = pm.createNode(sdkInfo_dict['type'],name=rightKeyNode)
-    for index in range(0, len(animKeys)):
-        frameValue = animKeys[index]
-        if invertDriver and invertDriven:
-            timeValue = frameValue[0] * -1
-            value = frameValue[1] * -1
-        elif invertDriver and not invertDriven:
-            timeValue = frameValue[0] * -1
-            value = frameValue[1]
-        elif not invertDriver and invertDriven:
-            timeValue = frameValue[0]
-            value = frameValue[1] * -1
-        else:
-            timeValue = frameValue[0]
-            value = frameValue[1]
-
-        print(timeValue)
-        pm.setDrivenKeyframe(drivenNode, at=drivenAttr, cd=driverNode+'.'+driverAttr, dv=timeValue,
+        for index in range(0, len(animKeys)):
+            frameValue = animKeys[index]
+            if invertDriver and invertDriven:
+                timeValue = frameValue[0] * -1
+                value = frameValue[1] * -1
+            if invertDriver and not invertDriven:
+                timeValue = frameValue[0]
+                value = frameValue[1] * -1
+            if not invertDriver and invertDriven:
+                timeValue = frameValue[0]
+                value = frameValue[1] * -1
+            else:
+                timeValue = frameValue[0]
+                value = frameValue[1]
+        # # print(timeValue, frameValue[2], frameValue[3])
+            pm.setDrivenKeyframe(drivenNode, at=drivenAttr, cd=driverNode+'.'+driverAttr, dv=timeValue,
                              itt=frameValue[2], ott=frameValue[3], value=value)
-        
-        # pm.setKeyframe(newAnimNode,
-        #                float=timeValue,
-        #                value=value,
-        #                itt=frameValue[2],
-        #                ott=frameValue[3])
-        # pm.connectAttr(source, destination)
 
-    return newAnimNode
 
 
 def stripKeys(animNode):

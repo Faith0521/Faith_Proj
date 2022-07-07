@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: YinYuFei
 # @Date:   2022-06-19 16:49:53
-# @Last Modified by:   yinyufei
-# @Last Modified time: 2022-06-29 14:13:22
+# @Last Modified by:   YinYuFei
+# @Last Modified time: 2022-07-05 21:41:54
 
 from Faith.Core import aboutPy, utils
 import json
@@ -10,8 +10,8 @@ if aboutPy.PY2:
     import cPickle
 else:
     import _pickle
-import pprint
-import pymel.core as pm
+import pprint,re
+import pymel.core as pm,maya.mel as mel
 
 SDK_UTILITY_TYPE = ("blendWeighted",)
 SDK_ANIMCURVES_TYPE = ("animCurveUA", "animCurveUL", "animCurveUU")
@@ -356,8 +356,8 @@ def mirrorKeys(attr, attributes=[], invertDriver=True, invertDriven=True):
 
 def invertKeyValues(sdkInfo, invertDriver=True, invertDriven=True):
 
-    LeftKey = ['L_']
-    RightKey = ['R_']
+    LeftKey = ['L_','l_','lf_','Lf_','_L','_l','_lf','_Lf']
+    RightKey = ['R_','r_','rt_','Rt_','_R','_r','_rt','_Rt']
     for animNode,infoDict in sdkInfo.items():
         animKeys = infoDict["keys"]
         driverNode = infoDict['driverNode']
@@ -367,10 +367,14 @@ def invertKeyValues(sdkInfo, invertDriver=True, invertDriven=True):
         drivenAttr = infoDict['drivenAttr']
 
         for i in range(len(LeftKey)):
-            if LeftKey[i] in driverNode:
+            if re.search('^'+ LeftKey[i], driverNode) or re.search(LeftKey[i]+'$', driverNode):
                 driverNode = driverNode.replace(LeftKey[i],RightKey[i])
-            if LeftKey[i] in drivenNode:
+            if re.search('^'+ LeftKey[i], drivenNode) or re.search(LeftKey[i]+'$', drivenNode):
                 drivenNode = drivenNode.replace(LeftKey[i],RightKey[i])
+            if re.search('^'+ LeftKey[i], driverAttr) or re.search(LeftKey[i]+'$', driverAttr):
+                driverAttr = driverAttr.replace(LeftKey[i],RightKey[i])
+            if re.search('^'+ LeftKey[i], drivenAttr) or re.search(LeftKey[i]+'$', drivenAttr):
+                drivenAttr = drivenAttr.replace(LeftKey[i],RightKey[i])
 
         for index in range(0, len(animKeys)):
             frameValue = animKeys[index]
@@ -386,10 +390,19 @@ def invertKeyValues(sdkInfo, invertDriver=True, invertDriven=True):
             else:
                 timeValue = frameValue[0]
                 value = frameValue[1]
-        # # print(timeValue, frameValue[2], frameValue[3])
+       
             pm.setDrivenKeyframe(drivenNode, at=drivenAttr, cd=driverNode+'.'+driverAttr, dv=timeValue,
-                             itt=frameValue[2], ott=frameValue[3], value=value)
+                                 value=value)
 
+            animCrvList = pm.listConnections(drivenNode,type="animCurve",s=True,d=False)
+            if animCrvList:
+                animCrv = animCrvList[0]
+                
+                mel.eval('keyTangent -index %s -e -itt %s -ott %s %s' % (index, frameValue[2], 
+                    frameValue[3], animCrv))
+
+                animCrv.preInfinity.set(infoDict['preInfinity'])
+                animCrv.postInfinity.set(infoDict['postInfinity'])
 
 
 def stripKeys(animNode):

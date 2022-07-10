@@ -1,18 +1,24 @@
 # -*- coding: utf-8 -*-
 # @Author: YinYuFei
 # @Date:   2022-05-06 20:03:08
-# @Last Modified by:   Admin
-# @Last Modified time: 2022-06-05 21:21:06
+# @Last Modified by:   YinYuFei
+# @Last Modified time: 2022-07-10 19:22:16
 
 """Functions to create and connect nodes."""
 
-
-import pymel.core as pm
-from pymel import versions
+import pymel.core as pm, maya.cmds as mc, maya.mel as mel
 import pymel.core.datatypes as datatypes
+import json, inspect, re, math
+from pymel import versions
 from . import aboutAttribute
-
 from .aboutPy import PY2, string_types
+
+maya_Ver = int(str(mc.about(v=True))[0:4])
+
+from maya import OpenMaya as om
+from maya import OpenMayaAnim as aom
+
+
 #############################################
 # CREATE SIMPLE NODES
 #############################################
@@ -59,7 +65,7 @@ def createMultMatrixNode(mA, mB, target=False, transform='srt'):
     return node
 
 
-def createDecomposeMatrixNode(m, name = ""):
+def createDecomposeMatrixNode(m, name=""):
     """
     Create and connect a decomposeMatrix node.
 
@@ -72,7 +78,7 @@ def createDecomposeMatrixNode(m, name = ""):
     >>> dm_node = nod.createDecomposeMatrixNode(mulmat_node+".output")
 
     """
-    node = pm.createNode("decomposeMatrix", n = name + "_decomp")
+    node = pm.createNode("decomposeMatrix", n=name + "_decomp")
 
     pm.connectAttr(m, node + ".inputMatrix")
 
@@ -352,7 +358,7 @@ def createReverseNode(input, name, output=None):
     >>> fkvis_node = nod.createReverseNode(self.blend_att)
 
     """
-    node = pm.createNode("reverse", n = name)
+    node = pm.createNode("reverse", n=name)
 
     if not isinstance(input, list):
         input = [input]
@@ -891,4 +897,758 @@ def controller_tag_connect(ctt, tagParent):
         ni = aboutAttribute.get_next_available_index(tpTagNode.children)
         pm.disconnectAttr(ctt.parent)
         pm.connectAttr(ctt.parent, tpTagNode.attr(
-                       "children[%s]" % str(ni)))
+            "children[%s]" % str(ni)))
+
+
+class myNode(type):
+
+    def __repr__(self):
+        return 'asNode'
+
+
+class asNode(object):
+    _mayaVer = int(str(mc.about(v = True))[0:4])
+    _cNum = None
+    _cType = None
+    _uvNums = None
+    _attrSup = None
+    __metaclass__ = myNode
+
+    def __new__(cls, *args, **kwargs):
+        asN = super(asNode, cls).__new__(cls, *args, **kwargs)
+        return asN
+
+    def __repr__(self):
+        frame = inspect.currentframe()
+        dictN = dict(list(frame.f_globals.items()) + list(frame.f_locals.items()))
+        fGlobals = frame.f_globals
+        for k, v in dictN.items():
+            if isinstance(v, self.__class__):
+                if hash(self) == hash(v):
+                    if self._cNum >= 0 or self._uvNums:
+                        fGlobals[k] = asNode(self.name)
+                    else:
+                        fGlobals[k] = self.asObj()
+                    break
+        return self.name
+
+    def __str__(self):
+        frame = inspect.currentframe()
+        dictN = dict(list(frame.f_globals.items()) + list(frame.f_locals.items()))
+        fGlobals = frame.f_globals
+        for k, v in dictN.items():
+            if isinstance(v, self.__class__):
+                if hash(self) == hash(v):
+                    if self._cNum >= 0 or self._uvNums:
+                        fGlobals[k] = asNode(self.name)
+                    else:
+                        fGlobals[k] = self.asObj
+                    break
+        return self.name
+
+    def __call__(self, getInfo=False, *args, **kwargs):
+        if getInfo:
+            argList = [arg for arg in dir(self) if not arg.startswith('_')]
+            uArgList = [arg for arg in dir(str) if not arg.startswith('_')]
+            for arg in uArgList:
+                argList.remove(arg)
+
+            for item in argList:
+                try:
+                    exec('print item; print inspect.getargspec(self.' + item + ');')
+                except:
+                    pass
+
+                exec('print self.' + item + '.__doc__')
+                print('\n')
+
+            print('Total Methods (Rigging Pipeline): ', len(argList) + len(uArgList))
+            numParents = self._MDagPath().length() - 1
+            # numSibs = self.selectSiblings()[(-1)] - 1
+            # numChd = self.numChildren()
+            # self.select()
+            # return [self.name(), numParents, numSibs, numChd]
+
+    def __init__(self, obj, attrSup=0):
+        """
+
+        @param obj:
+        @param attrSup:
+        """
+        self._attrSup = attrSup
+        __mayaVer = int(str(mc.about(v=True))[0:4])
+        # if not pm.objExists(str(obj)):
+        #     self._confirmAction('Maya node "%s" is not exists.'%str(obj))
+        if '.' in str(obj):
+            # 点
+            if '.vtx[' in str(obj):
+                self._cType = 'vtx'
+            # 边
+            elif '.e[' in str(obj):
+                self._cType = 'e'
+            # uv
+            elif re.match('^.*\\.cv\\[(?P<uVal>\\d+)\\]\\[(?P<vVal>\\d+)\\]$', str(obj)):
+                self._cType = 'uv'
+            # cv点
+            elif re.match('^.*\\.cv\\[(?P<uVal>\\d+)\\]$', str(obj)):
+                self._cType = 'cv'
+            # 面
+            elif '.f[' in str(obj):
+                self._cType = 'f'
+            # 点的index序号
+            if re.match('^.*\\.(cv|vtx|f|e)\\[(?P<uVal>\\d+)\\]$', str(obj)):
+                reObj = re.search('(?<=\\[)(?P<vtxNum>[\\d]+)(?=\\])', str(obj))
+                self._cNum = int(reObj.group())
+            # u的值和v的值
+            elif re.match('^.*\\.cv\\[(?P<uVal>\\d+)\\]\\[(?P<vVal>\\d+)\\]$', str(obj)):
+                reObj = re.match('^.*\\.cv\\[(?P<uVal>\\d+)\\]\\[(?P<vVal>\\d+)\\]$', str(obj))
+                self._uvNums = [int(reObj.group('uVal')), int(reObj.group('vVal'))]
+            else:
+                pass
+
+            objName = str(obj).split('.')[0]
+            activeList = om.MSelectionList()
+            activeList.add(objName)
+            pathDg = om.MDagPath()
+            activeList.getDagPath(0, pathDg)
+
+            # 指定的api迭代器类型
+            if self._cType == 'vtx':
+                compIt = om.MItMeshVertex(pathDg)
+            elif self._cType == 'e':
+                compIt = om.MItMeshEdge(pathDg)
+            elif self._cType == 'f':
+                compIt = om.MItMeshPolygon(pathDg)
+            elif self._cType == 'cv':
+                compIt = om.MItCurveCV(pathDg)
+            elif self._cType == 'uv':
+                compIt = om.MItSurfaceCV(pathDg)
+            if self._cType != 'uv':
+                while not compIt.isDone():
+                    if compIt.index() == self._cNum:
+                        cName = compIt.currentItem()
+                        break
+                    compIt.next()
+            else:
+                while not compIt.isDone():
+                    while not compIt.isRowDone():
+                        utilU = om.MScriptUtil()
+                        utilU.createFromInt(0)
+                        uInt = utilU.asIntPtr()
+                        utilV = om.MScriptUtil()
+                        utilV.createFromInt(0)
+                        vInt = utilV.asIntPtr()
+                        compIt.getIndex(uInt, vInt)
+                        uvList = [
+                            om.MScriptUtil.getInt(uInt),
+                            om.MScriptUtil.getInt(vInt)
+                        ]
+                        if uvList == self._uvNums:
+                            cName = compIt.currentItem()
+                            break
+                        compIt.next()
+                    if uvList == self._uvNums:
+                        break
+                    compIt.nextRow()
+
+        self.obj = str(obj)
+        self.obj = self._MDagPath()
+        self.setCtrlColor = self.applyCtrlColor
+
+    def _MObject(self):
+        """
+
+        @return:
+        """
+        dgPath = self._MDagPath()
+        if self._cNum >= 0:
+            dgPath.pop()
+        return dgPath.node()
+
+    def _MFnDagNode(self,
+                    mObj=None,
+                    toShapeNode=False):
+        """
+
+        @param mObj:
+        @param toShapeNode:
+        @return:
+        """
+        dgPath = self._MDagPath(mObj)
+        if not toShapeNode:
+            if self._cNum >= 0 or self._cType == 'uv':
+                dgPath.pop()
+        return om.MFnDagNode(dgPath)
+
+    def _MBoundingBox(self):
+        """
+
+        @return:
+        """
+        mBB = self._MFnDagNode()
+        return mBB.boundingBox()
+
+    def _MDagPath(self, mObj=None):
+        """
+
+        @param mObj:
+        @return: Instance of Maya API node : MDagPath
+        """
+        activeList = om.MSelectionList()
+        pathDg = om.MDagPath()
+        if mObj:
+            pathDg.getAPathTo(mObj, pathDg)
+        else:
+            activeList.add(self.obj)
+            activeList.getDagPath(0, pathDg)
+        return pathDg
+
+    def _MfnDependencyNode(self, mObj=None):
+        """
+
+        @param mObj:
+        @return:
+        """
+        depFn = om.MFnDependencyNode()
+        if mObj:
+            depFn.setObject(mObj)
+            return depFn
+        else:
+            dgPath = self._MDagPath()
+            if self._cNum >= 0:
+                dgPath.pop()
+            depFn.setObject(dgPath.node())
+            return depFn
+
+    def _nextVar(self, givenName,
+                 fromEnd=True,
+                 skipCount=0,
+                 versionUpAll=False):
+        """
+
+        @param givenName:
+        @param fromEnd:
+        @param skipCount:
+        @param versionUpAll:
+        @return:
+        """
+        asN = givenName
+        if not versionUpAll:
+            numList = re.findall(r'\d+', asN)
+            numRange = range(len(numList))
+            if fromEnd:
+                numStr = numList[(-1 * (skipCount + 1))]
+                lenStr = len(numStr)
+                nextNum = int(numStr) + 1
+                nextNumStr = ('%0.' + str(lenStr) + 'd') % nextNum
+                patternStr = r'[^\d+]*'
+                for num in numRange:
+                    patternStr += r'(\d+)'
+                    patternStr += r'[^\d+]*'
+
+                reObj = re.search(
+                    patternStr, self.shortName
+                )
+                spanRange = reObj.span(
+                    len(numList) - 1 * skipCount
+                )
+                nextName = asN[0:spanRange[0]] + nextNumStr + asN[spanRange[1]:]
+                if mc.objExists(nextName):
+                    nextName = asNode(nextName)
+                return [nextName, nextNum]
+
+    def parent(self, numParent=1, allParents=False,
+               nType=None, prntImplied=True):
+        """
+
+        @param numParent:
+        @param allParents:
+        @param nType:
+        @param prntImplied:
+        @return:
+        """
+        if prntImplied:
+            if allParents and numParent > 1:
+                a = 1
+                pCount = True
+                prntList = []
+                while pCount:
+                    try:
+                        if not prntList:
+                            asParent = self.parent()
+                        else:
+                            asParent = prntList[-1].parent()
+                        if asParent:
+                            if nType:
+                                if asParent.nodeType() == nType:
+                                    prntList.append(asParent)
+                                else:
+                                    numParent += 1
+                            else:
+                                prntList.append(asParent)
+                    except:
+                        pCount = False
+                    if numParent:
+                        if a >= numParent:
+                            break
+                    a += 1
+                if prntList:
+                    return prntList
+
+        if not allParents:
+            dgPath = self._MDagPath()
+            dgPath.pop(numParent)
+            if self._cNum >= 0:
+                dgPath.pop()
+            dgNodeFn = om.MFnDagNode()
+            dgNodeFn.setObject(dgPath)
+            parentName = dgNodeFn.partialPathName()
+            if mc.objExists(parentName):
+                return asNode(parentName)
+            return
+        else:
+            a = 1
+            pCount = True
+            prntList = []
+            while pCount:
+                try:
+                    asParent = self.parent(a)
+                    if asParent:
+                        if nType:
+                            if asParent.nodeType() == nType:
+                                prntList.append(asParent)
+                            else:
+                                numParent += 1
+                        else:
+                            prntList.append(asParent)
+                except:
+                    pCount = False
+
+                if numParent:
+                    if a >= numParent:
+                        break
+                a += 1
+
+            if prntList:
+                return prntList
+            return
+
+
+    def getParent(self,numParent=1, allParents=False,
+               nType=None, prntImplied=True):
+        """
+
+        @param numParent:
+        @param allParents:
+        @param nType:
+        @param prntImplied:
+        @return:
+        """
+        return self.parent(numParent=1, allParents=False,
+               nType=None, prntImplied=True)
+
+    def child(self, indexNum=0):
+        """
+
+        @param indexNum:
+        @param childImplied:
+        @return:
+        """
+        numChildren = self.numChildren()
+        if indexNum >= numChildren:
+            return
+        else:
+            dgPath = self._MDagPath()
+            chdObj = dgPath.child(indexNum)
+            if chdObj:
+                dagNodeFn = self._MFnDagNode(chdObj)
+                chdName = dagNodeFn.partialPathName()
+                return asNode(chdName)
+            return
+
+    def getChildren(self, type=None,
+                    childImplied=True,
+                    **kwargs):
+        """
+
+        @param type:
+        @param kwargs:
+        @return:
+        """
+        allChildren = mc.listRelatives(
+            self.name, c=1, pa=1, **kwargs
+        )
+        if childImplied:
+            impliedChild = self.child(0)
+            if impliedChild:
+                if not allChildren:
+                    allChildren = []
+                if str(impliedChild) not in allChildren:
+                    allChildren.append(impliedChild)
+        asChildren = []
+        if allChildren:
+            for child in allChildren:
+                try:
+                    asChildren.append(asNode(child))
+                except:
+                    asChildren.append(child)
+        else:
+            return
+
+        if not type:
+            return asChildren
+        else:
+            typeChildren = []
+            if type == 'constrain' or type == 'constraint':
+                conList = [conType + 'Constraint' for conType in
+                           ['point', 'orient', 'parent', 'scale', 'aim', 'geometry', 'normal', 'tangent']]
+                for child in asChildren:
+                    if str(mc.nodeType(child)) in conList:
+                        typeChildren.append(child)
+
+            else:
+                for child in asChildren:
+                    if mc.nodeType(child) == type:
+                        typeChildren.append(child)
+
+            return typeChildren
+
+
+    def numChildren(self, type=None, **kwargs):
+        """
+
+        @param type:
+        @param kwargs:
+        @return:
+        """
+        allChildren = mc.listRelatives(self.name(),
+                                       c = True,
+                                       **kwargs)
+        if not allChildren:
+            return 0
+        if not type:
+            if allChildren: return len(allChildren)
+            else: return 0
+        else:
+            typeChildren = []
+            for child in allChildren:
+                if mc.nodeType(child) == type:
+                    typeChildren.append(child)
+            if typeChildren:
+                return len(typeChildren)
+            return 0
+
+    def extractNum(self,
+                   fromEnd=True,
+                   skipCount=0):
+        """
+
+        @param fromEnd:
+        @param skipCount:
+        @return:
+        """
+        numList = re.findall(r'\d+', self.shortName)
+        if numList:
+            if fromEnd:
+                numStr = numList[(-1 * (skipCount + 1))]
+                num = int(numStr)
+                return [
+                    num, numStr
+                ]
+            else:
+                numStr = numList[skipCount]
+                num = int(numStr)
+                return [
+                    num, numStr
+                ]
+        else:
+            return
+
+    def numChildren(self, type=None, **kwargs):
+        """
+
+        @param type:
+        @param kwargs:
+        @return:
+        """
+        allChildren = mc.listRelatives(self.name,
+                                       c=True, **kwargs)
+        if not allChildren:
+            return 0
+        if not type:
+            if allChildren:
+                return len(allChildren)
+            else:
+                return 0
+        else:
+            typeChildren = []
+            for child in allChildren:
+                if mc.nodeType(child) == type:
+                    typeChildren.append(child)
+            if typeChildren:
+                return len(typeChildren)
+            return 0
+
+    def _confirmAction(self, action, raiseErr=False):
+        """
+
+        @param action:
+        @param raiseErr:
+        @return:
+        """
+        if raiseErr:
+            mc.confirmDialog(title="Warning..", bgc=(0.6,0.8,1.0),
+                             message=action, button=['Yes'],
+                             defaultButton='Yes')
+            raise RuntimeError(action)
+        confirm = mc.confirmDialog(title="Confirm Action", message=action,
+                                   button=['Yes', 'No'], defaultButton='Yes',
+                                   cancelButton='No', dismissString='No'
+                                   )
+        if confirm == 'Yes':
+            return True
+        else:
+            return False
+
+    def applyCtrlColor(self, colorNum):
+        """
+
+        @param colorNum:
+        @return:
+        """
+        self.setAttr()
+
+    def setAttr(self, attr, *args, **kwargs):
+        """
+
+        @param attr:
+        @param args:
+        @param kwargs:
+        @return:
+        """
+        attrList = [attr] if type(attr) != list else attr
+        for attr in attrList:
+            attr = str('')
+
+    def getShape(self, multiShapes=False):
+        """
+
+        @param multiShapes:
+        @return:
+        """
+        try:
+            if not multiShapes:
+                if self._cNum >= 0:
+                    return asNode(mc.listRelatives(self._fullName.split('.', 1)[0],
+                                                   shapes=1, f=1)[0])
+                else:
+                    return asNode(mc.listRelatives(self._fullName,
+                                                   shapes=1, f=1)[0])
+            else:
+                if self._cNum >= 0:
+                    return map(asNode, mc.listRelatives(
+                        self._fullName.split('.', 1)[0],
+                        shapes=1, f=1))
+                else:
+                    return map(asNode, mc.listRelatives(self._fullName,
+                                                        shapes=1, f=1))
+        except:
+            return
+
+    def listHistory(self, **kwargs):
+        """
+
+        @param kwargs:
+        @return:
+        """
+        self.select()
+        histNodes = []
+        try:
+            histNodes = mc.listHistory(**kwargs)
+        except:
+            if kwargs:
+                if 'type' in kwargs.keys():
+                    nodeList = mc.listHistory()
+                    if nodeList:
+                        for node in nodeList:
+                            if kwargs['type'] == 'constraint':
+                                try:
+                                    node = asNode(node)
+                                except:
+                                    continue
+                                if mc.nodeType(node) == 'pointConstraint'\
+                                        or mc.nodeType(node) == 'orientConstraint'\
+                                        or mc.nodeType(node) == 'parentConstraint'\
+                                        or mc.nodeType(node) == 'scaleConstraint'\
+                                        or mc.nodeType(node) == 'aimConstraint'\
+                                        or mc.nodeType(node) == 'tangentConstraint'\
+                                        or mc.nodeType(node) == 'normalConstraint'\
+                                        or mc.nodeType(node) == 'geometryConstraint'\
+                                        or mc.nodeType(node) == 'poleVectorConstraint':
+                                    if self.isParentOf(node):
+                                        histNodes.append(node)
+                            elif 'Constraint' in kwargs['type'] \
+                                and mc.nodeType()
+
+    def isParentOf(self, targetObj, prntImplied=True):
+        """
+
+        @param targetObj:
+        @param prntImplied:
+        @return:
+        """
+        asTarget = asNode(targetObj)
+        nodeDg = self._MFnDagNode()
+        mObj = asTarget._MObject()
+        return nodeDg.isParentOf(mObj)
+
+    def select(self, *args, **kwargs):
+        if not kwargs:
+            kwargs = {'r': 1}
+        try:
+            mc.select(self.name, *args, **kwargs)
+        except TypeError as msg:
+            if args == ([],):
+                for modeFlag in ('add', 'af', 'addFirst',
+                                 'd', 'deselect', 'tgl', 'toggle'):
+                    if kwargs.get(modeFlag, False):
+                        return
+                mc.select(cl=True)
+            else:
+                raise TypeError(msg)
+
+    def nodeType(self, transformCheck=False):
+        """
+
+        @param transformCheck:
+        @return:
+        """
+        if not transformCheck:
+            if self.hasShape:
+                return mc.nodeType(self.getShape())
+            else:
+                return mc.nodeType(self.name)
+        else:
+            return mc.listRelatives(self.name)
+
+    @property
+    def asObj(self):
+        """
+
+        @return:
+        """
+        if self._cNum >= 0:
+            return asNode(self.name.split('.', 1)[0])
+        else:
+            return asNode(self.name)
+
+    @property
+    def name(self):
+        """
+
+        @return:
+        """
+        dgPath = self._MDagPath()
+        shapes = self.getShape(True)
+        if self._cNum >= 0 or self._cType == 'uv':
+            if len(shapes) == 1:
+                dgPath.pop()
+        dgNodeFn = om.MFnDagNode()
+        dgNodeFn.setObject(dgPath)
+        nodeName = dgNodeFn.partialPathName()
+        if self._cNum >= 0:
+            return '%s.%s[%d]' % (nodeName, self._cType, self._cNum)
+        else:
+            if self._cType == 'uv':
+                return '%s.cv[%d][%d]' % (nodeName, self._uvNums[0], self._uvNums[1])
+            return nodeName
+
+    @property
+    def _fullName(self):
+        """
+
+        @return:
+        """
+        dgPath = self._MDagPath()
+        if self._cNum >= 0:
+            dgPath.pop()
+        dgNodeFn = om.MFnDagNode()
+        dgNodeFn.setObject(dgPath)
+        if self._cNum >= 0:
+            return dgNodeFn.fullPathName() + '.' + self._cType + '[' + str(self._cNum) + ']'
+        else:
+            return dgNodeFn.fullPathName()
+
+    @property
+    def shortName(self):
+        """
+
+        @return:
+        """
+        depNodeFn = self._MfnDependencyNode()
+        if self._cNum >= 0:
+            dgPath = self._MDagPath()
+            dgPath.pop()
+            dgNodeFn = om.MFnDagNode()
+            dgNodeFn.setObject(dgPath)
+            parentName = dgNodeFn.partialPathName()
+            return '%s.%s[%d]' % (parentName, self._cType, self._cNum)
+        else:
+            return depNodeFn.name()
+
+    @property
+    def longName(self):
+        """
+
+        @return:
+        """
+        dgNodeFn = self._MFnDagNode()
+        if self._cNum >= 0:
+            return '%s.%s[%d]'%(
+                dgNodeFn.fullPathName(), self._cType, self._cNum
+            )
+        else:
+            return dgNodeFn.fullPathName()
+
+    @property
+    def hasShape(self):
+        """
+
+        @return:
+        """
+        if self._cNum >= 0:
+            shapes = mc.listRelatives(
+                self.name.split('.', 1)[0],
+                shapes = True
+            )
+        else:
+            shapes = mc.listRelatives(
+                self.name,
+                shapes = True
+            )
+        if shapes:
+            return True
+        else:
+            return False
+
+    @property
+    def isMesh(self):
+        """
+
+        @return:
+        """
+        shpNode = self.getShape()
+        if shpNode:
+            if shpNode.nodeType() == 'mesh':
+                return True
+            else:
+                return False
+        else:
+            if self.nodeType() == 'mesh':
+                return True
+            else:
+                return False
+
+    @property
+    def isSkinMesh(self):
+        return

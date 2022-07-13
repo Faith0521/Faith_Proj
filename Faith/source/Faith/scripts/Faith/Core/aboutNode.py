@@ -908,14 +908,14 @@ class myNode(type):
 
 class asNode(object):
     _mayaVer = int(str(mc.about(v = True))[0:4])
-    _cNum = None
-    _cType = None
-    _uvNums = None
+    _cNum = -1
+    _cType = ''
+    _uvNums = 0
     _attrSup = None
     __metaclass__ = myNode
 
     def __new__(cls, *args, **kwargs):
-        asN = super(asNode, cls).__new__(cls, *args, **kwargs)
+        asN = super(asNode, cls).__new__(cls)
         return asN
 
     def __repr__(self):
@@ -1013,6 +1013,7 @@ class asNode(object):
             pathDg = om.MDagPath()
             activeList.getDagPath(0, pathDg)
 
+            compIt = None
             # 指定的api迭代器类型
             if self._cType == 'vtx':
                 compIt = om.MItMeshVertex(pathDg)
@@ -1025,32 +1026,34 @@ class asNode(object):
             elif self._cType == 'uv':
                 compIt = om.MItSurfaceCV(pathDg)
             if self._cType != 'uv':
-                while not compIt.isDone():
-                    if compIt.index() == self._cNum:
-                        cName = compIt.currentItem()
-                        break
-                    compIt.next()
-            else:
-                while not compIt.isDone():
-                    while not compIt.isRowDone():
-                        utilU = om.MScriptUtil()
-                        utilU.createFromInt(0)
-                        uInt = utilU.asIntPtr()
-                        utilV = om.MScriptUtil()
-                        utilV.createFromInt(0)
-                        vInt = utilV.asIntPtr()
-                        compIt.getIndex(uInt, vInt)
-                        uvList = [
-                            om.MScriptUtil.getInt(uInt),
-                            om.MScriptUtil.getInt(vInt)
-                        ]
-                        if uvList == self._uvNums:
+                if compIt:
+                    while not compIt.isDone():
+                        if compIt.index() == self._cNum:
                             cName = compIt.currentItem()
                             break
                         compIt.next()
-                    if uvList == self._uvNums:
-                        break
-                    compIt.nextRow()
+            else:
+                if compIt:
+                    while not compIt.isDone():
+                        while not compIt.isRowDone():
+                            utilU = om.MScriptUtil()
+                            utilU.createFromInt(0)
+                            uInt = utilU.asIntPtr()
+                            utilV = om.MScriptUtil()
+                            utilV.createFromInt(0)
+                            vInt = utilV.asIntPtr()
+                            compIt.getIndex(uInt, vInt)
+                            uvList = [
+                                om.MScriptUtil.getInt(uInt),
+                                om.MScriptUtil.getInt(vInt)
+                            ]
+                            if uvList == self._uvNums:
+                                cName = compIt.currentItem()
+                                break
+                            compIt.next()
+                        if uvList == self._uvNums:
+                            break
+                        compIt.nextRow()
 
         self.obj = str(obj)
         self.obj = self._MDagPath()
@@ -1120,6 +1123,9 @@ class asNode(object):
                 dgPath.pop()
             depFn.setObject(dgPath.node())
             return depFn
+
+    def _MFnMesh(self):
+        return om.MFnMesh(self._MDagPath())
 
     def _nextVar(self, givenName,
                  fromEnd=True,
@@ -1695,6 +1701,45 @@ class asNode(object):
             #     for subAttr in subAttrs:
             #         if mc.getAttr()
 
+    def getVtxList(self, get_asNode=True):
+        """
+
+        @param get_asNode:
+        @return:
+        """
+        if self.isNodeType('nurbsCurve'):
+            shapeList = self.getShape(1)
+            if len(shapeList) == 1:
+                curvFn = om.MFnNurbsCurve(self._MDagPath())
+                numCVs = curvFn.numCVs()
+                if curvFn.form() == 3:
+                    numCVs = numCVs - curvFn.degree()
+                cvList = [
+                    asNode('%s.cv[%d]'%(self.name, num) for num in range(numCVs))
+                ]
+                mc.select(cvList, r=True)
+                return [
+                    cvList, numCVs
+                ]
+
+            cv_List = []
+            for shape in shapeList:
+                curvFn = om.MFnNurbsCurve(shape._MDagPath())
+                numCVs = curvFn.numCVs()
+                if curvFn.form() == 3:
+                    numCVs = numCVs - curvFn.degree()
+                cvList = [
+                    asNode('%s.cv[%d]'%(self.name, num) for num in range(numCVs))
+                ]
+                cv_List.extend(cvList)
+            mc.select(cv_List, r=True)
+            return [
+                cv_List, len(cv_List)
+            ]
+        else:
+            if self.isNodeType('mesh'):
+                # polyIt = sel
+                return
     def getPos(self, shapePos=False):
         """
 
@@ -1734,7 +1779,7 @@ class asNode(object):
         dgPath = self._MDagPath()
         shapes = self.getShape(True)
         if self._cNum >= 0 or self._cType == 'uv':
-            if len(shapes) == 1:
+            if shapes and len(shapes) == 1:
                 dgPath.pop()
         dgNodeFn = om.MFnDagNode()
         dgNodeFn.setObject(dgPath)

@@ -947,23 +947,24 @@ class asNode(object):
         return self.name
 
     def __call__(self, getInfo=False, *args, **kwargs):
-        if getInfo:
-            argList = [arg for arg in dir(self) if not arg.startswith('_')]
-            uArgList = [arg for arg in dir(str) if not arg.startswith('_')]
-            for arg in uArgList:
-                argList.remove(arg)
-
-            for item in argList:
-                try:
-                    exec('print item; print inspect.getargspec(self.' + item + ');')
-                except:
-                    pass
-
-                exec('print self.' + item + '.__doc__')
-                print('\n')
-
-            print('Total Methods (Rigging Pipeline): ', len(argList) + len(uArgList))
-            numParents = self._MDagPath().length() - 1
+        pass
+    #     if getInfo:
+    #         argList = [arg for arg in dir(self) if not arg.startswith('_')]
+    #         uArgList = [arg for arg in dir(str) if not arg.startswith('_')]
+    #         for arg in uArgList:
+    #             argList.remove(arg)
+    #
+    #         for item in argList:
+    #             try:
+    #                 exec('print item; print inspect.getargspec(self.' + item + ');')
+    #             except:
+    #                 pass
+    #
+    #             exec('print self.' + item + '.__doc__')
+    #             print('\n')
+    #
+    #         print('Total Methods (Rigging Pipeline): ', len(argList) + len(uArgList))
+    #         numParents = self._MDagPath().length() - 1
             # numSibs = self.selectSiblings()[(-1)] - 1
             # numChd = self.numChildren()
             # self.select()
@@ -1156,6 +1157,52 @@ class asNode(object):
                 if mc.objExists(nextName):
                     nextName = asNode(nextName)
                 return [nextName, nextNum]
+
+            numStr = numList[skipCount]
+            lenStr = len(numStr)
+            nextNum = int(numStr) + 1
+            nextNumStr = ('%0.' + str(lenStr) + 'd') % nextNum
+            patternStr = r'[^\d+]*'
+            for num in numRange:
+                patternStr += r'(\d+)'
+                patternStr += r'[^\d+]*'
+
+            reObj = re.search(patternStr, self.shortName)
+            spanRange = reObj.span(skipCount + 1)
+            nextName = asN[0:spanRange[0]] + nextNumStr + asN[spanRange[1]:]
+            if mc.objExists(nextName):
+                nextName = asNode(nextName)
+            return [
+                nextName, nextNum]
+        else:
+            def repMGrp(mObj):
+                numVal = int(mObj.group())
+                formNum = len(mObj.group())
+                formVar = '%0.' + str(formNum) + 'd'
+                return str(formVar % (numVal + 1))
+            nextName = re.sub('\\d+', repMGrp, self.shortName())
+            if mc.objExists(nextName):
+                return asNode(nextName)
+            return nextName
+
+    def _getFilePath(self, fileName=None):
+        """
+
+        :param fileName:
+        :return:
+        """
+        if not fileName:
+            scnName = mc.file(q=True, sn=True)
+        else:
+            scnName = fileName
+        if scnName:
+            filePath, fileNameFull = scnName.rsplit('/', 1)
+            fileName, fileExtn = fileNameFull.rsplit('.')
+            return [
+                filePath, fileName, fileExtn
+            ]
+        else:
+            return
 
     def parent(self, numParent=1, allParents=False,
                nType=None, prntImplied=True):
@@ -1488,7 +1535,22 @@ class asNode(object):
                                     if self.isParentOf(node):
                                         histNodes.append(node)
                             elif 'Constraint' in kwargs['type'] \
-                                and mc.nodeType()
+                                and mc.nodeType(node) == kwargs['type']:
+                                try:
+                                    node = asNode(node)
+                                except:
+                                    continue
+                                if self.isParentOf(node):
+                                    histNodes.append(node)
+                            elif mc.nodeType(node) == kwargs['type']:
+                                histNodes.append(node)
+            else:
+                return
+
+        if histNodes:
+            return histNodes
+        else:
+            return
 
     def isParentOf(self, targetObj, prntImplied=True):
         """
@@ -1502,7 +1564,25 @@ class asNode(object):
         mObj = asTarget._MObject()
         return nodeDg.isParentOf(mObj)
 
+    def attributeQuery(self, *args, **kwargs):
+        """
+
+        @param args:
+        @param kwargs:
+        @return:
+        """
+        if 'n' not in kwargs:
+            if 'node' not in kwargs:
+                kwargs['node'] = self.name
+        return mc.attributeQuery(*args, **kwargs)
+
     def select(self, *args, **kwargs):
+        """
+
+        @param args:
+        @param kwargs:
+        @return:
+        """
         if not kwargs:
             kwargs = {'r': 1}
         try:
@@ -1517,6 +1597,31 @@ class asNode(object):
             else:
                 raise TypeError(msg)
 
+    def selectHI(self, objType='jnt',
+                 topSelect=True,
+                 includeShapes=False,
+                 childImplied=1):
+        """
+
+        @param objType:
+        @param topSelect:
+        @param includeShapes:
+        @param childImplied:
+        @return:
+        """
+        if objType == 'jnt' or objType == 'joint' or objType == '^jnt' or objType == '^joint':
+            nType = 'joint'
+        else:
+            if objType == 'crv' or objType == 'curv' or objType == 'nurbsCurve' or objType == '^crv' or objType == '^curv' or objType == '^nurbsCurve':
+                nType = 'nurbsCurve'
+            elif objType == 'mesh' or objType == 'obj' or objType == '^mesh' or objType == '^obj':
+                nType = 'mesh'
+            else:
+                nType = objType
+            self.select(r=1)
+            mc.select(hi=True)
+
+
     def nodeType(self, transformCheck=False):
         """
 
@@ -1530,6 +1635,84 @@ class asNode(object):
                 return mc.nodeType(self.name)
         else:
             return mc.listRelatives(self.name)
+
+    def listRelatives(self, *args, **kwargs):
+        """
+
+        @param args:
+        @param kwargs:
+        @return:
+        """
+        if kwargs:
+            if 'fullPath' not in kwargs or 'f' not in kwargs:
+                kwargs['fullPath'] = 1
+        else:
+            kwargs['fullPath'] = 1
+        relativeList = mc.listRelatives(self.name, *args, **kwargs)
+        if relativeList:
+            return [asNode(obj) for obj in relativeList]
+        else:
+            return
+
+    def attr(self, attrList):
+        """
+
+        @param attrList:
+        @return:
+        """
+        attrList = [attrList] if type(attrList) != list else attrList
+        attributeList = []
+
+        for attrName in attrList:
+            if mc.objExists('%s.%s'%(self.name, str(attrName))):
+                attrList.append('%s.%s'%(self.name, str(attrName)))
+            else:
+                self._confirmAction(
+                    'Attrbute "{}" not exists.'.
+                        format(self.name + '.' + str(attrName))
+                )
+        if attributeList:
+            if len(attributeList) > 1:
+                return attributeList
+            else:
+                return attributeList[0]
+        else:
+            return
+
+    def hssAttrLocked(self, attr):
+        """
+
+        @param attr:
+        @return:
+        """
+        attrType = mc.attributeQuery(attr, n=self.name, at=1)
+        if attrType == 'double3':
+            boolType = False
+            subAttrs = mc.attributeQuery(
+                attr, n=self.name, listChildren=1
+            )
+            # if subAttrs:
+            #     for subAttr in subAttrs:
+            #         if mc.getAttr()
+
+    def getPos(self, shapePos=False):
+        """
+
+        @param shapePos:
+        @return:
+        """
+        if '.' not in self.name:
+            if not shapePos:
+                transFn = om.MFnTransform()
+                pathDg = self._MDagPath()
+                transFn.setObject(pathDg)
+                point = om.MPoint()
+                point = transFn.rotatePivot(om.MSpace.kWorld)
+                objPos = [round(point.x, 5), round(point.y, 5), round(point.z, 5)]
+                return objPos
+            if self.isNodeType('nurbsCurve'):
+                cvList,numCvs = self.getVtxList()
+
 
     @property
     def asObj(self):
@@ -1562,6 +1745,15 @@ class asNode(object):
             if self._cType == 'uv':
                 return '%s.cv[%d][%d]' % (nodeName, self._uvNums[0], self._uvNums[1])
             return nodeName
+
+    @property
+    def hasUniqueName(self):
+        """
+
+        :return:
+        """
+        depFn = self._MfnDependencyNode()
+        return depFn.hasUniqueName()
 
     @property
     def _fullName(self):
@@ -1651,4 +1843,186 @@ class asNode(object):
 
     @property
     def isSkinMesh(self):
+        if not self.isMesh:
+            return False
+        skinClust = self.listHistory(type = 'skinCluster')
+        if not skinClust:
+            return False
+        return True
+
+    @property
+    def isTrans(self):
+        """
+
+        :return:
+        """
+        if self.nodeType(True) == 'transform':
+            return True
+        else:
+            return False
+
+    @property
+    def isShape(self):
+        """
+
+        :return:
+        """
+        dgPath = self._MDagPath()
+        dgPath.pop()
+        if self._cNum >= 0:
+            dgPath.pop()
+        dgNodeFn = om.MFnDagNode()
+        dgNodeFn.setObject(dgPath)
+        parentName = dgNodeFn.partialPathName()
+        if mc.objExists(parentName):
+            pNode = asNode(parentName)
+        else:
+            pNode = None
+        if pNode and not self.hasShape:
+            if pNode.isTrans:
+                pass
+        else:
+            return False
+        pShapes = pNode.listRelatives(shapes=1)
+
+        if pShapes:
+            pShapes = [str(shape) for shape in pShapes]
+            if str(self.name) in pShapes or str(self._fullName) in pShapes:
+                return True
+        else:
+            return False
+
+    @property
+    def isComponent(self):
+        """
+
+        :return:
+        """
+        if '.' in self.shortName:
+            return True
+        else:
+            return False
+
+    @property
+    def isCurve(self):
+        """
+
+        :return:
+        """
+        if self.getShape():
+            if self.getShape().nodeType() == 'nurbsCurve':
+                return True
+            else:
+                return False
+        else:
+            if self.nodeType() == 'nurbsCurve':
+                return True
+            else:
+                return False
+
+    @property
+    def isEdge(self):
+        """
+
+        :return:
+        """
+        if '.e[' in self.name:
+            return True
+        else:
+            return False
+
+    @property
+    def isVertex(self):
+        """
+
+        :return:
+        """
+        if '.vtx[' in self.name:
+            return True
+        else:
+            return False
+
+    @property
+    def isFace(self):
+        if '.f[' in self.name:
+            return True
+        else:
+            return False
+
+    @property
+    def isJoint(self):
+        """
+
+        :return:
+        """
+        if mc.nodeType(self.name) == 'joint':
+            return True
+        else:
+            return False
+
+    @property
+    def isLoc(self):
+        """
+
+        :return:
+        """
+        if self.getShape():
+            if self.getShape().nodeType() == 'locator':
+                return True
+            else:
+                return False
+        else:
+            if self.nodeType() == 'locator':
+                return True
+            else:
+                return False
+
+    @property
+    def isRightSide(self):
+        """
+
+        @return:
+        """
         return
+
+    def isNodeType(self, objType):
+        """
+
+        @return:
+        """
+        if self.getShape():
+            if self.getShape().nodeType() == objType:
+                return True
+            else:
+                return False
+        else:
+            if self.nodeType():
+                return True
+            else:
+                return False
+
+    def isLastJoint(self, numFromEnd=0, childImplied=True):
+        """
+
+        @param numFromEnd:
+        @param childImplied:
+        @return:
+        """
+        jnt = self.asObj
+        if mc.nodeType(jnt.name) == 'joint':
+            pass
+        else:
+            self._confirmAction('"%s" is Not Joint..' % self.name, True)
+        if numFromEnd:
+            childList = jnt.getChildren()
+            if not childList:
+                return True
+
+
+
+
+
+
+
+
+

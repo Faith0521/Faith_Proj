@@ -394,16 +394,64 @@ def invertKeyValues(sdkInfo, invertDriver=True, invertDriven=True):
             pm.setDrivenKeyframe(drivenNode, at=drivenAttr, cd=driverNode+'.'+driverAttr, dv=timeValue,
                                  value=value)
 
-            animCrvList = pm.listConnections(drivenNode,type="animCurve",s=True,d=False)
-            if animCrvList:
-                animCrv = animCrvList[0]
-                
-                mel.eval('keyTangent -index %s -e -itt %s -ott %s %s' % (index, frameValue[2], 
-                    frameValue[3], animCrv))
+            animCurrentCrv = getAnimCurve(driverAttr, drivenAttr)[0]
+            mel.eval('keyTangent -index %s -e -itt %s -ott %s %s' % (index, frameValue[2],
+                frameValue[3], animCurrentCrv))
 
-                animCrv.preInfinity.set(infoDict['preInfinity'])
-                animCrv.postInfinity.set(infoDict['postInfinity'])
+            animCurrentCrv.preInfinity.set(infoDict['preInfinity'])
+            animCurrentCrv.postInfinity.set(infoDict['postInfinity'])
 
+def getAnimCurve(driverAttr, setdrivenAttr=None):
+    """
+
+    @param driverAttr:
+    @param setdrivenAttr:
+    @return:
+    """
+    setdrivenCrv = []
+    # ------------------------------
+
+    animCList = pm.listConnections(driverAttr, type='animCurve', s=False, d=True, scn=True)
+
+    if animCList == None:
+        return None
+    elif animCList != None and setdrivenAttr == None:
+        return animCList
+    elif animCList != None and setdrivenAttr != None:
+        for x in animCList:
+            drivenAttr = removeEXnodes(x, 'output', 'dfs')[0]
+            if drivenAttr == setdrivenAttr:
+                setdrivenCrv.append(x)
+        return setdrivenCrv
+
+def removeEXnodes(nodeName, nodeAttr, direction):
+    """
+
+    @param nodeName:
+    @param nodeAttr:
+    @param direction:
+    @return:
+    """
+    if direction == 'sfd':
+        attrSource = pm.connectionInfo(nodeName + '.' + nodeAttr, sfd=1)
+
+        while 'unitConversion' in attrSource:
+            attrSource = pm.connectionInfo(attrSource.replace('output', 'input'), sfd=1)
+        if attrSource == '':
+            attrSource = 'None'
+        return attrSource
+
+    elif direction == 'dfs':
+        attrTargets = pm.connectionInfo(nodeName + '.' + nodeAttr, dfs=1)
+
+        for i, attr in enumerate(attrTargets):
+            if attr != '':
+                while 'unitConversion' in attrTargets[i] or 'blendWeighted' in attrTargets[i]:
+                    attrTargets[i] = \
+                        pm.connectionInfo(attrTargets[i][:attrTargets[i].index('.')] + '.output', dfs=1)[0]
+            else:
+                attrTargets[i] = 'None'
+        return attrTargets
 
 def stripKeys(animNode):
     """remove animation keys from the provided sdk node

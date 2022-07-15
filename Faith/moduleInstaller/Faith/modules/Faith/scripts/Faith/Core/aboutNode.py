@@ -1125,7 +1125,38 @@ class asNode(object):
             return depFn
 
     def _MFnMesh(self):
+        """
+
+        @return:
+        """
         return om.MFnMesh(self._MDagPath())
+
+    def _MFnNurbsCurve(self):
+        """
+
+        @return:
+        """
+        curvFn = om.MFnNurbsCurve()
+        curvFn.setObject(self._MDagPath())
+        return curvFn
+
+    def _MItMeshPolygon(self):
+        """
+
+        @return:
+        """
+        dgPath = self._MDagPath()
+        mItPoly = om.MItMeshPolygon(dgPath)
+        return mItPoly
+
+    def _MItMeshVertex(self):
+        """
+
+        @return:
+        """
+        dgPath = self._MDagPath()
+        mItVtx = om.MItMeshVertex(dgPath)
+        return mItVtx
 
     def _nextVar(self, givenName,
                  fromEnd=True,
@@ -1805,8 +1836,8 @@ class asNode(object):
             ]
         else:
             if self.isNodeType('mesh'):
-                # polyIt = sel
-                return
+                polyIt = self._MItMeshVertex()
+                # return
     def getPos(self, shapePos=False):
         """
 
@@ -1864,9 +1895,11 @@ class asNode(object):
                 self.name
             ]
 
-        # if endJnt:
-        #     for jnt in hiJntList:
-                # if jnt.i
+        if endJnt:
+            for jnt in hiJntList:
+                if jnt.isLastJoint():
+                    prevJnt = jnt.parent()
+                    # destLoc = prevJnt.
 
 
     def freeze(self, **kwargs):
@@ -1879,6 +1912,16 @@ class asNode(object):
             kwargs = {'t': 1, 'r': 1, 's': 1}
         self.select(r=1)
         mc.makeIdentity(apply=True, **kwargs)
+
+    def get_2PosVec(self, destObjOrPos):
+        """
+
+        @param destObjOrPos:
+        @return:
+        """
+        if type(destObjOrPos) != list:
+            destObjOrPos = asNode(destObjOrPos)
+            destPos = destObjOrPos.getPos()
 
     @property
     def asObj(self):

@@ -1,1 +1,0 @@
-del /a /f /s /q  "*.pyc"

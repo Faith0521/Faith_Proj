@@ -18,7 +18,6 @@ maya_Ver = int(str(mc.about(v=True))[0:4])
 from maya import OpenMaya as om
 from maya import OpenMayaAnim as aom
 
-
 #############################################
 # CREATE SIMPLE NODES
 #############################################
@@ -1158,7 +1157,8 @@ class asNode(object):
         mItVtx = om.MItMeshVertex(dgPath)
         return mItVtx
 
-    def _nextVar(self, givenName,
+    def _nextVar(self,
+                 givenName,
                  fromEnd=True,
                  skipCount=0,
                  versionUpAll=False):
@@ -1218,6 +1218,71 @@ class asNode(object):
                 formVar = '%0.' + str(formNum) + 'd'
                 return str(formVar % (numVal + 1))
             nextName = re.sub('\\d+', repMGrp, self.shortName())
+            if mc.objExists(nextName):
+                return asNode(nextName)
+            return nextName
+
+    def _preVar(self,
+                givenName,
+                fromEnd=True,
+                skipCount=0,
+                versionUpAll=False
+                ):
+        """
+
+        :param givenName:
+        :param fromEnd:
+        :param skipCount:
+        :param versionUpAll:
+        :return:
+        """
+        asN = givenName
+        if not versionUpAll:
+            numList = re.findall(r'\d+', asN)
+            numRange = range(len(numList))
+            if fromEnd:
+                numStr = numList[(-1 * (skipCount + 1))]
+                lenStr = len(numStr)
+                nextNum = int(numStr) - 1
+                nextNumStr = ('%0.' + str(lenStr) + 'd') % nextNum
+                patternStr = r'[^\d+]*'
+                for num in numRange:
+                    patternStr += r'(\d+)'
+                    patternStr += r'[^\d+]*'
+
+                reObj = re.search(patternStr, self.shortName)
+                spanRange = reObj.span(
+                    len(numList) - 1 * skipCount
+                )
+                nextName = asN[0:spanRange[0]] + nextNumStr + asN[spanRange[1]:]
+                if mc.objExists(nextName):
+                    nextName = asNode(nextName)
+                return [nextName, nextNum]
+
+            numStr = numList[skipCount]
+            lenStr = len(numStr)
+            nextNum = int(numStr) - 1
+            nextNumStr = ('%0.' + str(lenStr) + 'd') % nextNum
+            patternStr = r'[^\d+]*'
+            for num in numRange:
+                patternStr += r'(\d+)'
+                patternStr += r'[^\d+]*'
+            reObj = re.search(patternStr, self.shortName())
+            spanRange = reObj.span(skipCount + 1)
+            nextName = asN[0:spanRange[0]] + nextNumStr + asN[spanRange[1]:]
+            if mc.objExists(nextName):
+                nextName = asNode(nextName)
+            return [
+                nextName, nextNum]
+        else:
+
+            def repMGrp(mObj):
+                numVal = int(mObj.group())
+                formNum = len(mObj.group())
+                formVar = '%0.' + str(formNum) + 'd'
+                return str(formVar % (numVal - 1))
+
+            nextName = re.sub(r'\d+', repMGrp, self.shortName)
             if mc.objExists(nextName):
                 return asNode(nextName)
             return nextName
@@ -1613,6 +1678,36 @@ class asNode(object):
                 kwargs['node'] = self.name
         return mc.attributeQuery(*args, **kwargs)
 
+    def rename(self, newName):
+        """
+
+        :param newName:
+        :return:
+        """
+        depFn = om.MFnDependencyNode()
+        depFn.setObject(self._MObject())
+        if self.isShape:
+            if self._cNum >= 0:
+                mc.rename(self.parent().split('.', 1)[0], newName)
+            else:
+                mc.rename(self.parent(), newName)
+        else:
+            if self._cNum >= 0:
+                mc.rename(self.name.split('.', 1)[0], newName)
+            else:
+                mc.rename(self.name, newName)
+            frame = inspect.currentframe()
+            dictN = dict(list(frame.f_globals.items()) + list(frame.f_locals.items()))
+            for k,var in dictN.items():
+                if isinstance(var, self.__class__):
+                    if hash(self) == hash(var):
+                        if self._cNum >= 0:
+                            frame.f_globals[k] = asNode(self.name)
+                        else:
+                            frame.f_globals[k] = self.asObj
+                        break
+        return asNode(self.name)
+
     def select(self, *args, **kwargs):
         """
 
@@ -1807,13 +1902,13 @@ class asNode(object):
         """
         if self.isNodeType('nurbsCurve'):
             shapeList = self.getShape(1)
-            if len(shapeList) == 1:
+            if len(list(shapeList)) == 1:
                 curvFn = om.MFnNurbsCurve(self._MDagPath())
                 numCVs = curvFn.numCVs()
                 if curvFn.form() == 3:
                     numCVs = numCVs - curvFn.degree()
                 cvList = [
-                    asNode('%s.cv[%d]'%(self.name, num) for num in range(numCVs))
+                    asNode('%s.cv[%d]'%(self.name, num)) for num in range(numCVs)
                 ]
                 mc.select(cvList, r=True)
                 return [
@@ -1827,7 +1922,7 @@ class asNode(object):
                 if curvFn.form() == 3:
                     numCVs = numCVs - curvFn.degree()
                 cvList = [
-                    asNode('%s.cv[%d]'%(self.name, num) for num in range(numCVs))
+                    asNode('%s.cv[%d]'%(self.name, num)) for num in range(numCVs)
                 ]
                 cv_List.extend(cvList)
             mc.select(cv_List, r=True)
@@ -1837,7 +1932,42 @@ class asNode(object):
         else:
             if self.isNodeType('mesh'):
                 polyIt = self._MItMeshVertex()
-                # return
+                numVtx = polyIt.count()
+                vtxList = [
+                    '%s.vtx[%d]' % (self.name, num) for num in range(numVtx)
+                ]
+                if get_asNode:
+                    vtxList = map(asNode, vtxList)
+                return [vtxList, numVtx]
+
+            if self.isNodeType('nurbsSurface'):
+                cvIter = om.MItSurfaceCV(self.shape._MDagPath())
+                cvList = []
+                while not cvIter.isDone():
+                    while not cvIter.isRowDone():
+                        utilU = om.MScriptUtil()
+                        utilU.createFromInt(0)
+                        ptrU = utilU.asIntPtr()
+                        utilV = om.MScriptUtil()
+                        utilV.createFromInt(0)
+                        ptrV = utilV.asIntPtr()
+                        cvIter.getIndex(ptrU, ptrV)
+                        cvList.append(
+                            '%s.cv[%d][%d]'%(
+                                self.name, utilU.getInt(ptrU), utilV.getInt(ptrV)
+                            )
+                        )
+                        cvIter.next()
+
+                    cvIter.nextRow()
+
+                mc.select(cvList, r=True)
+                cvList = mc.filterExpand(sm=28)
+                numCVs = len(cvList)
+                return [
+                    cvList, numCVs
+                ]
+
     def getPos(self, shapePos=False):
         """
 
@@ -1855,6 +1985,159 @@ class asNode(object):
                 return objPos
             if self.isNodeType('nurbsCurve'):
                 cvList,numCvs = self.getVtxList()
+                mc.select(cvList, r=True)
+                mc.setToolTo('Move')
+                cPos = mc.manipMoveContext('Move', q=True, p=True)
+                return cPos
+        else:
+            if self._cNum >= 0 and '.vtx[' in self.name:
+                mDgPath = self._MDagPath()
+                mItVtx = om.MItMeshVertex(mDgPath)
+                vtxPos = []
+                while not mItVtx.isDone():
+                    if mItVtx.index() == self._cNum:
+                        point = om.MPoint()
+                        point = mItVtx.position(om.MSpace.kWorld)
+                        vtxPos = [
+                            round(point.x, 5), round(point.y, 5), round(point.z, 5)
+                        ]
+                    mItVtx.next()
+                return vtxPos
+
+            if self._cNum >= 0 and re.match(
+                    '^.*\\.cv\\[(?P<uVal>\\d+)\\]$', self.name
+            ):
+                mDgPath = self._MDagPath()
+                mItCV = om.MItCurveCV(mDgPath)
+                cvPos = []
+                while not mItCV.isDone():
+                    if mItCV.index() == self._cNum:
+                        point = om.MPoint()
+                        point = mItCV.position(om.MSpace.kWorld)
+                        cvPos = [
+                            round(point.x, 5), round(point.y, 5), round(point.z, 5)
+                        ]
+                    mItCV.next()
+                return cvPos
+
+            if self._uvNums:
+                mDgPath = self._MDagPath()
+                mItCV = om.MItSurfaceCV(mDgPath)
+                cvPos = []
+                uvList = []
+                while not mItCV.isDone():
+                    while not mItCV.isRowDone():
+                        utilU = om.MScriptUtil()
+                        utilU.createFromInt(0)
+                        uInt = utilU.asIntPtr()
+                        utilV = om.MScriptUtil()
+                        utilV.createFromInt(0)
+                        vInt = utilV.asIntPtr()
+                        mItCV.getIndex(uInt, vInt)
+                        uvList = [
+                            om.MScriptUtil.getInt(uInt),
+                            om.MScriptUtil.getInt(vInt)
+                        ]
+                        if uvList == self._uvNums:
+                            break
+                        mItCV.next()
+
+                    if uvList == self._uvNums: break
+                    mItCV.nextRow()
+
+                point = om.MPoint()
+                point = mItCV.position(om.MSpace.kWorld)
+                cvPos = [
+                    round(point.x, 5), round(point.y, 5), round(point.z, 5)
+                ]
+                return cvPos
+
+            if self._cNum >= 0 and '.f[' in self.name:
+                mItPoly = self._MItMeshPolygon()
+                polyPos = []
+                while not mItPoly.isDone():
+                    if mItPoly.index() == self._cNum:
+                        point = om.MPoint()
+                        point = mItPoly.center(om.MSpace.kWorld)
+                        polyPos = [
+                            round(point.x, 5), round(point.y, 5), round(point.z, 5)
+                        ]
+                        break
+                    mItPoly.next()
+                return polyPos
+
+            if self._cNum >= 0 and '.e[' in self.name:
+                mDgPath = self._MDagPath()
+                mItEdg = om.MItMeshEdge(mDgPath)
+                ePos = []
+                while not mItEdg.isDone():
+                    if mItEdg.index() == self._cNum:
+                        point = om.MPoint()
+                        point = mItEdg.center(MSpace.kWorld)
+                        ePos = [
+                            round(point.x, 5), round(point.y, 5), round(point.z, 5)
+                        ]
+                        break
+                    mItEdg.next()
+
+                return ePos
+
+    def setPos(self,
+               posList=[0,0,0]):
+        """
+
+        :param posList:
+        :return:
+        """
+        self.select(r=1)
+        mc.move(posList[0], posList[1], posList[2], rpr=True)
+
+    def getRot(self, worldSpace=False):
+        """
+
+        :param worldSpace:
+        :return:
+        """
+        if worldSpace:
+            pLoc = self.getPosLoc(False, True)[0]
+            locRot = pLoc.getRot()
+            pLoc.delete()
+            return locRot
+        else:
+            return list(self.getAttr('r'))
+
+    def getAttr(self, attr, *args, **kwargs):
+        """
+
+        :param attr:
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        datatype = kwargs.get('type', kwargs.get('typ', None))
+        attr = str(self.name + '.' + attr)
+        try:
+            attrVal = mc.getAttr(attr, *args, **kwargs)
+            if type(attrVal) != list:
+                return attrVal
+            if type(attrVal) == list and len(attrVal) == 1 and type(attrVal[0]) == tuple:
+                return list(attrVal[0])
+            if type(attrVal) == list and len(attrVal) == 3:
+                return attrVal
+        except TypeError as msg:
+            val = kwargs.pop('type', kwargs.pop('typ', False))
+            typ = mc.addAttr(attr, q=1, at=1)
+            if val == 'string' and typ == 'enum':
+                enums = mc.addAttr(attr, q=1, en=1).split(':')
+                index = enums.index(args[0])
+                args = (index,)
+                return mc.getAttr(attr, *args, **kwargs)
+            raise TypeError(msg)
+        except RuntimeError as msg:
+            if 'No object matches name: ' in str(msg):
+                raise attr
+            else:
+                raise
 
     def jntOrient(self,
                   jntAxis='x',
@@ -1919,9 +2202,216 @@ class asNode(object):
         @param destObjOrPos:
         @return:
         """
+        destPos = []
         if type(destObjOrPos) != list:
             destObjOrPos = asNode(destObjOrPos)
             destPos = destObjOrPos.getPos()
+        else:
+            destPos = destObjOrPos
+        srcPos = self.getPos()
+        distX = destPos[0] - srcPos[0]
+        distY = destPos[1] - srcPos[1]
+        distZ = destPos[2] - srcPos[2]
+        return om.MVector(distX, distY, distZ)
+
+    def get_2PosExtn(self,
+                     destObjOrPos,
+                     extnRatio,
+                     locName='as_Extn_Loc',
+                     getLoc=True,
+                     getSpot=False):
+        """
+
+        :param destObjOrPos:
+        :param extnRatio:
+        :param locName:
+        :param getLoc:
+        :param getSpot:
+        :return:
+        """
+        if getSpot:
+            getLoc = False
+        dirVect = self.get_2PosVec(destObjOrPos)
+        extnPos = [num * (extnRatio + 1) for num in dirVect]
+        extnLoc = asNode(
+            mc.spaceLocator(n=locName, p=[
+                extnPos[0], extnPos[1], extnPos[2]
+            ])[0]
+        )
+
+    def snapPosTo(self,
+                  destPosOrObj=[0,0,0],
+                  snapRot=False,
+                  shapePos=False):
+        """
+
+        :param destPosOrObj:
+        :param snapRot:
+        :param shapePos:
+        :return:
+        """
+        destObj = None
+        destPos = []
+        if type(destPosOrObj) != list:
+            destObj = asNode(destPosOrObj)
+            destPos = destObj.getPos()
+        else:
+            destPos = destPosOrObj
+        self.select(r=True)
+        mc.move(destPos[0], destPos[1], destPos[2], rpr=True)
+        if snapRot and destObj:
+            self.snapRotTo(destObj)
+
+    def snapRotTo(self,
+                  destObj,
+                  dirUpObj=None,
+                  aimAxis=None,
+                  upAxis=None):
+        """
+
+        :param destObj:
+        :param dirUpObj:
+        :param aimAxis:
+        :param upAxis:
+        :return:
+        """
+        src = self.asObj
+        if not (dirUpObj or aimAxis or upAxis):
+            oriConst = mc.orientConstraint(str(destObj), src, weight=1)
+            # rVal = self.g
+
+    def getPosLoc(self,
+                  makeChild=True,
+                  snapRot=False,
+                  hideLoc=True,
+                  locName=None,
+                  oppAxis=None,
+                  grpLevel=0,
+                  offsetDist=None,
+                  getSpot=False):
+        """
+
+        :param makeChild:
+        :param snapRot:
+        :param hideLoc:
+        :param locName:
+        :param oppAxis:
+        :param grpLevel:
+        :param offsetDist:
+        :param getSpot:
+        :return:
+        """
+        if locName:
+            locNames = [locName] if type(locName) != list else locName
+            locList = []
+            for locName in locNames:
+                nextUniqName = None
+                if mc.objExists(locName):
+                    nextUniqName = asNode(locName).nextUniqueName()
+                if getSpot:
+                    locName_ = asNode(
+                        mc.curve(asNode(mc.curve(n=locName, p=[(-1.0, 0.0, 0.0), (-0.70711, 0.0, -0.70711),
+                                                               (0.0, 0.0, -1.0), (0.0, -0.70711, -0.70711),
+                                                               (0.0, -1.0, 0.0), (0.0, -0.70711, 0.70711),
+                                                               (0.0, 0.0, 1.0), (0.0, 0.70711, 0.70711),
+                                                               (0.0, 1.0, 0.0), (0.0, 0.70711, -0.70711),
+                                                               (0.0, 0.0, -1.0), (0.0, 0.0, 0.0), (0.0, -1.0, 0.0),
+                                                               (-0.70711, -0.70711, 0.0), (-1.0, 0.0, 0.0),
+                                                               (1.0, 0.0, 0.0), (0.0, 0.0, 0.0), (0.0, 0.0, 1.0),
+                                                               (0.0, 0.0, -1.0), (0.0, 0.0, 0.0), (0.0, 1.0, 0.0),
+                                                               (0.0, -1.0, 0.0), (0.70711, -0.70711, 0.0),
+                                                               (1.0, 0.0, 0.0), (0.70711, 0.70711, 0.0),
+                                                               (0.0, 1.0, 0.0), (-0.70711, 0.70711, 0.0),
+                                                               (-1.0, 0.0, 0.0), (-0.70711, 0.0, 0.70711),
+                                                               (0.0, 0.0, 1.0), (0.70711, 0.0, 0.70711),
+                                                               (1.0, 0.0, 0.0), (0.70711, 0.0, -0.70711),
+                                                               (0.0, 0.0, -1.0)],
+                                                 k=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+                                                    16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
+                                                    29, 30, 31, 32, 33], d=1)))
+                    )
+                    locName_.applyCtrlColor(17)
+                else:
+                    mc.spaceLocator(n=locName)
+                    locName_ = self._selected()[0]
+                if nextUniqName:
+                    locName_ = locName_.rename(nextUniqName)
+                locList.append(locName_)
+        else:
+            if getSpot:
+                locName_ = asNode(
+                    mc.curve(n=self.shortName() + '_PosLoc',
+                             p=[(-1.0, 0.0, 0.0), (-0.70711, 0.0, -0.70711),
+                                (0.0, 0.0, -1.0), (0.0, -0.70711, -0.70711),
+                                (0.0, -1.0, 0.0), (0.0, -0.70711, 0.70711),
+                                (0.0, 0.0, 1.0), (0.0, 0.70711, 0.70711),
+                                (0.0, 1.0, 0.0), (0.0, 0.70711, -0.70711),
+                                (0.0, 0.0, -1.0), (0.0, 0.0, 0.0),
+                                (0.0, -1.0, 0.0), (-0.70711, -0.70711, 0.0),
+                                (-1.0, 0.0, 0.0), (1.0, 0.0, 0.0),
+                                (0.0, 0.0, 0.0), (0.0, 0.0, 1.0),
+                                (0.0, 0.0, -1.0), (0.0, 0.0, 0.0),
+                                (0.0, 1.0, 0.0), (0.0, -1.0, 0.0),
+                                (0.70711, -0.70711, 0.0), (1.0, 0.0, 0.0),
+                                (0.70711, 0.70711, 0.0), (0.0, 1.0, 0.0),
+                                (-0.70711, 0.70711, 0.0), (-1.0, 0.0, 0.0),
+                                (-0.70711, 0.0, 0.70711), (0.0, 0.0, 1.0),
+                                (0.70711, 0.0, 0.70711), (1.0, 0.0, 0.0),
+                                (0.70711, 0.0, -0.70711), (0.0, 0.0, -1.0)],
+                             k=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
+                                14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+                                25, 26, 27, 28, 29, 30, 31, 32, 33], d=1)
+
+                )
+                locName_.applyCtrlColor(17)
+            else:
+                mc.spaceLocator(n=self.shortName + '_PosLoc')
+            locList = self._selected()
+        for loc in locList:
+            loc.snapRotTo(self.name)
+
+    def nextUniqueName(self, reName=False, fromEnd=True):
+        """
+
+        :param reName:
+        :param fromEnd:
+        :return:
+        """
+        asN = self.asObj
+        origName = self.shortName
+
+        def getUniqueName(nextName, origName):
+            nextName = self._nextVar(nextName, fromEnd)[0]
+            try:
+                mc.select('*' + nextName, r=True)
+                mc.select(cl=True)
+                return getUniqueName(nextName, origName)
+            except:
+                pass
+
+            if not mc.objExists(nextName):
+                self.rename(nextName)
+                if self.hasUniqueName:
+                    if not reName:
+                        self.rename(origName)
+                    return nextName
+            else:
+                return getUniqueName(nextName, origName)
+
+        if self.extractNum():
+            return getUniqueName(asN.shortName, origName)
+        else:
+            if '_' not in self.shortName:
+                nextName = self.shortName + '_01'
+            else:
+                endSufx = self.shortName.split('_')[-1]
+                nextName = self.shortName.replace(endSufx, '01_' + endSufx)
+            asN.rename(nextName)
+            if asN.hasUniqueName:
+                if not reName:
+                    asN.rename(origName)
+                return nextName
+            return getUniqueName(asN, origName)
 
     @property
     def asObj(self):
@@ -1943,7 +2433,7 @@ class asNode(object):
         dgPath = self._MDagPath()
         shapes = self.getShape(True)
         if self._cNum >= 0 or self._cType == 'uv':
-            if shapes and len(shapes) == 1:
+            if shapes and len(list(shapes)) == 1:
                 dgPath.pop()
         dgNodeFn = om.MFnDagNode()
         dgNodeFn.setObject(dgPath)
@@ -1954,6 +2444,14 @@ class asNode(object):
             if self._cType == 'uv':
                 return '%s.cv[%d][%d]' % (nodeName, self._uvNums[0], self._uvNums[1])
             return nodeName
+
+    @property
+    def shape(self):
+        """
+
+        :return:
+        """
+        return self.getShape()
 
     @property
     def hasUniqueName(self):

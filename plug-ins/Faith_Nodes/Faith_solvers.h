@@ -364,9 +364,9 @@ class MatrixMult : public MPxNode
 {
 public:
 	MatrixMult();
-	virtual	~MatrixMult() override;
-	virtual MStatus	compute(const MPlug& plug, MDataBlock& data) override;
-	static  void* creator();
+	virtual					~MatrixMult() override;
+	virtual	MStatus			compute(const MPlug& plug, MDataBlock& data) override;
+	static  void*			creator();
 	static  MStatus			initialize();
 	static  MString			NodeName;
 	static  MTypeId			NodeID;
@@ -374,6 +374,22 @@ public:
 	static  MObject			inMatrixA;
 	static  MObject			inMatrixB;
 	static  MObject			outMatrix;
+
+};
+
+class CorrectiveShape : public MPxNode
+{
+public:
+							CorrectiveShape();
+	virtual					~CorrectiveShape();
+	virtual MStatus			compute(const MPlug& plug, MDataBlock& data) override;
+	static  void*			creator();
+	static  MStatus			initialize();
+	static  MString			NodeName;
+	static  MTypeId			NodeID;
+
+	static  MObject			inputMesh;
+	static  MObject			outputMesh;
 
 };
 

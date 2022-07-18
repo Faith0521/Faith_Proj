@@ -228,7 +228,6 @@ MStatus  transferSkinWeights::exportWeightInfo(
 }
 
 
-
 MStatus  transferSkinWeights::reader(const MFileObject& file,
 	const MString& optionsString,
 	FileAccessMode mode)
@@ -262,7 +261,6 @@ MStatus  transferSkinWeights::reader(const MFileObject& file,
 	}
 	return MS::kSuccess;
 }
-
 
 MStatus  transferSkinWeights::getShape(MDagPath& targetPath)
 {
@@ -304,8 +302,6 @@ void transferSkinWeights::exportString(ofstream& out, MString& str)
 	const char* name = str.asChar();
 	out.write(name, sizeof(char) * numChars);
 }
-
-
 
 MStatus  transferSkinWeights::importWeightInfo(std::ifstream& inFile, MDagPath& targetPath)
 {
@@ -360,7 +356,6 @@ MStatus  transferSkinWeights::importWeightInfo(std::ifstream& inFile, MDagPath& 
 
 	return MS::kSuccess;
 }
-
 
 MStatus transferSkinWeights::setInfoToSkinNode(fileInfo& weightInfo,
 	MFnDependencyNode& skinNode, MObjectArray& oJoints)
@@ -421,7 +416,6 @@ MStatus transferSkinWeights::setInfoToSkinNode(fileInfo& weightInfo,
 
 	return MS::kSuccess;
 }
-
 
 MStatus transferSkinWeights::getFileInfo(std::ifstream& inFile, fileInfo* pInfo,
 	MFnTransform& targetTransform, MMatrix& getMatrix)
@@ -485,17 +479,6 @@ MStatus transferSkinWeights::getFileInfo(std::ifstream& inFile, fileInfo* pInfo,
 			return MS::kFailure;
 		}
 
-		/*status = getShape(shapePath);
-		CHECK_MSTATUS_AND_RETURN_IT(status);
-		status = getSkinClusterNodeFromPath(shapePath, skinNode);
-		if (status == MS::kSuccess)
-		{
-			MGlobal::executePythonCommand("cmds.delete(" + skinNode.name() + ")");
-		}
-		else
-		{
-
-		}*/
 	}
 
 	unsigned int numVertices = 0;
@@ -554,7 +537,6 @@ MStatus transferSkinWeights::getFileInfo(std::ifstream& inFile, fileInfo* pInfo,
 	MGlobal::displayInfo("8");
 	return MS::kSuccess;
 }
-
 
 MStatus transferSkinWeights::getSkinClusterNodeFromPath(
 	MDagPath& pathDag, MFnDependencyNode& skinNode)

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: YinYuFei
 # @Date:   2022-04-27 08:55:58
-# @Last Modified by:   Admin
-# @Last Modified time: 2022-05-01 22:19:51
+# @Last Modified by:   YinYuFei
+# @Last Modified time: 2022-07-19 20:55:21
 
 # basic
 from Faith.Guide import Component
@@ -21,6 +21,8 @@ from . import guide,naming
 
 PY2 = sys.version_info[0] == 2
 COMPONENT_ENV_KEY = "FAITH_COMPONENT_PATH"
+
+_PLUGIN = ["FaithNodes",]
 
 if not pm.pluginInfo("FaithNodes", q = True, loaded = True):
 	try:

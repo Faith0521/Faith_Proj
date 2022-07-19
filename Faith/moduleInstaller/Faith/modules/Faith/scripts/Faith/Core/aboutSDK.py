@@ -309,7 +309,7 @@ def getConnectedSDKs(attr = "",
 
     return retrievedSDKNodes
 
-def mirrorSDKs(nodes, expType="front", attributes=[], invertDriver=True, invertDriven=True):
+def mirrorSDKs(nodes, attributes=[], invertDriver=True, invertDriven=True):
     """
 
     :param nodes:
@@ -390,11 +390,13 @@ def invertKeyValues(sdkInfo, invertDriver=True, invertDriven=True):
             else:
                 timeValue = frameValue[0]
                 value = frameValue[1]
-       
+
             pm.setDrivenKeyframe(drivenNode, at=drivenAttr, cd=driverNode+'.'+driverAttr, dv=timeValue,
                                  value=value)
 
-            animCurrentCrv = getAnimCurve(driverAttr, drivenAttr)[0]
+            animCurrentCrv = getAnimCurve(
+                driverNode+'.'+driverAttr, drivenNode+'.'+drivenAttr
+            )[0]
             mel.eval('keyTangent -index %s -e -itt %s -ott %s %s' % (index, frameValue[2],
                 frameValue[3], animCurrentCrv))
 

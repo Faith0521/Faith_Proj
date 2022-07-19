@@ -53,6 +53,9 @@
     <ClCompile Include="MatrixMult.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="CorrectiveShape.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Faith_solvers.h">

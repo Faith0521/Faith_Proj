@@ -48,6 +48,11 @@ MStatus initializePlugin( MObject obj )
 		MPxNode::kDependNode);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
+	status = plugin.registerNode(CorrectiveShape::NodeName, CorrectiveShape::NodeID,
+		CorrectiveShape::creator, CorrectiveShape::initialize,
+		MPxNode::kDeformerNode);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
+
 	return status;
 }
 
@@ -78,6 +83,9 @@ MStatus uninitializePlugin( MObject obj )
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
 	status = plugin.deregisterNode(MatrixMult::NodeID);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
+
+	status = plugin.deregisterNode(CorrectiveShape::NodeID);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 	
 	return status;

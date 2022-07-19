@@ -3,54 +3,55 @@
 # @Date:   2022-07-07 19:01:29
 # @Last Modified by:   YinYuFei
 # @Last Modified time: 2022-07-08 19:55:29
-import pymel.core as pm,maya.cmds as mc,maya.mel as mel
-import json,time,re
+import subprocess, xml.etree.ElementTree, time, maya.cmds as cmds, maya.mel as mel, webbrowser as web, Faith.Core.aboutNode as asN
+import json,re,shutil
 from maya.api import OpenMaya as om
 from maya.api import OpenMayaAnim as aom
-from Faith.Tools.Skinning import skin_core
+from Faith.Core.aboutNode import *
+from uuid import getnode
+from maya.cmds import *
+from maya.mel import *
+from pymel.all import *
+from pymel.core import *
 
-class Skin(skin_core.SkinNode):
+
+class Skin(object):
 
     def __init__(self):
-        pass
+        mc.softSelect(e=1, softSelectEnabled=0)
+        if mc.currentUnit(q=1, linear=1) != 'centimeter':
+            mc.currentUnit(linear='centimeter')
 
-    def extractNum(self, objName, fromEnd=True, skipCount=0):
-        objName = str(objName)
-        numList = re.findall('\\d+', objName)
-        if numList:
-            if fromEnd:
-                numStr = numList[(-1 * (skipCount + 1))]
-                num = int(numStr)
-                return [
-                    num, str(num)]
+    def createSplitPlane(self,
+                         skinMesh,
+                         L_Prfx = 'L_',
+                         R_Prfx = 'R_',
+                         skinSide = 'LT'):
+        __showProgressTime = 0
+        __displayTotalTime = 0
+        __freeVersion = 0
+        blendVal = 0.0
+        refCount = 1
+        prefixOrSuffix = 'Prefix'
+        usingJntAxis = False
+        extractGCMs = False
+        noDiscSkin = True
+        excludeJntName = 'Fan'
+        jntsGiven = False
+        allJntList = []
+        self.skinMesh = skinMesh
+
+        if selected():
+            selObj = asNode(selected()[0])
+            if selObj.isSkinMesh:
+                self.skinMesh = selObj.strip()
+            elif selObj.isJoint:
+                jntsGiven = True
+                jnt_List = [asNode(jnt) for jnt in selected()]
+                jntList = [jnt for jnt in jnt_List if jnt.nodeType() == 'joint']
+                allJntList = [jnt for jnt in jntList]
             else:
-                numStr = numList[skipCount]
-                num = int(numStr)
-                return [num, str(num)]
-
-        else:
-            return
-
-    def createSplitPlane(self, skinMesh):
-        skinClust = skinMesh.history(type = "skinCluster")
-        if not skinClust:
-            pm.error("Mesh is not a skinned mesh.")
-
-        skinNode = skinClust[0]
-        jnt_list = [jnt for jnt in pm.skinCluster(skinNode, inf = 1, q = 1)]
-
-        # if not pm.objExists('Skin_Grp'):
-        #     skinGrp = pm.group(em = True, n = "Skin_Grp") if 1 else pm.PyNode("Skin_Grp")
-        #     skinClusNum = self.extractNum(skinNode)[1]
-        #     MeshGrpName = str(skinMesh) + "_MeshGrp"
-        #
-        #     if not pm.objExists(MeshGrpName):
-        #         MeshGrp = pm.group(em = True, n = MeshGrpName, p = skinGrp) if 1 else pm.PyNode(MeshGrpName)
-        #
-        for jnt in jnt_list:
-            chdJnt = jnt.getChildren(type="joint")
-            if chdJnt:
-                chdJnt = chdJnt[0]
+                self.error('Selected Is Not A Mesh | Skinned Mesh..!\nYou need to provide Skin_Mesh')
                 
 
 

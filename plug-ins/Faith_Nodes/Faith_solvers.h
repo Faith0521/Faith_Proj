@@ -23,6 +23,8 @@
 #include <maya/MFnMatrixAttribute.h>
 #include <maya/MStringArray.h>
 #include <maya/MFnEnumAttribute.h>
+#include <maya/MMatrixArray.h>
+#include <maya/MFnPointArrayData.h>
 #include <maya/MDoubleArray.h>
 #include <maya/MFnCompoundAttribute.h>
 #include <maya/MFnUnitAttribute.h>
@@ -31,6 +33,7 @@
 #include <maya/MFnComponentListData.h>
 #include <maya/MPxCommand.h>
 #include <maya/MSyntax.h>
+#include <maya/MPxDeformerNode.h>
 #include <maya/MArgDatabase.h>
 #include <maya/MSelectionList.h>
 #include <maya/MArrayDataBuilder.h>
@@ -58,6 +61,8 @@
 #include <maya/MItSelectionList.h>
 #include <maya/MFnMatrixData.h>
 #include <maya/MItDag.h>
+#include <maya/MScriptUtil.h>
+#include <maya/MFnMeshData.h>
 #include <Eigen/Dense>
 #include <Eigen/Eigenvalues>
 #include "rapidjson/document.h"
@@ -377,20 +382,23 @@ public:
 
 };
 
-class CorrectiveShape : public MPxNode
+class CorrectiveShape : public MPxDeformerNode
 {
 public:
 							CorrectiveShape();
 	virtual					~CorrectiveShape();
-	virtual MStatus			compute(const MPlug& plug, MDataBlock& data) override;
+	virtual MStatus			deform(MDataBlock& block, MItGeometry& iter, const MMatrix& mat, unsigned int multiIndex);
 	static  void*			creator();
 	static  MStatus			initialize();
 	static  MString			NodeName;
 	static  MTypeId			NodeID;
 
-	static  MObject			inputMesh;
-	static  MObject			outputMesh;
-
+	static  MObject			aMatrix;
+	static  MObject			aCorrectiveGeo;
+	static  MObject			aDeformedPoints;
+	static  bool			_initialized;
+	static  MPointArray		_deformedPoints;
+	static  MMatrixArray	_matrices;
 };
 
 #endif // !IKNODE_H

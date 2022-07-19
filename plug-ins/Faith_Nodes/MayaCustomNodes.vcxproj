@@ -16,6 +16,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BlendMatrix.cpp" />
+    <ClCompile Include="CorrectiveShape.cpp" />
     <ClCompile Include="Drum.cpp" />
     <ClCompile Include="IKNode.cpp" />
     <ClCompile Include="MatrixMult.cpp" />
@@ -32,14 +33,14 @@
   <PropertyGroup Label="Globals">
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{A2301C3B-99FD-40B4-B5BC-C11FB95A086B}</ProjectGuid>
-    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
     <ProjectName>Faith_Node</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -79,7 +80,7 @@
       <MinimalRebuild>true</MinimalRebuild>
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <AdditionalOptions>%(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>E:\bd\eigen-3.3.9;C:\Program Files\Autodesk\Maya2018\include;C:\Qt\Qt5.12.5\5.12.5\msvc2017_64\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\yinyufei\Downloads\eigen-3.3.9\eigen-3.3.9;C:\Program Files\Autodesk\Maya2018\include;C:\Qt\Qt5.12.5\5.12.5\msvc2017_64\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeaderOutputFile>$(Configuration)\MayaCustomNodes.pch</PrecompiledHeaderOutputFile>
     </ClCompile>
     <Link>
@@ -88,7 +89,7 @@
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <AdditionalOptions>/export:initializePlugin /export:uninitializePlugin  /FORCE:MULTIPLE %(AdditionalOptions)</AdditionalOptions>
       <AdditionalDependencies>Foundation.lib;OpenMaya.lib;OpenMayaUI.lib;OpenMayaAnim.lib;OpenMayaFX.lib;OpenMayaRender.lib;Image.lib;libMocap.lib;OpenGL32.lib;Qt5Core.lib;Qt5Gui.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>E:\bd\eigen-3.3.9;C:\Program Files\Autodesk\Maya2018\lib;C:\Qt\Qt5.12.5\5.12.5\msvc2017_64\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\yinyufei\Downloads\eigen-3.3.9\eigen-3.3.9;C:\Program Files\Autodesk\Maya2018\lib;C:\Qt\Qt5.12.5\5.12.5\msvc2017_64\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <OutputFile>$(Configuration)\FaithNodes.mll</OutputFile>
       <ImportLibrary>$(Configuration)\MayaCustomNodes.lib</ImportLibrary>
       <ProgramDatabaseFile>$(Configuration)\MayaCustomNodes.pdb</ProgramDatabaseFile>

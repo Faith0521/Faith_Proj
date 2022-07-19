@@ -1559,13 +1559,26 @@ class asNode(object):
         else:
             return False
 
-    def applyCtrlColor(self, colorNum):
+    def applyCtrlColor(self, colorNum=None):
         """
 
         @param colorNum:
         @return:
         """
-        self.setAttr()
+        self.setAttr('overrideEnabled', 1)
+        if not colorNum:
+            if self.__str__().startswith('L') or \
+                    self.__str__().endswith('L') or \
+                    self.isLeftSide():
+                self.setAttr('overrideColor', 6)
+            elif self.__str__().startswith('R') or \
+                    self.__str__().endswith('R') or \
+                    self.isRightSide():
+                self.setAttr('overrideColor', 13)
+            else:
+                self.setAttr('overrideColor', 17)
+        else:
+            self.setAttr('overrideColor', colorNum)
 
     def setAttr(self, attr, *args, **kwargs):
         """
@@ -1707,6 +1720,14 @@ class asNode(object):
                             frame.f_globals[k] = self.asObj
                         break
         return asNode(self.name)
+
+    def delete(self, **kwargs):
+        """
+
+        @param kwargs:
+        @return:
+        """
+        mc.delete(self.name, **kwargs)
 
     def select(self, *args, **kwargs):
         """
@@ -1902,33 +1923,34 @@ class asNode(object):
         """
         if self.isNodeType('nurbsCurve'):
             shapeList = self.getShape(1)
-            if len(list(shapeList)) == 1:
-                curvFn = om.MFnNurbsCurve(self._MDagPath())
-                numCVs = curvFn.numCVs()
-                if curvFn.form() == 3:
-                    numCVs = numCVs - curvFn.degree()
-                cvList = [
-                    asNode('%s.cv[%d]'%(self.name, num)) for num in range(numCVs)
-                ]
-                mc.select(cvList, r=True)
-                return [
-                    cvList, numCVs
-                ]
+            if shapeList:
+                if len(list(shapeList)) == 1:
+                    curvFn = om.MFnNurbsCurve(self._MDagPath())
+                    numCVs = curvFn.numCVs()
+                    if curvFn.form() == 3:
+                        numCVs = numCVs - curvFn.degree()
+                    cvList = [
+                        asNode('%s.cv[%d]'%(self.name, num)) for num in range(numCVs)
+                    ]
+                    mc.select(cvList, r=True)
+                    return [
+                        cvList, numCVs
+                    ]
 
-            cv_List = []
-            for shape in shapeList:
-                curvFn = om.MFnNurbsCurve(shape._MDagPath())
-                numCVs = curvFn.numCVs()
-                if curvFn.form() == 3:
-                    numCVs = numCVs - curvFn.degree()
-                cvList = [
-                    asNode('%s.cv[%d]'%(self.name, num)) for num in range(numCVs)
+                cv_List = []
+                for shape in shapeList:
+                    curvFn = om.MFnNurbsCurve(shape._MDagPath())
+                    numCVs = curvFn.numCVs()
+                    if curvFn.form() == 3:
+                        numCVs = numCVs - curvFn.degree()
+                    cvList = [
+                        asNode('%s.cv[%d]'%(self.name, num)) for num in range(numCVs)
+                    ]
+                    cv_List.extend(cvList)
+                mc.select(cv_List, r=True)
+                return [
+                    cv_List, len(cv_List)
                 ]
-                cv_List.extend(cvList)
-            mc.select(cv_List, r=True)
-            return [
-                cv_List, len(cv_List)
-            ]
         else:
             if self.isNodeType('mesh'):
                 polyIt = self._MItMeshVertex()
@@ -2086,8 +2108,8 @@ class asNode(object):
                posList=[0,0,0]):
         """
 
-        :param posList:
-        :return:
+        @param posList:
+        @return:
         """
         self.select(r=1)
         mc.move(posList[0], posList[1], posList[2], rpr=True)
@@ -2095,8 +2117,8 @@ class asNode(object):
     def getRot(self, worldSpace=False):
         """
 
-        :param worldSpace:
-        :return:
+        @param worldSpace:
+        @return:
         """
         if worldSpace:
             pLoc = self.getPosLoc(False, True)[0]
@@ -2138,6 +2160,35 @@ class asNode(object):
                 raise attr
             else:
                 raise
+
+    def setAttr(self, attr, *args, **kwargs):
+        """
+
+        @param attr:
+        @param args:
+        @param kwargs:
+        @return:
+        """
+        attrList = [attr] if type(attr) != list else attr
+        for attr in attrList:
+            attr = str(self.name + '.' + attr)
+            try:
+                mc.setAttr(attr, *args, **kwargs)
+            except TypeError as msg:
+                val = kwargs.pop('type', kwargs.pop('typ', False))
+                typ = mc.addAttr(attr, q=1, at=1)
+                if val == 'string' and typ == 'enum':
+                    enums = mc.addAttr(attr, q=1, en=1).split(':')
+                    index = enums.index(args[0])
+                    args = (index,)
+                    mc.setAttr(attr, *args, **kwargs)
+                else:
+                    raise(msg)
+            except RuntimeError as msg:
+                if 'No object matches name: ' in str(msg):
+                    raise(attr)
+                else:
+                    raise
 
     def jntOrient(self,
                   jntAxis='x',
@@ -2184,6 +2235,16 @@ class asNode(object):
                     prevJnt = jnt.parent()
                     # destLoc = prevJnt.
 
+    def deleteKey(self, attrList):
+        """
+
+        @param attrList:
+        @return:
+        """
+        attrList = [attrList] if type(attrList) != list else attrList
+        for attr in attrList:
+            mc.cutKey(self.attr(attr))
+        return True
 
     def freeze(self, **kwargs):
         """
@@ -2238,6 +2299,20 @@ class asNode(object):
                 extnPos[0], extnPos[1], extnPos[2]
             ])[0]
         )
+        extnLoc.snapPosTo(self.name)
+        extnLoc.centerPivot
+        extnLoc.unfreezeTrans
+        if getLoc == True:
+            return extnLoc
+        else:
+            if getSpot:
+                extLoc = extnLoc.getPosLoc(0, 0, 0, locName, getSpot=True)[0]
+                extnLoc.delete()
+                return extLoc
+            extnPos = mc.xform(extnLoc, q=1, ws=1, t=1)
+            mc.delete(extnLoc)
+            return extnPos
+
 
     def snapPosTo(self,
                   destPosOrObj=[0,0,0],
@@ -2278,7 +2353,55 @@ class asNode(object):
         src = self.asObj
         if not (dirUpObj or aimAxis or upAxis):
             oriConst = mc.orientConstraint(str(destObj), src, weight=1)
-            # rVal = self.g
+            rVal = self.getRot()
+            mc.delete(oriConst)
+            mc.setAttr(str(src) + '.r', rVal[0], rVal[1], rVal[2], type='double3')
+        elif dirUpObj and aimAxis and upAxis:
+            aimCon = mc.aimConstraint(destObj,
+                                      src,
+                                      weight=1,
+                                      upVector=upAxis,
+                                      worldUpObject=str(dirUpObj),
+                                      worldUpType='object',
+                                      offset=(0, 0, 0),
+                                      aimVector=aimAxis)
+            rVal = self.getRot()
+            mc.delete(aimCon)
+            mc.setAttr(str(src) + '.r', rVal[0], rVal[1], rVal[2], type='double3')
+        elif not dirUpObj and aimAxis and upAxis:
+            aimCon = mc.aimConstraint(destObj,
+                                      src,
+                                      weight=1,
+                                      upVector=upAxis,
+                                      worldUpType='scene',
+                                      offset=(0, 0, 0),
+                                      aimVector=aimAxis)
+            rVal = self.getRot()
+            mc.delete(aimCon)
+            mc.setAttr(str(src) + '.r', rVal[0], rVal[1], rVal[2], type='double3')
+
+    def snapPosTo(self,
+                  destPosOrObj=[0, 0, 0],
+                  snapRot=False,
+                  shapePos=False):
+        """
+
+        @param destPosOrObj:
+        @param snapRot:
+        @param shapePos:
+        @return:
+        """
+        destObj=None
+        if type(destPosOrObj) != list:
+            destObj = asNode(destPosOrObj)
+            destPos = destObj.getPos(shapePos)
+        else:
+            destPos = destPosOrObj
+        self.select(r=1)
+        mc.move(destPos[0], destPos[1], destPos[2], rpr=1)
+        if snapRot and destObj:
+            self.snapRotTo(destObj)
+        return
 
     def getPosLoc(self,
                   makeChild=True,
@@ -2370,6 +2493,41 @@ class asNode(object):
         for loc in locList:
             loc.snapRotTo(self.name)
 
+    def jntRadius(self, val=None):
+        """
+
+        @param val:
+        @return:
+        """
+        if not val:
+            return self.getAttr('radius')
+        self.setAttr('radius', val)
+
+    def jntDist(self, includeHI=False, impliedParent=True):
+        """
+
+        @param includeHI:
+        @param impliedParent:
+        @return:
+        """
+        if includeHI:
+            chdList = self.selectHI('jnt', True)
+            if chdList:
+                return sum(chdJnt.jntDist() for chdJnt in chdList)
+            return 0
+        else:
+            prntJnt = self.parent()
+            if prntJnt:
+                if prntJnt.isJnt():
+                    jntAxis = prntJnt.jntAxis[1]
+                    jntAxis = jntAxis.strip('-')
+                    return self.getAttr('t' + jntAxis)
+                else:
+                    return 0
+
+            else:
+                return 0
+
     def nextUniqueName(self, reName=False, fromEnd=True):
         """
 
@@ -2454,6 +2612,122 @@ class asNode(object):
         return self.getShape()
 
     @property
+    def jntAxis(self):
+        """
+
+        @return:
+        """
+        jntName = self.name
+        switch = 1
+        relative_c = 1
+        relative_p = 1
+        pos_neg = 1
+        if mc.nodeType(jntName) != 'joint':
+            raise RuntimeError(
+                '%s is not Joint, but %s\n' % (jntName, mc.nodeType(jntName))
+            )
+        # 检测是否有子骨骼
+        chdList = mc.listRelatives(jntName, c=1, typ='joint', fullPath=1)
+        if chdList:
+            chdList = map(asNode, chdList)
+            chdJnt = chdList[0]
+        else:
+            print("Child Joint Doesn't Exist!")
+            switch = -1
+            relative_c = 0
+            # 是否有父级骨骼
+            parentList = mc.listRelatives(jntName, p=1, typ='joint')
+            if parentList:
+                parentList = map(asNode, parentList)
+                chdJnt = parentList[0]
+            else:
+                relative_p = 0
+                print("Parent Joint Doesn't Exist!")
+                chdJnt = jntName
+        jntPos = mc.joint(jntName, q=1, a=1, p=1)
+        jntVect = om.MVector(jntPos[0], jntPos[1], jntPos[2])
+        chdPos = mc.joint(chdJnt, q=1, a=1, p=1)
+        chdVect = om.MVector(chdPos[0], chdPos[1], chdPos[2])
+
+        # 获取目标向量
+        if switch == 1:
+            aimVect = chdVect - jntVect
+        else:
+            aimVect = -(chdVect - jntVect)
+        aimVect.normalize()
+        normVect = aimVect
+        baseLoc = mc.spaceLocator(p=(jntVect.x, jntVect.y, jntVect.z))
+        mc.parent(baseLoc, jntName)
+        mc.makeIdentity(apply=True, s=1, r=1, t=1, n=0)
+        mc.CenterPivot()
+        basePos = mc.pointPosition(baseLoc, w=1)
+        baseVect = om.MVector(basePos[0], basePos[1], basePos[2])
+        mc.move(1, 0, 0, r=1, ls=1, wd=1)
+        locPos = mc.pointPosition(baseLoc, w=1)
+        tempPosX = om.MVector(locPos[0], locPos[1], locPos[2])
+        normVectX = tempPosX - baseVect
+        normVectX.normalize()
+        mc.move(-1, 1, 0, r=1, ls=1, wd=1)
+        locPos = mc.pointPosition(baseLoc, w=1)
+        tempPosY = om.MVector(locPos[0], locPos[1], locPos[2])
+        normVectY = tempPosY - baseVect
+        normVectY.normalize()
+        mc.move(0, -1, 1, r=1, ls=1, wd=1)
+        locPos = mc.pointPosition(baseLoc, w=1)
+        tempPosZ = om.MVector(locPos[0], locPos[1], locPos[2])
+        normVectZ = tempPosZ - baseVect
+        normVectZ.normalize()
+        mc.move(0, 0, -1, r=1, ls=1, wd=1)
+        vectList = [
+            normVectX.x, normVectX.y, normVectX.z, normVectY.x, normVectY.y, normVectY.z, normVectZ.x, normVectZ.y,
+            normVectZ.z, normVect.x, normVect.y, normVect.z]
+        tempArray = []
+        for i in range(0, 12):
+            tempArray.append(float(round(vectList[i], 3)))
+
+        normVectX = om.MVector(tempArray[0], tempArray[1], tempArray[2])
+        normVectY = om.MVector(tempArray[3], tempArray[4], tempArray[5])
+        normVectZ = om.MVector(tempArray[6], tempArray[7], tempArray[8])
+        normVect = om.MVector(tempArray[9], tempArray[10], tempArray[11])
+        aimVal = ''
+        if normVectY == normVect:
+            aimVal = 'y'
+            dirVect = om.MVector(0, 1, 0)
+        elif normVectY == -normVect:
+            aimVal = '-y'
+            dirVect = om.MVector(0, -1, 0)
+        elif normVectZ == normVect:
+            aimVal = 'z'
+            dirVect = om.MVector(0, 0, 1)
+        elif normVectZ == -normVect:
+            aimVal = '-z'
+            dirVect = om.MVector(0, 0, -1)
+        elif normVectX == normVect:
+            aimVal = 'x'
+            dirVect = om.MVector(1, 0, 0)
+        elif normVectX == -normVect:
+            aimVal = '-x'
+            dirVect = om.MVector(-1, 0, 0)
+        elif relative_p == 1 and relative_c == 1:
+            dirVect = None
+        elif relative_p == 1:
+            dirVect = None
+        elif relative_p == 0:
+            aimVal = 'w'
+            mc.warning('Joint has no child or Joint has no parent\n')
+            dirVect = om.MVector(0, 1, 0)
+        if len(aimVal) == 2:
+            pos_neg = -1
+            normVect = -normVect
+        mc.delete(baseLoc)
+        if dirVect:
+            return [
+                [dirVect.x, dirVect.y, dirVect.z], aimVal
+            ]
+        else:
+            return
+
+    @property
     def hasUniqueName(self):
         """
 
@@ -2510,6 +2784,27 @@ class asNode(object):
             return dgNodeFn.fullPathName()
 
     @property
+    def centerPivot(self):
+        """
+
+        @return:
+        """
+        self.select()
+        mel.eval('CenterPivot')
+
+    @property
+    def unfreezeTrans(self):
+        """
+
+        @return:
+        """
+        init_Pos = self.getPos()
+        self.setPos([0, 0, 0])
+        self.freeze(t=1, r=1, s=1)
+        self.setPos(init_Pos)
+        self.select()
+
+    @property
     def hasShape(self):
         """
 
@@ -2529,6 +2824,25 @@ class asNode(object):
             return True
         else:
             return False
+
+    @property
+    def deleteNode(self):
+        """
+
+        @return:
+        """
+        mc.delete(self.name)
+
+    @property
+    def deleteHistory(self):
+        """
+
+        @return:
+        """
+        self.select(r=1)
+        mel.eval('DeleteHistory')
+        self.select(cl=1)
+
 
     @property
     def isMesh(self):
@@ -2684,14 +2998,6 @@ class asNode(object):
             else:
                 return False
 
-    @property
-    def isRightSide(self):
-        """
-
-        @return:
-        """
-        return
-
     def isNodeType(self, objType):
         """
 
@@ -2738,7 +3044,44 @@ class asNode(object):
             jnt.select()
             return False
 
+    def isLeftSide(self, offset=0.05, dirAxis='x'):
+        """
 
+        @param offset:
+        @param dirAxis:
+        @return:
+        """
+        posList = self.getPos()
+        if posList[0] >= offset:
+            return True
+        else:
+            return False
+
+    def isRightSide(self, offset=0.05, dirAxis='x'):
+        """
+
+        @param offset:
+        @param dirAxis:
+        @return:
+        """
+        posList = self.getPos()
+        if posList[0] <= -1 * offset:
+            return True
+        else:
+            return False
+
+    def isMiddleSide(self, offset=0.05, dirAxis='x'):
+        """
+
+        @param offset:
+        @param dirAxis:
+        @return:
+        """
+        posList = self.getPos()
+        if posList[0] <= offset and posList[0] >= -1 * offset:
+            return True
+        else:
+            return False
 
 
 

@@ -26,13 +26,13 @@ MStatus SwingAmplitude::compute(const MPlug& plug, MDataBlock& data)
 
 	MArrayDataHandle outputArrayDataHandle = data.outputArrayValue(outTransform);
 
-	MArrayDataBuilder builder(outTransform, InputArrayDataHandle.elementCount());
-	for (unsigned i=0;i< InputArrayDataHandle.elementCount();i++)
+	MArrayDataBuilder builder(outTransform, outputArrayDataHandle.elementCount());
+	for (unsigned i=0;i< outputArrayDataHandle.elementCount();i++)
 	{
 		MDataHandle outHandle = builder.addElement(i);
-		InputArrayDataHandle.jumpToElement(i);
-		double tx = InputArrayDataHandle.inputValue().child(intranslateX).asDouble();
-		outHandle.setDouble(tx);
+		outputArrayDataHandle.jumpToElement(i);
+		double tx = outputArrayDataHandle.outputValue().child(outtranslateX).asDouble();
+		outHandle.setDouble(tx + i);
 	}
 	status = outputArrayDataHandle.set(builder);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
@@ -56,24 +56,9 @@ MStatus SwingAmplitude::initialize()
 	n.setKeyable(true);
 	n.setStorable(true);
 	n.setWritable(true);
-
-	intranslateY = n.create("intranslateY", "iy", MFnNumericData::kDouble, 0.0);
-	n.setKeyable(true);
-	n.setStorable(true);
-	n.setWritable(true);
-
-	inputTransform = c.create("inputTransform", "inputTransform");
-	c.setArray(true);
-	c.setUsesArrayDataBuilder(true);
-	c.addChild(intranslateX);
-	c.addChild(intranslateY);
+	addAttribute(intranslateX);
 
 	outtranslateX = n.create("outtranslateX", "outtranslateX", MFnNumericData::kDouble, 0.0);
-	n.setKeyable(false);
-	n.setStorable(false);
-	n.setWritable(false);
-
-	outtranslateY = n.create("outtranslateY", "outtranslateY", MFnNumericData::kDouble, 0.0);
 	n.setKeyable(false);
 	n.setStorable(false);
 	n.setWritable(false);
@@ -82,11 +67,9 @@ MStatus SwingAmplitude::initialize()
 	c.setArray(true);
 	c.setUsesArrayDataBuilder(true);
 	c.addChild(outtranslateX);
-	c.addChild(outtranslateY);
 
-	addAttribute(inputTransform);
 	addAttribute(outTransform);
-	attributeAffects(inputTransform, outTransform);
+	attributeAffects(intranslateX, outTransform);
 
 	return MS::kSuccess;
 }

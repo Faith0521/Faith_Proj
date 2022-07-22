@@ -1,5 +1,5 @@
 #include "Faith_solvers.h"
-#include "utils.cpp"
+#include "utils.h"
 
 MString SwingAmplitude::NodeName = "FAITH_SwingAmplitude";
 MTypeId SwingAmplitude::NodeID = MTypeId(0x0020);
@@ -41,23 +41,17 @@ MStatus SwingAmplitude::compute(const MPlug& plug, MDataBlock& data)
 	{
 		outputArrayDataHandle.jumpToElement(i);
 		MDataHandle eHandle = outputArrayDataHandle.outputValue(&status).child(aResult);
-		double test;
 		double sin01_PA = oWaveFollow * (-1) + oWaveLength * (i * (1.0 / (count - 1)));
 		double k = (count - 1) / 2.0;
 		double inReverse = oReverse * (k - i) + k;
-		double result_ = ((oStartPosition + inReverse - 0.0) / (double(count) - 0.0) * (1.0 - 0.0)) + 0.0;
-		if (result_ > 1.0)
-		{
-			test = 1.0;
-		}
-		else
-		{
-			test = result_;
-		}
-		double startPosition_PA = 1.0 - test;
+		double setRange_ = setRange(0.0, double(count), 0.0, 1.0, oStartPosition + inReverse);;
+		double startPosition_PA = 1.0 - setRange_;
 		double amplitude_MD = oAmplitude * (oEnvelope * startPosition_PA);
 		double result = amplitude_MD * sin(sin01_PA);
-
+		if (count <= 1)
+		{
+			result = 0.0;
+		}
 		eHandle.setDouble(result);
 	}
 

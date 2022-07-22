@@ -1,5 +1,5 @@
 #include "Faith_solvers.h"
-#include "utils.cpp"
+#include "utils.h"
 
 MString SquashNode::NodeName = "FAITH_Squash";
 MTypeId SquashNode::NodeID = MTypeId(0x0019);

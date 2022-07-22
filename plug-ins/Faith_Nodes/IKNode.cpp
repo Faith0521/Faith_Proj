@@ -1,5 +1,5 @@
 #include "Faith_solvers.h"
-#include "utils.cpp"
+#include "utils.h"
 
 MString IKNode::NodeName = "FAITH_IKFKCalculate";
 

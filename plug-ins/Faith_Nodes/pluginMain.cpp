@@ -43,6 +43,11 @@ MStatus initializePlugin( MObject obj )
 		MPxNode::kDeformerNode);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
+	status = plugin.registerNode(splineMatrix::NodeName, splineMatrix::NodeID,
+		splineMatrix::creator, splineMatrix::initialize,
+		MPxNode::kDependNode);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
+
 	return status;
 }
 
@@ -70,6 +75,9 @@ MStatus uninitializePlugin( MObject obj )
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
 	status = plugin.deregisterNode(CorrectiveShape::NodeID);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
+
+	status = plugin.deregisterNode(splineMatrix::NodeID);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 	
 	return status;

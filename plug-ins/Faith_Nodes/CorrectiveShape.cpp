@@ -1,7 +1,7 @@
 #include "Faith_solvers.h"
 
 MString CorrectiveShape::NodeName = "FAITH_CorrectiveShape";
-MTypeId CorrectiveShape::NodeID = MTypeId(0x0021);
+MTypeId CorrectiveShape::NodeID = MTypeId(0x0017);
 
 MObject CorrectiveShape::aMatrix;
 MObject CorrectiveShape::aCorrectiveGeo;

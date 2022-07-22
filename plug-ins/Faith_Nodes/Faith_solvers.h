@@ -69,6 +69,7 @@
 #include "rapidjson/prettywriter.h"
 #include "rapidjson/stringbuffer.h"
 
+
 using namespace Eigen;
 using namespace std;
 
@@ -246,64 +247,6 @@ public:
 
 };
 
-class Swing : public MPxNode
-{
-public:
-							Swing();
-	virtual					~Swing() override;
-	virtual MStatus			compute(const MPlug& plug, MDataBlock& data) override;
-	static  void*			creator();
-	static  MStatus			initialize();
-
-	static  MString			NodeName;
-	static  MTypeId			NodeID;
-
-public:
-	// input attribute
-	static MObject inOutTime;
-	static MObject inSwingSpeed;
-	static MObject inSwingOffset;
-	static MObject inSwingReductionValue;
-	static MObject inSwingReduction;
-	static MObject outputUp;
-	static MObject outputDn;
-	static MObject inSwingAmplitudeXAdd;
-	static MObject inSwingAmplitudeYAdd;
-	static MObject inRoot_SwingAmplitudeX;
-	static MObject inRoot_SwingAmplitudeY;
-	static MObject inIK_SwingAmplitudeX;
-	static MObject inIK_SwingAmplitudeY;
-	
-};
-
-class Drum : public MPxNode
-{
-public:
-							Drum();
-	virtual					~Drum() override;
-	virtual MStatus			compute(const MPlug& plug, MDataBlock& data) override;
-	static  void*			creator();
-	static  MStatus			initialize();
-
-	static  MString			NodeName;
-	static  MTypeId			NodeID;
-
-public:
-	// input attribute
-	static MObject inOutTime;
-	static MObject inDrumSpeed;
-	static MObject inDrumOffset;
-	static MObject inDrumDefaultValue;
-	static MObject inDrumReduction;
-	static MObject inRoot_DrumStrength;
-	static MObject inIK_DrumStrength;
-	static MObject outScale;
-	static MObject outScaleX;
-	static MObject outScaleY;
-	static MObject outScaleZ;
-
-};
-
 class BlendMatrix : public MPxNode
 {
 public:
@@ -354,12 +297,14 @@ public:
 	static  MString			NodeName;
 	static  MTypeId			NodeID;
 
-	static  MObject			inputTransform;
-	static  MObject			intranslateX;
-	static  MObject			intranslateY;
-	static  MObject			outTransform;
-	static  MObject			outtranslateX;
-	static  MObject			outtranslateY;
+	static  MObject			aEnvelope;
+	static  MObject			aAmplitude;
+	static  MObject			aWaveLength;
+	static  MObject			aWaveFollow;
+	static  MObject			aStartPosition;
+	static  MObject			aReverse;
+	static  MObject			aOutputTransform;
+	static  MObject			aResult;
 
 private:
 

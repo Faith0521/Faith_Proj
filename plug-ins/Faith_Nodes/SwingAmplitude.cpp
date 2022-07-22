@@ -1,14 +1,17 @@
 #include "Faith_solvers.h"
+#include "utils.cpp"
 
 MString SwingAmplitude::NodeName = "FAITH_SwingAmplitude";
-MTypeId SwingAmplitude::NodeID = MTypeId(0x0018);
+MTypeId SwingAmplitude::NodeID = MTypeId(0x0020);
 
-MObject SwingAmplitude::inputTransform;
-MObject SwingAmplitude::intranslateX;
-MObject SwingAmplitude::intranslateY;
-MObject SwingAmplitude::outTransform;
-MObject SwingAmplitude::outtranslateX;
-MObject SwingAmplitude::outtranslateY;
+MObject SwingAmplitude::aEnvelope;
+MObject SwingAmplitude::aAmplitude;
+MObject SwingAmplitude::aWaveLength;
+MObject SwingAmplitude::aWaveFollow;
+MObject SwingAmplitude::aStartPosition;
+MObject SwingAmplitude::aReverse;
+MObject SwingAmplitude::aOutputTransform;
+MObject SwingAmplitude::aResult;
 
 SwingAmplitude::SwingAmplitude()
 {
@@ -22,23 +25,42 @@ MStatus SwingAmplitude::compute(const MPlug& plug, MDataBlock& data)
 {
 	MStatus status;
 
-	MArrayDataHandle InputArrayDataHandle = data.inputArrayValue(inputTransform);
+	unsigned i;
 
-	MArrayDataHandle outputArrayDataHandle = data.outputArrayValue(outTransform);
+	double oEnvelope = data.inputValue(aEnvelope).asDouble();
+	double oAmplitude = data.inputValue(aAmplitude).asDouble();
+	double oWaveLength = data.inputValue(aWaveLength).asDouble();
+	double oWaveFollow = data.inputValue(aWaveFollow).asDouble();
+	double oStartPosition = data.inputValue(aStartPosition).asDouble();
+	double oReverse = data.inputValue(aReverse).asDouble();
 
-	MArrayDataBuilder builder(outTransform, outputArrayDataHandle.elementCount());
-	for (unsigned i=0;i< outputArrayDataHandle.elementCount();i++)
+	MArrayDataHandle outputArrayDataHandle = data.outputArrayValue(aOutputTransform);
+	unsigned count = outputArrayDataHandle.elementCount();
+
+	for (i=0;i< count;i++)
 	{
-		MDataHandle outHandle = builder.addElement(i);
 		outputArrayDataHandle.jumpToElement(i);
-		double tx = outputArrayDataHandle.outputValue().child(outtranslateX).asDouble();
-		outHandle.setDouble(tx + i);
-	}
-	status = outputArrayDataHandle.set(builder);
-	CHECK_MSTATUS_AND_RETURN_IT(status);
+		MDataHandle eHandle = outputArrayDataHandle.outputValue(&status).child(aResult);
+		double test;
+		double sin01_PA = oWaveFollow * (-1) + oWaveLength * (i * (1.0 / (count - 1)));
+		double k = (count - 1) / 2.0;
+		double inReverse = oReverse * (k - i) + k;
+		double result_ = ((oStartPosition + inReverse - 0.0) / (double(count) - 0.0) * (1.0 - 0.0)) + 0.0;
+		if (result_ > 1.0)
+		{
+			test = 1.0;
+		}
+		else
+		{
+			test = result_;
+		}
+		double startPosition_PA = 1.0 - test;
+		double amplitude_MD = oAmplitude * (oEnvelope * startPosition_PA);
+		double result = amplitude_MD * sin(sin01_PA);
 
-	status = outputArrayDataHandle.setAllClean();
-	
+		eHandle.setDouble(result);
+	}
+
 	return MS::kSuccess;
 }
 
@@ -52,24 +74,58 @@ MStatus SwingAmplitude::initialize()
 	MFnCompoundAttribute c; 
 	MFnNumericAttribute n;
 
-	intranslateX = n.create("intranslateX", "ix", MFnNumericData::kDouble, 0.0);
-	n.setKeyable(true);
-	n.setStorable(true);
-	n.setWritable(true);
-	addAttribute(intranslateX);
-
-	outtranslateX = n.create("outtranslateX", "outtranslateX", MFnNumericData::kDouble, 0.0);
+	aResult = n.create("result", "result", MFnNumericData::kDouble, 0.0);
 	n.setKeyable(false);
 	n.setStorable(false);
 	n.setWritable(false);
 
-	outTransform = c.create("outTransform", "outTransform");
+	aOutputTransform = c.create("outTransform", "ot");
 	c.setArray(true);
 	c.setUsesArrayDataBuilder(true);
-	c.addChild(outtranslateX);
+	c.addChild(aResult);
+	addAttribute(aOutputTransform);
 
-	addAttribute(outTransform);
-	attributeAffects(intranslateX, outTransform);
+	aEnvelope = n.create("envelope", "envelope", MFnNumericData::kDouble, 0.0);
+	n.setKeyable(true);
+	n.setStorable(true);
+	n.setWritable(true);
+	addAttribute(aEnvelope);
+	attributeAffects(aEnvelope, aOutputTransform);
+
+	aAmplitude = n.create("amplitude", "amp", MFnNumericData::kDouble, 0.0);
+	n.setKeyable(true);
+	n.setStorable(true);
+	n.setWritable(true);
+	addAttribute(aAmplitude);
+	attributeAffects(aAmplitude, aOutputTransform);
+
+	aWaveLength = n.create("waveLength", "wl", MFnNumericData::kDouble, 0.0);
+	n.setKeyable(true);
+	n.setStorable(true);
+	n.setWritable(true);
+	addAttribute(aWaveLength);
+	attributeAffects(aWaveLength, aOutputTransform);
+	
+	aWaveFollow = n.create("waveFollow", "wf", MFnNumericData::kDouble, 0.0);
+	n.setKeyable(true);
+	n.setStorable(true);
+	n.setWritable(true);
+	addAttribute(aWaveFollow);
+	attributeAffects(aWaveFollow, aOutputTransform);
+
+	aStartPosition = n.create("startPosition", "sp", MFnNumericData::kDouble, 0.0);
+	n.setKeyable(true);
+	n.setStorable(true);
+	n.setWritable(true);
+	addAttribute(aStartPosition);
+	attributeAffects(aStartPosition, aOutputTransform);
+
+	aReverse = n.create("reverse", "reverse", MFnNumericData::kDouble, 0.0);
+	n.setKeyable(true);
+	n.setStorable(true);
+	n.setWritable(true);
+	addAttribute(aReverse);
+	attributeAffects(aReverse, aOutputTransform);
 
 	return MS::kSuccess;
 }

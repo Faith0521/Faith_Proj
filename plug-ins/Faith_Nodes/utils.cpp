@@ -118,3 +118,21 @@ double radians2degrees(double a) {
 double degrees2radians(double a) {
 	return a * 0.0174532925;
 }
+
+double setRange(double oldMin, double oldMax, double newMin, double newMax, double value)
+{
+	double result = ((value - oldMin) / (oldMax - oldMin)* (newMax - newMin)) + newMin;
+	if (result > newMax)
+	{
+		return newMax;
+	}
+	if (result < newMin)
+	{
+		return newMin;
+	}
+	else
+	{
+		return result;
+	}
+	
+}

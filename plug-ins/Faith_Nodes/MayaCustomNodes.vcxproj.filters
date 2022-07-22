@@ -35,12 +35,6 @@
     <ClCompile Include="SquashNode.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Swing.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Drum.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="transferSkinWeights.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

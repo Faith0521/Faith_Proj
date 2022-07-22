@@ -1,7 +1,7 @@
 #include "Faith_solvers.h"
 
 MString MatrixMult::NodeName = "FAITH_MatrixMult";
-MTypeId MatrixMult::NodeID = MTypeId(0x0020);
+MTypeId MatrixMult::NodeID = MTypeId(0x0018);
 
 MObject MatrixMult::inMatrixA;
 MObject MatrixMult::inMatrixB;

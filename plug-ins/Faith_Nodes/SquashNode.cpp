@@ -2,7 +2,7 @@
 #include "utils.cpp"
 
 MString SquashNode::NodeName = "FAITH_Squash";
-MTypeId SquashNode::NodeID = MTypeId(0x0014);
+MTypeId SquashNode::NodeID = MTypeId(0x0019);
 
 MObject SquashNode::globalScale;
 MObject SquashNode::globalScalex;

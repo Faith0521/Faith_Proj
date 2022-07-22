@@ -2,7 +2,7 @@
 #include "utils.cpp"
 
 MString BlendMatrix::NodeName = "FAITH_BlendMatrix";
-MTypeId BlendMatrix::NodeID = MTypeId(0x0019);
+MTypeId BlendMatrix::NodeID = MTypeId(0x0016);
 
 MObject BlendMatrix::aOutputMatrix;
 MObject BlendMatrix::aOffsetMatrix;

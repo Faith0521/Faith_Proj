@@ -16,16 +16,6 @@ MStatus initializePlugin( MObject obj )
 		MPxNode::kDependNode);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
-	status = plugin.registerNode(Swing::NodeName, Swing::NodeID,
-		Swing::creator, Swing::initialize,
-		MPxNode::kDependNode);
-	CHECK_MSTATUS_AND_RETURN_IT(status);
-
-	status = plugin.registerNode(Drum::NodeName, Drum::NodeID,
-		Drum::creator, Drum::initialize,
-		MPxNode::kDependNode);
-	CHECK_MSTATUS_AND_RETURN_IT(status);
-
 	status = plugin.registerFileTranslator(
 		"skin", "none", transferSkinWeights::creator,
 		(char*)optionScript,
@@ -65,12 +55,6 @@ MStatus uninitializePlugin( MObject obj )
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
 	status = plugin.deregisterNode(SquashNode::NodeID);
-	CHECK_MSTATUS_AND_RETURN_IT(status);
-
-	status = plugin.deregisterNode(Swing::NodeID);
-	CHECK_MSTATUS_AND_RETURN_IT(status);
-
-	status = plugin.deregisterNode(Drum::NodeID);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
 	status = plugin.deregisterFileTranslator("skin");

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: YinYuFei
 # @Date:   2022-06-19 16:49:53
-# @Last Modified by:   YinYuFei
-# @Last Modified time: 2022-07-05 21:41:54
+# @Last Modified by:   yinyufei
+# @Last Modified time: 2022-07-21 11:41:58
 
 from Faith.Core import aboutPy, utils
 import json
@@ -403,6 +403,11 @@ def invertKeyValues(sdkInfo, invertDriver=True, invertDriven=True):
                 else:
                     timeValue = frameValue[0]
                     value = frameValue[1]
+
+                connectionObj = pm.connectionInfo(drivenNodes[j] + '.' + drivenAttrs[j], sfd=1)
+                
+                if connectionObj != '' and 'animCurve' in pm.nodeType(connectionObj):
+                    pass
 
                 pm.setDrivenKeyframe(drivenNodes[j], at=drivenAttrs[j], cd=driverNode+'.'+driverAttr, dv=timeValue,
                                      value=value)

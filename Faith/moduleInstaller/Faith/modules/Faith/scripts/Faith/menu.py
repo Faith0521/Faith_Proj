@@ -1,7 +1,7 @@
 import pymel.core as pm
 import Faith
 
-menuName = "Faith"
+menuName = "Faith_Tool"
 
 def create(menuName = menuName):
     """

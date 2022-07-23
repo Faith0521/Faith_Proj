@@ -2503,6 +2503,35 @@ class asNode(object):
             return self.getAttr('radius')
         self.setAttr('radius', val)
 
+    def jntSplit(self,
+                 splitCount=1,
+                 makeCopy=False,
+                 namePrefix=None,
+                 nameSuffix="Skin_Jnt",
+                 matchOrient=False,
+                 getPos=0,
+                 getLoc=0,
+                 getEnds=0):
+        """
+
+        @param splitCount:
+        @param makeCopy:
+        @param namePrefix:
+        @param nameSuffix:
+        @param matchOrient:
+        @param getPos:
+        @param getLoc:
+        @param getEnds:
+        @return:
+        """
+        base_jnt = self.asObj
+        chd_jnt = base_jnt.child()
+        if not chd_jnt:
+            return []
+        else:
+            jnt_Axis = base_jnt.jntAxis
+            print(jnt_Axis)
+
     def jntDist(self, includeHI=False, impliedParent=True):
         """
 

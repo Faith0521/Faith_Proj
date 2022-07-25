@@ -92,7 +92,6 @@ MStatus splineMatrix::initialize()
 	MFnNumericAttribute  nAttr;
 	MFnMatrixAttribute   mAttr;
 	MFnTypedAttribute    tAttr;
-	MFnCompoundAttribute cAttr;
 
 	aOutputMatrix = mAttr.create("outputMatrix", "outputMatrix");
 	mAttr.setArray(true);

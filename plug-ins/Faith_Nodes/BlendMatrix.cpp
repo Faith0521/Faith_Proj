@@ -5,6 +5,7 @@ MString BlendMatrix::NodeName = "FAITH_BlendMatrix";
 MTypeId BlendMatrix::NodeID = MTypeId(0x0016);
 
 MObject BlendMatrix::aOutputMatrix;
+MObject BlendMatrix::aOutputDriverOffsetMatrix;
 MObject BlendMatrix::aOffsetMatrix;
 MObject BlendMatrix::aRestMatrix;
 MObject BlendMatrix::aParentInverseMatrix;
@@ -37,19 +38,26 @@ MStatus BlendMatrix::initialize() {
 	mAttr.setStorable(false);
 	addAttribute(aOutputMatrix);
 
+	aOutputDriverOffsetMatrix = mAttr.create("outputDriverOffsetMatrix", "outputDriverOffsetMatrix", MFnMatrixAttribute::kDouble);
+	mAttr.setKeyable(false);
+	mAttr.setWritable(false);
+	mAttr.setStorable(false);
+	addAttribute(aOutputDriverOffsetMatrix);
+
 	aOffsetMatrix = mAttr.create("offsetMatrix", "offsetMatrix");
 	mAttr.setWritable(true);
 	mAttr.setStorable(true);
-	mAttr.setReadable(false);
+	mAttr.setReadable(true);
 	addAttribute(aOffsetMatrix);
 	attributeAffects(aOffsetMatrix, aOutputMatrix);
 
 	aRestMatrix = mAttr.create("restMatrix", "restMatrix");
 	mAttr.setWritable(true);
 	mAttr.setStorable(true);
-	mAttr.setReadable(false);
+	mAttr.setReadable(true);
 	addAttribute(aRestMatrix);
 	attributeAffects(aRestMatrix, aOutputMatrix);
+	attributeAffects(aRestMatrix, aOutputDriverOffsetMatrix);
 
 	aParentInverseMatrix = mAttr.create("ParentInverseMatrix", "ParentInverseMatrix");
 	mAttr.setWritable(true);
@@ -91,6 +99,7 @@ MStatus BlendMatrix::initialize() {
 	nAttr.setDefault(0.0, 0.0, 0.0);
 	addAttribute(aDriverRotationOffset);
 	attributeAffects(aDriverRotationOffset, aOutputMatrix);
+	attributeAffects(aDriverRotationOffset, aOutputDriverOffsetMatrix);
 
 	aBlendTranslateWeight = nAttr.create("blendTranslateWeight", "blendTranslateWeight", MFnNumericData::kFloat, 1);
 	nAttr.setKeyable(true);
@@ -119,6 +128,7 @@ MStatus BlendMatrix::initialize() {
 	cAttr.addChild(aBlendShearWeight);
 	addAttribute(aBlendMatrix);
 	attributeAffects(aBlendMatrix, aOutputMatrix);
+	attributeAffects(aBlendMatrix, aOutputDriverOffsetMatrix);
 
 	return MS::kSuccess;
 }
@@ -130,10 +140,13 @@ void* BlendMatrix::creator() {
 
 MStatus BlendMatrix::compute(const MPlug& plug, MDataBlock& data) {
 	MStatus status;
-
+	MTransformationMatrix result;
 	if (plug != aOutputMatrix) {
 		return MS::kUnknownParameter;
 	}
+
+	double scale[3];
+	double shear[3];
 
 	MArrayDataHandle hBlendMatrix = data.inputArrayValue(aBlendMatrix);
 	int count = hBlendMatrix.elementCount();
@@ -189,7 +202,7 @@ MStatus BlendMatrix::compute(const MPlug& plug, MDataBlock& data) {
 
 	MDataHandle hOut = data.outputValue(aOutputMatrix);
 	
-	MMatrix driver_matrix = offsetMatrix * outputMatrix * parentInverse;
+	MMatrix driver_matrix = offsetMatrix * outputMatrix;
 	
 	double in_driver_rotation_offset_x = data.inputValue(aDriverRotationOffsetX, &status).asDouble();
 	double in_driver_rotation_offset_y = data.inputValue(aDriverRotationOffsetY, &status).asDouble();
@@ -204,8 +217,32 @@ MStatus BlendMatrix::compute(const MPlug& plug, MDataBlock& data) {
 	// rotateBy
 	MTransformationMatrix driver_matrix_off = driver_matrix_tfm.rotateBy(euler_off, MSpace::kPreTransform);
 
-	hOut.setMMatrix(driver_matrix_off.asMatrix());
-	hOut.setClean();
+	MMatrix mult_matrix = driver_matrix_off.asMatrix() * parentInverse;
+
+	MMatrix rotate_matrix = mult_matrix * restMatrix.inverse();
+
+	MTransformationMatrix matrix(mult_matrix);
+	MTransformationMatrix rotate_tfm(rotate_matrix);
+	MQuaternion rotation = rotate_tfm.rotation();
+
+	MVector translation = matrix.getTranslation(MSpace::kWorld);
+	matrix.getScale(scale, MSpace::kWorld);
+	matrix.getShear(shear, MSpace::kWorld);
+
+	// -- compose our matrix
+	result.setTranslation(translation, MSpace::kWorld);
+	result.setRotationQuaternion(rotation.x, rotation.y, rotation.z, rotation.w);
+	result.setScale(scale, MSpace::kWorld);
+	result.setShear(shear, MSpace::kWorld);
+
+	hOut.setMMatrix(result.asMatrix());
+	data.setClean(aOutputMatrix);
+
+	MDataHandle matrix_driver_off_handle = data.outputValue(aOutputDriverOffsetMatrix, &status);
+	matrix_driver_off_handle.setMMatrix(driver_matrix_off.asMatrix());
+	data.setClean(aOutputDriverOffsetMatrix);
+
+	data.setClean(plug);
 
 	return MS::kSuccess;
 }

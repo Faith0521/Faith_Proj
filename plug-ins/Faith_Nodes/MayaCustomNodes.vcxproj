@@ -15,6 +15,7 @@
     <ClCompile Include="CorrectiveShape.cpp" />
     <ClCompile Include="IKNode.cpp" />
     <ClCompile Include="MatrixMult.cpp" />
+    <ClCompile Include="nearstPoint.cpp" />
     <ClCompile Include="pluginMain.cpp" />
     <ClCompile Include="splineMatrix.cpp" />
     <ClCompile Include="SquashNode.cpp" />

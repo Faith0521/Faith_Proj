@@ -255,6 +255,7 @@ public:
 	static  MTypeId			NodeID;
 
 	static  MObject			aOutputMatrix;
+	static  MObject			aOutputDriverOffsetMatrix;
 	static  MObject			aOffsetMatrix;
 	static  MObject			aRestMatrix;
 	static  MObject			aParentInverseMatrix;
@@ -371,6 +372,27 @@ public:
 	double					minParam;
 	double					maxParam;
 	bool					angleByTangent;
+
+};
+
+class nearstPoint : public MPxNode
+{
+public:
+							nearstPoint();
+	virtual					~nearstPoint() override;
+	virtual	MStatus			compute(const MPlug& plug, MDataBlock& data) override;
+	static  void*			creator();
+	static  MStatus			initialize();
+	static  MString			NodeName;
+	static  MTypeId			NodeID;
+
+	static  MObject			ainputCurve;
+	static  MObject			aInPosition;
+	static  MObject			aPosition;
+	static  MObject			aOutputResult;
+	static  MObject			aResult;
+	static  MObject			aOutputPosition;
+	static  MObject			aOutputParameter;
 
 };
 

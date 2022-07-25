@@ -338,6 +338,12 @@ def _matrix_cns(in_objs,
         pm.connectAttr(out_obj + ".parentInverseMatrix[0]",
                        node + ".ParentInverseMatrix", force=True)
 
+        pm.refresh()
+        driver_m = datatypes.Matrix(pm.getAttr(node + ".outputDriverOffsetMatrix"))
+        driven_m = datatypes.Matrix(pm.getAttr(out_obj + ".parentInverseMatrix[0]"))
+        mult = driver_m * driven_m
+        pm.setAttr(node + ".restMatrix", mult, type="matrix")
+
         if offset_mat:
             pm.setAttr("%s.offsetMatrix"%(node), pm.getAttr("%s.worldMatrix[0]"%out_obj))
         # connect srt (scale, rotation, translation)

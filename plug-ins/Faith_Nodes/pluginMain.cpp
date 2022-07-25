@@ -48,6 +48,11 @@ MStatus initializePlugin( MObject obj )
 		MPxNode::kDependNode);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
+	status = plugin.registerNode(nearstPoint::NodeName, nearstPoint::NodeID,
+		nearstPoint::creator, nearstPoint::initialize,
+		MPxNode::kDependNode);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
+
 	return status;
 }
 
@@ -78,6 +83,9 @@ MStatus uninitializePlugin( MObject obj )
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
 	status = plugin.deregisterNode(splineMatrix::NodeID);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
+
+	status = plugin.deregisterNode(nearstPoint::NodeID);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 	
 	return status;

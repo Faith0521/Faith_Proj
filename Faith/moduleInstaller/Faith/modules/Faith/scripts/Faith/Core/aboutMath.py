@@ -5,9 +5,7 @@
 # @Last Modified time: 2022-06-09 19:44:43
 
 import math
-import pymel.core as pm,maya.cmds as mc
 from pymel.core.datatypes import Vector,Point,Matrix,Quaternion,EulerRotation
-
 
 class Spline(object):
 
@@ -110,6 +108,14 @@ class Spline(object):
     #     print(cms, jps)
     #     for joint, p in zip(joints, jps):
     #         joint.setTranslation(p, space="world")
+
+class Aim(object):
+    def __init__(self, ):
+
+
+localXform = Matrix()
+localXform[3][0] = length / sampleCount
+
 
 
 

@@ -62,7 +62,7 @@ def pin_to_surface(oNurbs, sourceObj=None, uPos=0.5, vPos=0.5):
         pm.delete(oNode)
 
     pName = '{}_foll#'.format(oNurbs.name())
-    result = pm.spaceLocator(n=pName).getShape()
+    result = pm.createNode('transform', n=pName)
     result.addAttr('parameterU', at='double', keyable=True, dv=uPos)
     result.addAttr('parameterV', at='double', keyable=True, dv=vPos)
     # set min and max ranges for the follicle along the UV limits.
@@ -77,8 +77,8 @@ def pin_to_surface(oNurbs, sourceObj=None, uPos=0.5, vPos=0.5):
     mtx = pm.createNode('fourByFourMatrix')
     outMatrix = pm.createNode('decomposeMatrix')
     mtx.output.connect(outMatrix.inputMatrix)
-    outMatrix.outputTranslate.connect(result.getTransform().translate)
-    outMatrix.outputRotate.connect(result.getTransform().rotate)
+    outMatrix.outputTranslate.connect(result.translate)
+    outMatrix.outputRotate.connect(result.rotate)
 
     '''
     # Normalize these vectors

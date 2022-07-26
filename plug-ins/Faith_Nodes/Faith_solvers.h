@@ -303,8 +303,6 @@ public:
 	static  MObject			aOutputTransform;
 	static  MObject			aResult;
 
-private:
-
 };
 
 class MatrixMult : public MPxNode
@@ -396,6 +394,21 @@ public:
 
 };
 
+class Curly : public MPxNode
+{
+public:
+							Curly();
+	virtual					~Curly() override;
+	virtual	MStatus			compute(const MPlug& plug, MDataBlock& data) override;
+	static  void*			creator();
+	static  MStatus			initialize();
+	static  MString			NodeName;
+	static  MTypeId			NodeID;
+
+	static  MObject			ainputCurve;
+
+
+};
 
 #endif // !IKNODE_H
 

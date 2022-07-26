@@ -37,7 +37,7 @@ MStatus SwingAmplitude::compute(const MPlug& plug, MDataBlock& data)
 	MArrayDataHandle outputArrayDataHandle = data.outputArrayValue(aOutputTransform);
 	unsigned count = outputArrayDataHandle.elementCount();
 
-	for (i=0;i< count;i++)
+	for (i=0;i< count;i++, outputArrayDataHandle.next())
 	{
 		outputArrayDataHandle.jumpToElement(i);
 		MDataHandle eHandle = outputArrayDataHandle.outputValue(&status).child(aResult);

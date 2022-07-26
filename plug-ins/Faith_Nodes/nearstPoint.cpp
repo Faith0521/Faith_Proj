@@ -23,7 +23,7 @@ MStatus nearstPoint::compute(const MPlug& plug, MDataBlock& data)
 {
 	MStatus status;
 
-	int i;
+	int i,j;
 	MDataHandle hInputCurve = data.inputValue(ainputCurve, &status);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
@@ -36,13 +36,27 @@ MStatus nearstPoint::compute(const MPlug& plug, MDataBlock& data)
 
 	int numPosition = hInputPosition.elementCount();
 
-	for (i=0; i<numPosition; i++)
+	MPointArray ptArray;
+	MDoubleArray paramArray;
+	double param;
+
+	for (i=0; i<numPosition; i++, hInputPosition.next())
 	{
-		outputArrayDataHandle.jumpToElement(i);
-		MDataHandle pHandle = outputArrayDataHandle.outputValue(&status).child(aOutputPosition);
-		//MPoint inPoint(hInputPosition.inputValue(&status).asFloatVector());
-		//MPoint clstPt = nurbsFn.closestPoint(inPoint, false, NULL, 0.01, MSpace::kWorld);
-		pHandle.set3Float(0.0, 1.0, 0.0);
+		hInputPosition.jumpToElement(i);
+		MPoint inPoint(hInputPosition.inputValue(&status).asFloatVector());
+		MPoint clstPt = nurbsFn.closestPoint(inPoint, false, NULL, 0.01, MSpace::kWorld);
+		nurbsFn.getParamAtPoint(clstPt, param, MSpace::kWorld);
+		ptArray.append(clstPt);
+		paramArray.append(param);
+	}
+
+	for (j=0; j<outputArrayDataHandle.elementCount(); j++, outputArrayDataHandle.next())
+	{
+		outputArrayDataHandle.jumpToElement(j);
+		MDataHandle h_position = outputArrayDataHandle.outputValue(&status).child(aPosition);
+		MDataHandle h_param = outputArrayDataHandle.outputValue(&status).child(aOutputParameter);
+		h_position.set3Float(ptArray[j].x, ptArray[j].y, ptArray[j].z);
+		h_param.setDouble(paramArray[j]);
 	}
 
 	data.setClean(plug);

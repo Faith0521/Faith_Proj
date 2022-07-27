@@ -13,10 +13,12 @@
   <ItemGroup>
     <ClCompile Include="BlendMatrix.cpp" />
     <ClCompile Include="CorrectiveShape.cpp" />
+    <ClCompile Include="Faith_solvers.cpp" />
     <ClCompile Include="IKNode.cpp" />
     <ClCompile Include="MatrixMult.cpp" />
     <ClCompile Include="nearstPoint.cpp" />
     <ClCompile Include="pluginMain.cpp" />
+    <ClCompile Include="SlideRange.cpp" />
     <ClCompile Include="splineMatrix.cpp" />
     <ClCompile Include="SquashNode.cpp" />
     <ClCompile Include="SwingAmplitude.cpp" />
@@ -36,7 +38,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>

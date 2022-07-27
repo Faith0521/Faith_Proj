@@ -63,6 +63,22 @@ int clamp(int d, int min_value, int max_value) {
 	return d;
 }
 
+double remap(double inVal, double inMin, double inMax, double outMin, double outMax)
+{
+	double inResult, outResult;
+	inResult = clamp(inVal, inMin, inMax);
+	outResult = clamp(inResult, outMin, outMax);
+	return outResult;
+}
+
+int remap(int inVal, int inMin, int inMax, int outMin, int outMax)
+{
+	int inResult, outResult;
+	inResult = clamp(inVal, inMin, inMax);
+	outResult = clamp(inResult, outMin, outMax);
+	return outResult;
+}
+
 double smoothstep(double edge0, double edge1, double x) {
 	// Scale, bias and saturate x to 0..1 range
 	x = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);

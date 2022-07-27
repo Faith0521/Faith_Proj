@@ -1,0 +1,29 @@
+global proc AEFAITH_SlideRangeTemplate( string $nodeName )
+{
+    // the following controls will be in a scrollable layout
+    editorTemplate -beginScrollLayout;
+
+        editorTemplate -beginLayout "AEFAITH_SlideRangeTemplate Attributes" -collapse 0;
+            // editorTemplate -addControl "axis";
+            // editorTemplate -addControl "rangeStart";
+            // editorTemplate -addControl "rangeEnd";
+            // editorTemplate -addControl "offset";
+            // editorTemplate -beginNoOptimize;
+            // editorTemplate -addControl "mirror";
+            // editorTemplate -annotation "Limits the startRange value in mirror mode to 0" -addControl "clamp";
+            // editorTemplate -addControl "centered";
+            // editorTemplate -addControl "invert";
+            // editorTemplate -addControl "useTransform";
+            // editorTemplate -endNoOptimize;
+            // editorTemplate -addControl "multiply";
+            AEaddRampControl( $nodeName + ".blendCurve" );
+        editorTemplate -endLayout;
+
+        // include/call base class/node attributes
+        AEdependNodeTemplate $nodeName;
+
+        // add any extra attributes that have been added
+        editorTemplate -addExtraControls;
+
+    editorTemplate -endScrollLayout;
+}

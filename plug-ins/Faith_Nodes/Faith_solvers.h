@@ -56,6 +56,7 @@
 #include <maya/MFnTransform.h>
 #include <maya/MItGeometry.h>
 #include <maya/MTypes.h>
+#include <maya/MCurveAttribute.h>
 #include <maya/MEulerRotation.h>
 #include <maya/MPxFileTranslator.h>
 #include <maya/MItSelectionList.h>
@@ -405,9 +406,49 @@ public:
 	static  MString			NodeName;
 	static  MTypeId			NodeID;
 
-	static  MObject			ainputCurve;
+	static  MObject			aCurly;
+	static  MObject			aInCurly;
+	static  MObject			aInCurlyStrength;
+	static  MObject			aInCurlyClamp;
 
+	static  MObject			aBodyCurly;
+	static  MObject			aInBodyCurly;
+	static  MObject			aInBodyCurlyStrength;
+	static  MObject			aInBodyCurlyClamp;
 
+	static  MObject			aResult;
+	static  MObject			aOutCurly;
+	static  MObject			aOutBodyCurly;
+
+};
+
+class SlideRange : public MPxNode
+{
+public:
+							SlideRange();
+	virtual					~SlideRange() override;
+	virtual	MStatus			compute(const MPlug& plug, MDataBlock& data) override;
+	static  void*			creator();
+	static  MStatus			initialize();
+	void					postConstructor() override;
+	static  MString			NodeName;
+	static  MTypeId			NodeID;
+
+	MStatus					postConstructor_init_curveRamp(MObject& nodeObj,
+							MObject& rampObj,
+							int index,
+							float position,
+							float value,
+							int interpolation);
+
+	static  MObject			aInCurve;
+	static  MObject			aCurveRamp;
+	static  MObject			aInPosition;
+	static  MObject			aInSlidePosition;
+	static	MObject			aOutputTransform;
+	static	MObject			aOutputTranslate;
+	static	MObject			aOutputRotate;
+	static	MObject			aOutputScale;
 };
 
 #endif // !IKNODE_H

@@ -53,6 +53,11 @@ MStatus initializePlugin( MObject obj )
 		MPxNode::kDependNode);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
+	status = plugin.registerNode(SlideRange::NodeName, SlideRange::NodeID,
+		SlideRange::creator, SlideRange::initialize,
+		MPxNode::kDependNode);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
+
 	return status;
 }
 
@@ -86,6 +91,9 @@ MStatus uninitializePlugin( MObject obj )
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
 	status = plugin.deregisterNode(nearstPoint::NodeID);
+	CHECK_MSTATUS_AND_RETURN_IT(status);
+
+	status = plugin.deregisterNode(SlideRange::NodeID);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 	
 	return status;

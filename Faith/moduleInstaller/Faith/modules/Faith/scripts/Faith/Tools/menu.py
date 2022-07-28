@@ -40,7 +40,8 @@ def install_skin():
 
 
 str_show_sdk = """
-
+import Faith.Tools.SDK_Manager.UI.ui_manager as ui
+ui.show_guide_component_manager()
 """
 str_bs_show = """
 

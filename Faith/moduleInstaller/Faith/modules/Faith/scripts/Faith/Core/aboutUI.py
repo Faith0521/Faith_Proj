@@ -99,12 +99,12 @@ class DragQListView(QtWidgets.QListView):
 
             relpos = widget.mapFromGlobal(pos)
             invY = widget.frameSize().height() - relpos.y()
-            sel = selectFromScreenApi(relpos.x() - self.exp,
-                                      invY - self.exp,
-                                      relpos.x() + self.exp,
-                                      invY + self.exp)
-
-            self.doAction(sel)
+            # sel = selectFromScreenApi(relpos.x() - self.exp,
+            #                           invY - self.exp,
+            #                           relpos.x() + self.exp,
+            #                           invY + self.exp)
+            #
+            # self.doAction(sel)
 
     def setAction(self, action):
         self.theAction = action

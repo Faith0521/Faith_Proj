@@ -3,7 +3,14 @@
 MString SlideRange::NodeName = "FAITH_SlideRange";
 MTypeId SlideRange::NodeID = MTypeId(0x0023);
 
+MObject SlideRange::aInCurve;
 MObject SlideRange::aCurveRamp;
+MObject SlideRange::aInPosition;
+MObject SlideRange::aInSlidePosition;
+MObject SlideRange::aOutputTransform;
+MObject SlideRange::aOutputTranslate;
+MObject SlideRange::aOutputRotate;
+MObject SlideRange::aOutputScale;
 
 SlideRange::SlideRange()
 {
@@ -39,10 +46,54 @@ MStatus SlideRange::initialize()
 {
 	MFnNumericAttribute nAttr;
 	MRampAttribute rAttr;
+	MFnCompoundAttribute cAttr;
+	MFnTypedAttribute tAttr;
+
+	aOutputTranslate = nAttr.createPoint("Translate", "tr");
+
+	aOutputRotate = nAttr.createPoint("Rotate", "ro");
+
+	aOutputScale = nAttr.createPoint("Scale", "scl");
+
+	aOutputTransform = cAttr.create("outputTransform", "ot");
+	cAttr.setArray(true);
+	cAttr.setUsesArrayDataBuilder(true);
+	cAttr.addChild(aOutputTranslate);
+	cAttr.addChild(aOutputRotate);
+	cAttr.addChild(aOutputScale);
+	cAttr.setKeyable(false);
+	cAttr.setWritable(false);
+	cAttr.setStorable(false);
+	addAttribute(aOutputTransform);
 
 	aCurveRamp = rAttr.createCurveRamp("blendCurve", "bc");
 	addAttribute(aCurveRamp);
-	attributeAffects(aCurveRamp, aOutputVale);
+	attributeAffects(aCurveRamp, aOutputTransform);
+
+	aInCurve = tAttr.create("inCurve", "incv", MFnData::kNurbsCurve);
+	tAttr.setKeyable(true);
+	tAttr.setWritable(true);
+	tAttr.setStorable(true);
+	addAttribute(aInCurve);
+	attributeAffects(aInCurve, aOutputTransform);
+
+	aInPosition = nAttr.createPoint("inPosition", "ip");
+	nAttr.setArray(true);
+	nAttr.setUsesArrayDataBuilder(true);
+	nAttr.setKeyable(true);
+	nAttr.setWritable(true);
+	nAttr.setStorable(true);
+	addAttribute(aInPosition);
+	attributeAffects(aInPosition, aOutputTransform);
+
+	aInSlidePosition = nAttr.createPoint("inSlidePosition", "isp");
+	nAttr.setArray(true);
+	nAttr.setUsesArrayDataBuilder(true);
+	nAttr.setKeyable(true);
+	nAttr.setWritable(true);
+	nAttr.setStorable(true);
+	addAttribute(aInSlidePosition);
+	attributeAffects(aInSlidePosition, aOutputTransform);
 	
 	return MS::kSuccess;
 }

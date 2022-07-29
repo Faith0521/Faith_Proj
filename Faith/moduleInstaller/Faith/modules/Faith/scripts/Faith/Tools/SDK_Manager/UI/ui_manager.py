@@ -90,10 +90,14 @@ class DockableMainUI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         else:
             self.allSDKInfo_dict = aboutSDK.getSDKInfoFromNode(node, "after")
 
-        for animNode, infoDict in self.allSDKInfo_dict.items():
-            driver = infoDict["driverNode"]
-            model.appendRow(QtGui.QStandardItem(driver))
-            self.__proxyModel01.setSourceModel(model)
+        driverList = []
+        for sdk,infoDict in self.allSDKInfo_dict.items():
+            driverNode = infoDict["driverNode"]
+            drivenAttrs = infoDict["drivenAttrs"]
+            item = self.mainUI.driven_list.selectedIndexes()[0].data()
+            if item in drivenAttrs:
+                model.appendRow(QtGui.QStandardItem(driverNode))
+        self.__proxyModel01.setSourceModel(model)
 
     def loadObj(self):
         """
@@ -105,9 +109,43 @@ class DockableMainUI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
             self.mainUI.node_le.setText(selection[0].name())
         if len(selection) > 1:
             pm.warning("You select two more objects in the scene.")
+        if not selection:
+            self.mainUI.node_le.setText("")
+            self.refreshList()
 
         if self.mainUI.node_le.text() != "":
-            self._refreshDrivenList(selection[0].name())
+            self.refreshList(selection[0].name())
+
+    def refreshList(self, node=None):
+        """
+
+        @return:
+        """
+        model_01 = QtGui.QStandardItemModel(self)
+        model_02 = QtGui.QStandardItemModel(self)
+        self.__proxyModel02.setSourceModel(model_01)
+        self.__proxyModel01.setSourceModel(model_02)
+
+        if node:
+            self.allSDKInfo_dict = {}
+            driverAttrs = []
+            drivenList = []
+            if self.mainUI.frnt_rbtn.isChecked():
+                self.allSDKInfo_dict = aboutSDK.getSDKInfoFromNode(node, "front")
+                for animNode, infoDict in self.allSDKInfo_dict.items():
+                    drivenList.extend(infoDict["drivenAttrs"])
+                drivenList = set(drivenList)    
+                for obj in drivenList:
+                    model_01.appendRow(QtGui.QStandardItem(obj))
+                self.__proxyModel02.setSourceModel(model_01)
+            if self.mainUI.after_rbtn.isChecked():
+                self.allSDKInfo_dict = aboutSDK.getSDKInfoFromNode(node, "after")
+                for animNode, infoDict in self.allSDKInfo_dict.items():
+                    driverAttrs.append(infoDict["driverAttr"])
+                driverAttrs = set(driverAttrs)
+                for attr in driverAttrs:
+                    model_02.appendRow(QtGui.QStandardItem(attr))
+                    self.__proxyModel01.setSourceModel(model_02)
 
     def _refreshDrivenList(self, node):
         """

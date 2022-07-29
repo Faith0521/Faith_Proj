@@ -2,7 +2,7 @@
 # @Author: YinYuFei
 # @Date:   2022-06-19 16:49:53
 # @Last Modified by:   yinyufei
-# @Last Modified time: 2022-07-21 11:41:58
+# @Last Modified time: 2022-07-29 15:52:33
 
 from Faith.Core import aboutPy, utils
 import json
@@ -95,7 +95,7 @@ def getSDKInfoFromNode(node, expType="after"):
                                                  plugs = True)
             if testConnections:
                 retrievedSDKNodes = getConnectedSDKs(
-                    attr = "%s.%s"%(node, eachAttr),expType=expType)
+                    attribute = "%s.%s"%(node, eachAttr),expType=expType)
                 if expType == "front":
                     retrievedSDKNodes.extend(getMultSDKs("%s.%s"%(node, eachAttr)))
                 if expType == "front":
@@ -236,7 +236,14 @@ def getSDKInfo(animNode):
                                           source=True,
                                           plugs=True,
                                           scn=True)[0]
-    driverNode, driverAttr = sourceDriverAttr.split(".")
+    if "blendWeighted" in pm.nodeType(sourceDriverAttr):
+        sourceDriverAttr_new = pm.listConnections(sourceDriverAttr.replace('output','input'),
+                                          source=True,
+                                          plugs=True,
+                                          scn=True)[0]
+        driverNode, driverAttr = sourceDriverAttr_new.split(".")
+    else:
+        driverNode, driverAttr = sourceDriverAttr.split(".")
     sdkInfo_dict["driverNode"] = driverNode
     sdkInfo_dict["driverAttr"] = driverAttr
 
@@ -264,7 +271,7 @@ def getSDKDestination(animNodeOutputPlug):
     drivenAttrs = []
     for i, attr in enumerate(attrTargets):
         if attr != '':
-            while 'unitConversion' in attrTargets[i] or 'blendWeighted' in attrTargets[i]:
+            while 'unitConversion' in pm.nodeType(attrTargets[i]) or 'blendWeighted' in pm.nodeType(attrTargets[i]):
                 attrTargets[i] = \
                     pm.connectionInfo(attrTargets[i][:attrTargets[i].index('.')] + '.output', dfs=1)[0]
         else:
@@ -274,7 +281,7 @@ def getSDKDestination(animNodeOutputPlug):
 
     return drivenNodes, drivenAttrs
 
-def getConnectedSDKs(attr = "",
+def getConnectedSDKs(attribute = "",
                      expType="after",
                      curvesOfType=[]):
     """
@@ -283,11 +290,26 @@ def getConnectedSDKs(attr = "",
     :return:
     """
     retrievedSDKNodes = []
+    animCurveNodes = []
     if not curvesOfType:
         curvesOfType = SDK_ANIMCURVES_TYPE
     for animCurve in curvesOfType:
         if expType == "after":
-            animCurveNodes = pm.listConnections(attr,
+            attrTargets = pm.connectionInfo(attribute, dfs=1)
+            for i, attr in enumerate(attrTargets):
+                if attr != '':
+                    if 'unitConversion' in pm.nodeType(attrTargets[i]) or 'blendWeighted' in pm.nodeType(attrTargets[i]):
+                        animCurveNodes = pm.listConnections(attrTargets[i][:attrTargets[i].index('.')] + '.output', 
+                                                            source = False,
+                                                            destination = True,
+                                                            type = animCurve,
+                                                            exactType = True,
+                                                            plugs = True,
+                                                            connections = True,
+                                                            sourceFirst = True,
+                                                            scn = True) or []
+                    else:
+                        animCurveNodes = pm.listConnections(attribute,
                                                 source = False,
                                                 destination = True,
                                                 type = animCurve,
@@ -296,8 +318,9 @@ def getConnectedSDKs(attr = "",
                                                 connections = True,
                                                 sourceFirst = True,
                                                 scn = True) or []
+
         else:
-            animCurveNodes = pm.listConnections(attr,
+            animCurveNodes = pm.listConnections(attribute,
                                                 source = True,
                                                 destination = False,
                                                 type = animCurve,

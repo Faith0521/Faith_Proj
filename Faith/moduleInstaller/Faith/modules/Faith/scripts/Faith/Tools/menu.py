@@ -7,7 +7,7 @@
 from functools import partial
 import Faith.menu
 import pymel.core as pm
-
+from imp import reload
 
 def install_tool():
     """
@@ -41,6 +41,7 @@ def install_skin():
 
 str_show_sdk = """
 import Faith.Tools.SDK_Manager.UI.ui_manager as ui
+reload(ui)
 ui.show_guide_component_manager()
 """
 str_bs_show = """

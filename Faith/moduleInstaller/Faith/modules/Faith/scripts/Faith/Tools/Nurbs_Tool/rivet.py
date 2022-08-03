@@ -8,7 +8,7 @@
 import pymel.core as pm
 
 
-def pin_to_surface(oNurbs, sourceObj=None, uPos=0.5, vPos=0.5):
+def pin_to_surface(oNurbs, sourceObj=None, uPos=0.5, vPos=0.5,connection=None):
     """
     This function replaces what I used to use follicles for.
     It pins an object to a surface's UV coordinates.
@@ -62,7 +62,10 @@ def pin_to_surface(oNurbs, sourceObj=None, uPos=0.5, vPos=0.5):
         pm.delete(oNode)
 
     pName = '{}_foll#'.format(oNurbs.name())
-    result = pm.createNode('transform', n=pName)
+    if connection:
+        result = connection
+    else:
+        result = pm.createNode('transform', n=pName)
     result.addAttr('parameterU', at='double', keyable=True, dv=uPos)
     result.addAttr('parameterV', at='double', keyable=True, dv=vPos)
     # set min and max ranges for the follicle along the UV limits.
@@ -122,8 +125,12 @@ def snapToSurfaceAverage(oNurbs, numberOfFollicles=10, uPos=0.5, vPos=0.5):
     paramLengthU = oNurbs.getShape().minMaxRangeU.get()
 
     for i in range(numberOfFollicles):
-        uPosR = (i/float(numberOfFollicles-1)) * paramLengthU[1]
-        shape = pin_to_surface(oNurbs, uPos=uPosR, vPos=vPos)
+        if numberOfFollicles < 2:
+            # uPosR = 0.0
+            shape = pin_to_surface(oNurbs, uPos=0.5, vPos=0.5)
+        else:
+            uPosR = (i/float(numberOfFollicles-1)) * paramLengthU[1]
+            shape = pin_to_surface(oNurbs, uPos=uPosR, vPos=vPos)
         follicleShapeList.append(shape)
 
     return follicleShapeList

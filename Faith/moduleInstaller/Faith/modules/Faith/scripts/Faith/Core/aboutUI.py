@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 # @Author: YinYuFei
 # @Date:   2022-05-27 21:08:00
-# @Last Modified by:   Admin
-# @Last Modified time: 2022-05-28 00:39:55
+# @Last Modified by:   yinyufei
+# @Last Modified time: 2022-08-03 17:43:04
 """mgear qt functions"""
 import os,traceback
 import maya.OpenMayaUI as omui,pymel.core as pm
-
+from dayu_widgets import dayu_theme
 
 from .Qt import QtCore, QtWidgets, QtGui, QtCompat, QtSvg
 from pymel import versions
@@ -43,7 +43,7 @@ def showDialog(dialog, dInst=True, dockable=False, *args):
 
     # Create minimal dialog object
     windw = dialog()
-
+    dayu_theme.apply(windw)
     # ensure clean workspace name
     if hasattr(windw, "uiName") and dockable:
         control = windw.uiName + "WorkspaceControl"

@@ -46,6 +46,9 @@ class DockableMainUI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.mainUI.driver_list.setModel(self.__proxyModel01)
         self.mainUI.driven_list.setModel(self.__proxyModel02)
 
+        self.mainUI.driver_list.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+        self.mainUI.driven_list.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+
         self.create_window()
         self.create_layout()
         self.create_connections()
@@ -74,8 +77,11 @@ class DockableMainUI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.mainUI.load_btn.clicked.connect(self.loadObj)
         # QtWidgets.QListView().selectedIndexes()
         self.mainUI.driven_list.clicked.connect(self._refreshDriver)
+        self.mainUI.driver_list.clicked.connect(self._refreshDriven)
+        self.mainUI.driver_list.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.mainUI.driver_list.customContextMenuRequested.connect(self._component_driver_menu)
         self.mainUI.driven_list.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.mainUI.driven_list.customContextMenuRequested.connect(self._component_menu)
+        self.mainUI.driven_list.customContextMenuRequested.connect(self._component_driven_menu)
 
     def _refreshDriver(self):
         """
@@ -86,18 +92,19 @@ class DockableMainUI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         model = QtGui.QStandardItemModel(self)
         self.allSDKInfo_dict = {}
         if self.mainUI.frnt_rbtn.isChecked():
-            self.allSDKInfo_dict = aboutSDK.getSDKInfoFromNode(node, "front")
-        else:
-            self.allSDKInfo_dict = aboutSDK.getSDKInfoFromNode(node, "after")
-
-        driverList = []
-        for sdk,infoDict in self.allSDKInfo_dict.items():
-            driverNode = infoDict["driverNode"]
-            drivenAttrs = infoDict["drivenAttrs"]
+            pm.select(node, r=True)
             item = self.mainUI.driven_list.selectedIndexes()[0].data()
-            if item in drivenAttrs:
-                model.appendRow(QtGui.QStandardItem(driverNode))
-        self.__proxyModel01.setSourceModel(model)
+            SDKInfo_dict = aboutSDK.getSDKInfoFromAttr(node + '.' + item, "front")
+            driverNodes = []
+            for sdk,info_dict in SDKInfo_dict.items():   
+                driverNode = info_dict["driverNode"]
+                driverNodes.append(driverNode)
+            driverNodes = set(driverNodes)
+            for node in driverNodes:
+                model.appendRow(QtGui.QStandardItem(node))
+                self.__proxyModel01.setSourceModel(model)
+        else:
+            pm.select(self.mainUI.driven_list.selectedIndexes()[0].data(),r=True)
 
     def loadObj(self):
         """
@@ -147,32 +154,64 @@ class DockableMainUI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
                     model_02.appendRow(QtGui.QStandardItem(attr))
                     self.__proxyModel01.setSourceModel(model_02)
 
-    def _refreshDrivenList(self, node):
+    def _refreshDriven(self):
         """
 
         :return:
         """
+        node = self.mainUI.node_le.text()
+        item = self.mainUI.driver_list.selectedIndexes()[0].data()
+
         model = QtGui.QStandardItemModel(self)
         self.allSDKInfo_dict = {}
         if self.mainUI.frnt_rbtn.isChecked():
             self.allSDKInfo_dict = aboutSDK.getSDKInfoFromNode(node, "front")
+            pm.select(item, r=True)
         else:
-            self.allSDKInfo_dict = aboutSDK.getSDKInfoFromNode(node, "after")
-
-        for animNode, infoDict in self.allSDKInfo_dict.items():
-            drivenList = infoDict["drivenAttrs"]
-            for obj in drivenList:
-                model.appendRow(QtGui.QStandardItem(obj))
+            item = self.mainUI.driver_list.selectedIndexes()[0].data()
+            SDKInfo_dict = aboutSDK.getSDKInfoFromAttr(node + '.' + item, "after")
+            pm.select(node, r=True)
+            drivenNodes = []
+            for sdk,infoDict in SDKInfo_dict.items():
+                drivenList = infoDict["drivenNodes"]
+                drivenNodes.extend(drivenList)
+            drivenNodes = set(drivenNodes)
+            for node in drivenNodes:
+                model.appendRow(QtGui.QStandardItem(node))
+            
             self.__proxyModel02.setSourceModel(model)
-
-    def _component_menu(self, QPos):
+        
+    def _component_driven_menu(self, QPos):
         """
 
         :return:
         """
         comp_widget = self.mainUI.driven_list
         currentSelection = comp_widget.selectedIndexes()
-        if currentSelection is None:
+        if not currentSelection:
+            return
+        self.comp_menu = QtWidgets.QMenu()
+        parentPosition = comp_widget.mapToGlobal(QtCore.QPoint(0, 0))
+        menu_item_01 = self.comp_menu.addAction("Mirror Selected")
+        menu_item_01.triggered.connect(self.mirrorDrivenKeys)
+        self.comp_menu.addSeparator()
+        menu_item_02 = self.comp_menu.addAction("Refresh List")
+        self.comp_menu.addSeparator()
+        menu_item_03 = self.comp_menu.addAction("Export Node")
+        self.comp_menu.addSeparator()
+        menu_item_04 = self.comp_menu.addAction("Import Node")
+
+        self.comp_menu.move(parentPosition + QPos)
+        self.comp_menu.show()
+
+    def _component_driver_menu(self, QPos):
+        """
+
+        :return:
+        """
+        comp_widget = self.mainUI.driver_list
+        currentSelection = comp_widget.selectedIndexes()
+        if not currentSelection:
             return
         self.comp_menu = QtWidgets.QMenu()
         parentPosition = comp_widget.mapToGlobal(QtCore.QPoint(0, 0))
@@ -186,6 +225,16 @@ class DockableMainUI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
 
         self.comp_menu.move(parentPosition + QPos)
         self.comp_menu.show()
+
+    def mirrorDrivenKeys(self):
+        node = self.mainUI.node_le.text()
+        item = self.mainUI.driven_list.selectedIndexes()
+        print(item)
+        # isAttr = pm.attributeQuery( item, node=node, k=True )
+        # if isAttr:
+        #     aboutSDK.mirrorSDKs([node], attributes=[item], invertDriver=False, invertDriven=False)
+        # else:
+        #     pm.warning("Selected item is not attribute.")
 
 def show_guide_component_manager(*args):
     aboutUI.showDialog(DockableMainUI, dockable=True)

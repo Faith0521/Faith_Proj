@@ -2,7 +2,7 @@
 # @Author: YinYuFei
 # @Date:   2022-06-19 16:49:53
 # @Last Modified by:   yinyufei
-# @Last Modified time: 2022-07-29 15:52:33
+# @Last Modified time: 2022-08-02 16:11:49
 
 from Faith.Core import aboutPy, utils
 import json
@@ -106,6 +106,22 @@ def getSDKInfoFromNode(node, expType="after"):
                         allSDKInfo_dict[animPlug.nodeName()] = getSDKInfo(animPlug.node())
     return allSDKInfo_dict
 
+
+def getSDKInfoFromAttr(attr, expType="after"):
+    allSDKInfo_dict = {}
+    testConnections = pm.listConnections(attr, plugs = True)
+    if testConnections:
+        retrievedSDKNodes = getConnectedSDKs(
+                    attribute = attr, expType=expType)
+        if expType == "front":
+                    retrievedSDKNodes.extend(getMultSDKs(attr))
+        if expType == "front":
+            for animPlug, targetPlug in retrievedSDKNodes:
+                allSDKInfo_dict[animPlug.nodeName()] = getSDKInfo(animPlug.node())
+        else:
+            for targetPlug, animPlug in retrievedSDKNodes:
+                allSDKInfo_dict[animPlug.nodeName()] = getSDKInfo(animPlug.node())
+    return allSDKInfo_dict
 
 def getMultSDKs(attr):
     """

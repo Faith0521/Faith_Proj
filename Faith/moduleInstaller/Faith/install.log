@@ -1,69 +1,69 @@
-10:23:11.21 : Begin installation 
-10:23:11.22 : Using module.cfg 
-10:23:16.04 : Maya version : 2016.5 2017 2018 2019 2020 2022 2023 
-10:23:16.06 : Module version : any 
-10:23:16.07 : Module icons : icons 
-10:23:16.08 : Module plug-ins : plug-ins/PLATFORM/VERSION 
-10:23:16.09 : Module scripts : scripts 
-10:23:16.10 : MAYA_APP_DIR :  
-10:23:16.11 : Module path : C:\Users\$USER\Documents\maya\modules 
-10:23:16.35 : Source folder content : Faith 
-10:23:16.37 : Module Name : Faith 
-10:23:16.38 : Module base path : F:\Code\Faith_Proj\Faith\moduleInstaller\Faith\modules\Faith 
-10:23:16.39 : Module has plug-in : 1 
-10:23:19.03 : Install option : 1 
-10:23:19.05 : Searching default path : C:\Program_Files\Autodesk\Maya2016.5\modules 
-10:23:19.06 : Searching default path : C:\Users\yinyufei\Documents\maya\2016.5\modules 
-10:23:19.07 : Searching default path : C:\Users\yinyufei\Documents\maya\modules 
-10:23:19.08 : Found existing module file : C:\Users\yinyufei\Documents\maya\modules\Faith.mod 
-10:23:19.11 : First line in module : + MAYAVERSION:2016.5 Faith any C:\Users\yinyufei\Documents\maya\modules\Faith  
-10:23:19.12 : Required line items : 5 
-10:23:19.13 : Existing module content : C:\Users\yinyufei\Documents\maya\modules\Faith 
-10:23:19.14 : Marked for deletion : C:\Users\yinyufei\Documents\maya\modules\Faith.mod 
-10:23:19.14 : Marked for deletion : C:\Users\yinyufei\Documents\maya\modules\Faith 
-10:23:19.15 : Searching default path : C:\Program_Files\Common_Files\Alias_Shared\Modules\maya\2016.5 
-10:23:19.16 : Searching default path : C:\Program_Files\Common_Files\Alias_Shared\Modules\maya 
-10:23:19.17 : Searching default path : C:\Program_Files\Common_Files\Autodesk_Shared\Modules\maya\2016.5 
-10:23:19.18 : Searching default path : C:\Program_Files\Autodesk\Maya2017\modules 
-10:23:19.19 : Searching default path : C:\Users\yinyufei\Documents\maya\2017\modules 
-10:23:19.20 : Searching default path : C:\Users\yinyufei\Documents\maya\modules 
-10:23:19.21 : Searching default path : C:\Program_Files\Common_Files\Alias_Shared\Modules\maya\2017 
-10:23:19.22 : Searching default path : C:\Program_Files\Common_Files\Alias_Shared\Modules\maya 
-10:23:19.23 : Searching default path : C:\Program_Files\Common_Files\Autodesk_Shared\Modules\maya\2017 
-10:23:19.24 : Searching default path : C:\Program_Files\Autodesk\Maya2018\modules 
-10:23:19.25 : Searching default path : C:\Users\yinyufei\Documents\maya\2018\modules 
-10:23:19.26 : Searching default path : C:\Users\yinyufei\Documents\maya\modules 
-10:23:19.27 : Searching default path : C:\Program_Files\Common_Files\Alias_Shared\Modules\maya\2018 
-10:23:19.28 : Searching default path : C:\Program_Files\Common_Files\Alias_Shared\Modules\maya 
-10:23:19.29 : Searching default path : C:\Program_Files\Common_Files\Autodesk_Shared\Modules\maya\2018 
-10:23:19.30 : Searching default path : C:\Program_Files\Autodesk\Maya2019\modules 
-10:23:19.31 : Searching default path : C:\Users\yinyufei\Documents\maya\2019\modules 
-10:23:19.32 : Searching default path : C:\Users\yinyufei\Documents\maya\modules 
-10:23:19.33 : Searching default path : C:\Program_Files\Common_Files\Alias_Shared\Modules\maya\2019 
-10:23:19.34 : Searching default path : C:\Program_Files\Common_Files\Alias_Shared\Modules\maya 
-10:23:19.35 : Searching default path : C:\Program_Files\Common_Files\Autodesk_Shared\Modules\maya\2019 
-10:23:19.36 : Searching default path : C:\Program_Files\Autodesk\Maya2020\modules 
-10:23:19.37 : Searching default path : C:\Users\yinyufei\Documents\maya\2020\modules 
-10:23:19.38 : Searching default path : C:\Users\yinyufei\Documents\maya\modules 
-10:23:19.39 : Searching default path : C:\Program_Files\Common_Files\Alias_Shared\Modules\maya\2020 
-10:23:19.40 : Searching default path : C:\Program_Files\Common_Files\Alias_Shared\Modules\maya 
-10:23:19.41 : Searching default path : C:\Program_Files\Common_Files\Autodesk_Shared\Modules\maya\2020 
-10:23:19.42 : Searching default path : C:\Program_Files\Autodesk\Maya2022\modules 
-10:23:19.43 : Searching default path : C:\Users\yinyufei\Documents\maya\2022\modules 
-10:23:19.44 : Searching default path : C:\Users\yinyufei\Documents\maya\modules 
-10:23:19.45 : Searching default path : C:\Program_Files\Common_Files\Alias_Shared\Modules\maya\2022 
-10:23:19.45 : Searching default path : C:\Program_Files\Common_Files\Alias_Shared\Modules\maya 
-10:23:19.46 : Searching default path : C:\Program_Files\Common_Files\Autodesk_Shared\Modules\maya\2022 
-10:23:19.47 : Searching default path : C:\Program_Files\Autodesk\Maya2023\modules 
-10:23:19.48 : Searching default path : C:\Users\yinyufei\Documents\maya\2023\modules 
-10:23:19.49 : Searching default path : C:\Users\yinyufei\Documents\maya\modules 
-10:23:19.50 : Searching default path : C:\Program_Files\Common_Files\Alias_Shared\Modules\maya\2023 
-10:23:19.51 : Searching default path : C:\Program_Files\Common_Files\Alias_Shared\Modules\maya 
-10:23:19.52 : Searching default path : C:\Program_Files\Common_Files\Autodesk_Shared\Modules\maya\2023 
-10:23:20.81 : Deleted previous module : C:\Users\yinyufei\Documents\maya\modules\Faith.mod 
-10:23:20.82 : Deleted previous module content : C:\Users\yinyufei\Documents\maya\modules\Faith 
-10:23:20.83 : Using existing module path : C:\Users\yinyufei\Documents\maya\modules 
-10:23:20.86 : Begin writing module file : C:\Users\yinyufei\Documents\maya\modules\Faith.mod 
-10:23:20.89 : Finished writing module file : C:\Users\yinyufei\Documents\maya\modules\Faith.mod 
-10:23:21.79 : Installed module to : C:\Users\yinyufei\Documents\maya\modules\Faith\ 
-10:23:21.85 : Installation complete 
+19:32:32.66 : Begin installation 
+19:32:32.67 : Using module.cfg 
+19:32:37.94 : Maya version : 2016.5 2017 2018 2019 2020 2022 2023 
+19:32:37.95 : Module version : any 
+19:32:37.96 : Module icons : icons 
+19:32:37.96 : Module plug-ins : plug-ins/PLATFORM/VERSION 
+19:32:37.97 : Module scripts : scripts 
+19:32:37.98 : MAYA_APP_DIR :  
+19:32:37.99 : Module path : C:\Users\$USER\Documents\maya\modules 
+19:32:38.00 : Source folder content : Faith 
+19:32:38.01 : Module Name : Faith 
+19:32:38.02 : Module base path : E:\bd\Code\Faith_Proj\Faith\moduleInstaller\Faith\modules\Faith 
+19:32:38.03 : Module has plug-in : 1 
+19:32:39.23 : Install option : 1 
+19:32:39.24 : Searching default path : C:\Program_Files\Autodesk\Maya2016.5\modules 
+19:32:39.25 : Searching default path : C:\Users\YinYuFei\Documents\maya\2016.5\modules 
+19:32:39.25 : Searching default path : C:\Users\YinYuFei\Documents\maya\modules 
+19:32:39.26 : Found existing module file : C:\Users\YinYuFei\Documents\maya\modules\Faith.mod 
+19:32:39.27 : First line in module : + MAYAVERSION:2016.5 Faith any C:\Users\YinYuFei\Documents\maya\modules\Faith  
+19:32:39.28 : Required line items : 5 
+19:32:39.28 : Existing module content : C:\Users\YinYuFei\Documents\maya\modules\Faith 
+19:32:39.29 : Marked for deletion : C:\Users\YinYuFei\Documents\maya\modules\Faith.mod 
+19:32:39.30 : Marked for deletion : C:\Users\YinYuFei\Documents\maya\modules\Faith 
+19:32:39.30 : Searching default path : C:\Program_Files\Common_Files\Alias_Shared\Modules\maya\2016.5 
+19:32:39.31 : Searching default path : C:\Program_Files\Common_Files\Alias_Shared\Modules\maya 
+19:32:39.32 : Searching default path : C:\Program_Files\Common_Files\Autodesk_Shared\Modules\maya\2016.5 
+19:32:39.32 : Searching default path : C:\Program_Files\Autodesk\Maya2017\modules 
+19:32:39.33 : Searching default path : C:\Users\YinYuFei\Documents\maya\2017\modules 
+19:32:39.34 : Searching default path : C:\Users\YinYuFei\Documents\maya\modules 
+19:32:39.34 : Searching default path : C:\Program_Files\Common_Files\Alias_Shared\Modules\maya\2017 
+19:32:39.35 : Searching default path : C:\Program_Files\Common_Files\Alias_Shared\Modules\maya 
+19:32:39.36 : Searching default path : C:\Program_Files\Common_Files\Autodesk_Shared\Modules\maya\2017 
+19:32:39.36 : Searching default path : C:\Program_Files\Autodesk\Maya2018\modules 
+19:32:39.37 : Searching default path : C:\Users\YinYuFei\Documents\maya\2018\modules 
+19:32:39.38 : Searching default path : C:\Users\YinYuFei\Documents\maya\modules 
+19:32:39.38 : Searching default path : C:\Program_Files\Common_Files\Alias_Shared\Modules\maya\2018 
+19:32:39.39 : Searching default path : C:\Program_Files\Common_Files\Alias_Shared\Modules\maya 
+19:32:39.40 : Searching default path : C:\Program_Files\Common_Files\Autodesk_Shared\Modules\maya\2018 
+19:32:39.40 : Searching default path : C:\Program_Files\Autodesk\Maya2019\modules 
+19:32:39.41 : Searching default path : C:\Users\YinYuFei\Documents\maya\2019\modules 
+19:32:39.42 : Searching default path : C:\Users\YinYuFei\Documents\maya\modules 
+19:32:39.43 : Searching default path : C:\Program_Files\Common_Files\Alias_Shared\Modules\maya\2019 
+19:32:39.43 : Searching default path : C:\Program_Files\Common_Files\Alias_Shared\Modules\maya 
+19:32:39.44 : Searching default path : C:\Program_Files\Common_Files\Autodesk_Shared\Modules\maya\2019 
+19:32:39.45 : Searching default path : C:\Program_Files\Autodesk\Maya2020\modules 
+19:32:39.45 : Searching default path : C:\Users\YinYuFei\Documents\maya\2020\modules 
+19:32:39.46 : Searching default path : C:\Users\YinYuFei\Documents\maya\modules 
+19:32:39.47 : Searching default path : C:\Program_Files\Common_Files\Alias_Shared\Modules\maya\2020 
+19:32:39.47 : Searching default path : C:\Program_Files\Common_Files\Alias_Shared\Modules\maya 
+19:32:39.48 : Searching default path : C:\Program_Files\Common_Files\Autodesk_Shared\Modules\maya\2020 
+19:32:39.49 : Searching default path : C:\Program_Files\Autodesk\Maya2022\modules 
+19:32:39.49 : Searching default path : C:\Users\YinYuFei\Documents\maya\2022\modules 
+19:32:39.50 : Searching default path : C:\Users\YinYuFei\Documents\maya\modules 
+19:32:39.51 : Searching default path : C:\Program_Files\Common_Files\Alias_Shared\Modules\maya\2022 
+19:32:39.51 : Searching default path : C:\Program_Files\Common_Files\Alias_Shared\Modules\maya 
+19:32:39.52 : Searching default path : C:\Program_Files\Common_Files\Autodesk_Shared\Modules\maya\2022 
+19:32:39.53 : Searching default path : C:\Program_Files\Autodesk\Maya2023\modules 
+19:32:39.53 : Searching default path : C:\Users\YinYuFei\Documents\maya\2023\modules 
+19:32:39.54 : Searching default path : C:\Users\YinYuFei\Documents\maya\modules 
+19:32:39.54 : Searching default path : C:\Program_Files\Common_Files\Alias_Shared\Modules\maya\2023 
+19:32:39.55 : Searching default path : C:\Program_Files\Common_Files\Alias_Shared\Modules\maya 
+19:32:39.56 : Searching default path : C:\Program_Files\Common_Files\Autodesk_Shared\Modules\maya\2023 
+19:32:39.77 : Deleted previous module : C:\Users\YinYuFei\Documents\maya\modules\Faith.mod 
+19:32:39.78 : Deleted previous module content : C:\Users\YinYuFei\Documents\maya\modules\Faith 
+19:32:39.78 : Using existing module path : C:\Users\YinYuFei\Documents\maya\modules 
+19:32:39.79 : Begin writing module file : C:\Users\YinYuFei\Documents\maya\modules\Faith.mod 
+19:32:39.81 : Finished writing module file : C:\Users\YinYuFei\Documents\maya\modules\Faith.mod 
+19:32:40.77 : Installed module to : C:\Users\YinYuFei\Documents\maya\modules\Faith\ 
+19:32:40.78 : Installation complete 

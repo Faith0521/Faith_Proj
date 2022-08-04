@@ -152,7 +152,7 @@ class Ui_Form(object):
         Form.setWindowTitle(QtWidgets.QApplication.translate("Form", "SDK_TOOL v0.0.1", None, -1))
         self.pushButton.setText(QtWidgets.QApplication.translate("Form", "Node", None, -1))
         self.node_le.setPlaceholderText(QtWidgets.QApplication.translate("Form", "Please select one node.", None, -1))
-        self.load_btn.setText(QtWidgets.QApplication.translate("Form", ">> L o a d", None, -1))
+        self.load_btn.setText(QtWidgets.QApplication.translate("Form", "L o a d", None, -1))
         self.pushButton_2.setText(QtWidgets.QApplication.translate("Form", "Direction", None, -1))
         self.frnt_rbtn.setText(QtWidgets.QApplication.translate("Form", "F r o n t", None, -1))
         self.after_rbtn.setText(QtWidgets.QApplication.translate("Form", "A f t e r", None, -1))

@@ -8,6 +8,8 @@ from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 from PySide2 import QtCore, QtWidgets, QtGui
 from Faith.Tools.SDK_Manager.UI import UI as mui
 from Faith.Core import aboutUI,aboutSDK
+from dayu_widgets.message import MMessage
+from dayu_widgets.toast import MToast
 
 PY2 = sys.version_info[0] == 2
 
@@ -116,6 +118,7 @@ class DockableMainUI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
             self.mainUI.node_le.setText(selection[0].name())
         if len(selection) > 1:
             pm.warning("You select two more objects in the scene.")
+            MMessage.warning("You select two more objects in the scene.",parent=self)
         if not selection:
             self.mainUI.node_le.setText("")
             self.refreshList()
@@ -196,10 +199,14 @@ class DockableMainUI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         menu_item_01.triggered.connect(self.mirrorDrivenKeys)
         self.comp_menu.addSeparator()
         menu_item_02 = self.comp_menu.addAction("Refresh List")
+        menu_item_02.triggered.connect(lambda:self.refreshList(node=self.mainUI.node_le.text()))
         self.comp_menu.addSeparator()
-        menu_item_03 = self.comp_menu.addAction("Export Node")
+        menu_item_03 = self.comp_menu.addAction("Clear Nodes")
         self.comp_menu.addSeparator()
-        menu_item_04 = self.comp_menu.addAction("Import Node")
+        menu_item_04 = self.comp_menu.addAction("Export Node")
+        menu_item_04.triggered.connect(self._exportSDK)
+        self.comp_menu.addSeparator()
+        menu_item_05 = self.comp_menu.addAction("Import Node")
 
         self.comp_menu.move(parentPosition + QPos)
         self.comp_menu.show()
@@ -226,15 +233,30 @@ class DockableMainUI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.comp_menu.move(parentPosition + QPos)
         self.comp_menu.show()
 
+    def _exportSDK(self):
+        filepath,type = QtWidgets.QFileDialog.getSaveFileName(self,'export','/','json(*.json)')
+        node = self.mainUI.node_le.text()
+        try:
+            if self.mainUI.frnt_rbtn.isChecked():
+                aboutSDK.exportSDKs([node], filepath, expType="front")
+            else:
+                aboutSDK.exportSDKs([node], filepath, expType="after")
+            MToast.success("Export Success!", self)
+        except:
+            MToast.error("Export Failed!", self)
+
+
+
     def mirrorDrivenKeys(self):
         node = self.mainUI.node_le.text()
-        item = self.mainUI.driven_list.selectedIndexes()
-        print(item)
-        # isAttr = pm.attributeQuery( item, node=node, k=True )
-        # if isAttr:
-        #     aboutSDK.mirrorSDKs([node], attributes=[item], invertDriver=False, invertDriven=False)
-        # else:
-        #     pm.warning("Selected item is not attribute.")
+        items = self.mainUI.driven_list.selectedIndexes()
+        for i in items:
+            attr = i.data()
+            isAttr = pm.objExists(node + '.' + attr)
+            if isAttr:
+                aboutSDK.mirrorSDKs([node], attributes=[attr], invertDriver=False, invertDriven=False)
+            else:
+                MMessage.warning("Selected item {0}.{1} is not exists.".format(node, attr), parent = self)
 
 def show_guide_component_manager(*args):
     aboutUI.showDialog(DockableMainUI, dockable=True)

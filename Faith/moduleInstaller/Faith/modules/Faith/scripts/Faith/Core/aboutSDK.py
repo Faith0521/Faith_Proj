@@ -2,7 +2,7 @@
 # @Author: YinYuFei
 # @Date:   2022-06-19 16:49:53
 # @Last Modified by:   yinyufei
-# @Last Modified time: 2022-08-02 16:11:49
+# @Last Modified time: 2022-08-04 09:45:03
 
 from Faith.Core import aboutPy, utils
 import json
@@ -285,11 +285,16 @@ def getSDKDestination(animNodeOutputPlug):
     attrTargets = pm.connectionInfo(animNodeOutputPlug, dfs=1)
     drivenNodes = []
     drivenAttrs = []
+    # print(attrTargets)
     for i, attr in enumerate(attrTargets):
         if attr != '':
             while 'unitConversion' in pm.nodeType(attrTargets[i]) or 'blendWeighted' in pm.nodeType(attrTargets[i]):
-                attrTargets[i] = \
-                    pm.connectionInfo(attrTargets[i][:attrTargets[i].index('.')] + '.output', dfs=1)[0]
+                targets = pm.connectionInfo(attrTargets[i][:attrTargets[i].index('.')] + '.output', dfs=1)
+                if not targets:
+                    pm.error("Please clear not used 'unitConversion' or 'blendWeighted' nodes.")
+                    break
+                else:
+                    attrTargets[i] = targets[0]
         else:
             attrTargets[i] = 'None'
         drivenNodes.append(attrTargets[i].split(".")[0])

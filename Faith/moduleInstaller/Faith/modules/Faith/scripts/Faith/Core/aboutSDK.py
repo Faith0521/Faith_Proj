@@ -288,7 +288,7 @@ def getSDKDestination(animNodeOutputPlug):
     # print(attrTargets)
     for i, attr in enumerate(attrTargets):
         if attr != '':
-            while 'unitConversion' in pm.nodeType(attrTargets[i]) or 'blendWeighted' in pm.nodeType(attrTargets[i]):
+            while not 'animCurve' in pm.nodeType(attrTargets[i]):
                 targets = pm.connectionInfo(attrTargets[i][:attrTargets[i].index('.')] + '.output', dfs=1)
                 if not targets:
                     pm.error("Please clear not used 'unitConversion' or 'blendWeighted' nodes.")

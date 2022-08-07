@@ -10,6 +10,7 @@ from Faith.Tools.SDK_Manager.UI import UI as mui
 from Faith.Core import aboutUI,aboutSDK
 from dayu_widgets.message import MMessage
 from dayu_widgets.toast import MToast
+from dayu_widgets.qt import MIcon
 
 PY2 = sys.version_info[0] == 2
 
@@ -65,7 +66,11 @@ class DockableMainUI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.setWindowFlags(QtCore.Qt.Window)
         self.setWindowTitle("SDK Tool v0.0.1")
         self.resize(350, 500)
-
+        self.mainUI.pushButton.setIcon(MIcon("cil-lightbulb.png","#ddd"))
+        self.mainUI.pushButton_2.setIcon(MIcon("cil-transfer.png", "#ddd"))
+        self.mainUI.load_btn.setIcon(MIcon("right_line_dark.png"))
+        self.mainUI.refresh_btn.setIcon(MIcon("big_view.svg"))
+        self.mainUI.mirror_btn.setIcon(MIcon("list_view.svg"))
 
     def create_layout(self):
 
@@ -76,14 +81,39 @@ class DockableMainUI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.setLayout(self.gmc_layout)
 
     def create_connections(self):
+        """
+        ui slots connections
+        :return:
+        """
         self.mainUI.load_btn.clicked.connect(self.loadObj)
-        # QtWidgets.QListView().selectedIndexes()
+        self.mainUI.node_le.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.mainUI.node_le.customContextMenuRequested.connect(self.le_menu)
         self.mainUI.driven_list.clicked.connect(self._refreshDriver)
         self.mainUI.driver_list.clicked.connect(self._refreshDriven)
         self.mainUI.driver_list.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.mainUI.driver_list.customContextMenuRequested.connect(self._component_driver_menu)
         self.mainUI.driven_list.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.mainUI.driven_list.customContextMenuRequested.connect(self._component_driven_menu)
+
+    def le_menu(self, QPos):
+        """
+
+        :return:
+        """
+        comp_widget = self.mainUI.node_le
+        if self.mainUI.node_le.text() == "":
+            return
+        self.comp_menu = QtWidgets.QMenu()
+        parentPosition = comp_widget.mapToGlobal(QtCore.QPoint(0, 0))
+        menu_item_01 = self.comp_menu.addAction("Export Node")
+        menu_item_01.triggered.connect(self._exportSDK)
+        self.comp_menu.addSeparator()
+        menu_item_02 = self.comp_menu.addAction("Import Node")
+        self.comp_menu.addSeparator()
+        menu_item_03 = self.comp_menu.addAction("Clear Useless Nodes")
+
+        self.comp_menu.move(parentPosition + QPos)
+        self.comp_menu.show()
 
     def _refreshDriver(self):
         """
@@ -200,13 +230,6 @@ class DockableMainUI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.comp_menu.addSeparator()
         menu_item_02 = self.comp_menu.addAction("Refresh List")
         menu_item_02.triggered.connect(lambda:self.refreshList(node=self.mainUI.node_le.text()))
-        self.comp_menu.addSeparator()
-        menu_item_03 = self.comp_menu.addAction("Clear Nodes")
-        self.comp_menu.addSeparator()
-        menu_item_04 = self.comp_menu.addAction("Export Node")
-        menu_item_04.triggered.connect(self._exportSDK)
-        self.comp_menu.addSeparator()
-        menu_item_05 = self.comp_menu.addAction("Import Node")
 
         self.comp_menu.move(parentPosition + QPos)
         self.comp_menu.show()
@@ -223,18 +246,17 @@ class DockableMainUI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.comp_menu = QtWidgets.QMenu()
         parentPosition = comp_widget.mapToGlobal(QtCore.QPoint(0, 0))
         menu_item_01 = self.comp_menu.addAction("Mirror Selected")
+        menu_item_01.triggered.connect(self.mirrorDriverKeys)
         self.comp_menu.addSeparator()
         menu_item_02 = self.comp_menu.addAction("Refresh List")
-        self.comp_menu.addSeparator()
-        menu_item_03 = self.comp_menu.addAction("Export Node")
-        self.comp_menu.addSeparator()
-        menu_item_04 = self.comp_menu.addAction("Import Node")
 
         self.comp_menu.move(parentPosition + QPos)
         self.comp_menu.show()
 
     def _exportSDK(self):
         filepath,type = QtWidgets.QFileDialog.getSaveFileName(self,'export','/','json(*.json)')
+        if not filepath:
+            return
         node = self.mainUI.node_le.text()
         try:
             if self.mainUI.frnt_rbtn.isChecked():
@@ -245,11 +267,20 @@ class DockableMainUI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         except:
             MToast.error("Export Failed!", self)
 
-
-
     def mirrorDrivenKeys(self):
         node = self.mainUI.node_le.text()
         items = self.mainUI.driven_list.selectedIndexes()
+        for i in items:
+            attr = i.data()
+            isAttr = pm.objExists(node + '.' + attr)
+            if isAttr:
+                aboutSDK.mirrorSDKs([node], attributes=[attr], invertDriver=False, invertDriven=False)
+            else:
+                MMessage.warning("Selected item {0}.{1} is not exists.".format(node, attr), parent = self)
+
+    def mirrorDriverKeys(self):
+        node = self.mainUI.node_le.text()
+        items = self.mainUI.driver_list.selectedIndexes()
         for i in items:
             attr = i.data()
             isAttr = pm.objExists(node + '.' + attr)

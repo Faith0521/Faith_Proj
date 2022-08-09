@@ -2280,7 +2280,9 @@ class asNode(object):
                      extnRatio,
                      locName='as_Extn_Loc',
                      getLoc=True,
-                     getSpot=False):
+                     getSpot=False,
+                     extnDist=None,
+                     **shArgs):
         """
 
         :param destObjOrPos:
@@ -2288,11 +2290,25 @@ class asNode(object):
         :param locName:
         :param getLoc:
         :param getSpot:
+        :param extnDist:
+        :param shArgs:
         :return:
         """
+        if shArgs:
+            destObjOrPos = shArgs['do'] if 'do' in shArgs else destObjOrPos
+            extnRatio = shArgs['er'] if 'er' in shArgs else extnRatio
+            locName = shArgs['n'] if 'n' in shArgs else locName
+            getLoc = shArgs['gl'] if 'gl' in shArgs else getLoc
+            getSpot = shArgs['gs'] if 'gs' in shArgs else getSpot
+            extnDist = shArgs['ed'] if 'ed' in shArgs else extnDist
         if getSpot:
             getLoc = False
         dirVect = self.get_2PosVec(destObjOrPos)
+
+        if not extnDist:
+            extnPos = [ num * (extnRatio + 1) for num in dirVect ]
+        else:
+            dist_A2B = self.distanceTo(destObjOrPos)[0]
         extnPos = [num * (extnRatio + 1) for num in dirVect]
         extnLoc = asNode(
             mc.spaceLocator(n=locName, p=[
@@ -2493,6 +2509,60 @@ class asNode(object):
         for loc in locList:
             loc.snapRotTo(self.name)
 
+    def distanceTo(self,
+                   destObjOrPos,
+                   getNode=False,
+                   parentGrp=None,
+                   hideLoc=False):
+        """
+
+        :param destObjOrPos:
+        :param getNode:
+        :param parentGrp:
+        :param hideLoc:
+        :return:
+        """
+        srcObj = self.name
+        srcPos = self.getPos()
+
+        destNode = None
+
+        if type(destObjOrPos) != list:
+            destNode = asNode(destObjOrPos)
+            destPos = destNode.getPos()
+        else:
+            destPos = destObjOrPos
+
+        distX = destPos[0] - srcPos[0]
+        distY = destPos[1] - srcPos[1]
+        distZ = destPos[2] - srcPos[2]
+        mDist = math.sqrt(distX**2 + distY**2 + distZ**2)
+
+        if getNode:
+            distShape = asNode(mc.distanceDimension(
+                sp=(-100, -100, -100), ep=(100, 100, 100)
+            ))
+            distNode = asNode(distShape.parent())
+            distNode = distNode.rename(destNode.shortName + '_Dist')
+            distAttr = distShape.name + '.distance'
+            srcLoc = asNode(mc.listConnections(distShape.name + '.startPoint')[0])
+            destLoc = asNode(mc.listConnections(distShape.name() + '.endPoint')[0])
+            srcLoc.snapPosTo(srcObj)
+            destLoc.snapPosTo(destNode.name)
+
+            if mc.objExists(srcObj) and type(srcObj) != list:
+                srcLoc.rename(srcObj + '_SrcLoc')
+
+    def parentTo(self, parentNode=None):
+        """
+
+        :param parentNode:
+        :return:
+        """
+        # if parentNode:
+            # if not self.is
+        return
+
     def jntRadius(self, val=None):
         """
 
@@ -2599,6 +2669,68 @@ class asNode(object):
                     asN.rename(origName)
                 return nextName
             return getUniqueName(asN, origName)
+
+    def isAnimted(self, attr=None):
+        """
+
+        :param attr:
+        :return:
+        """
+        if attr:
+            if mc.findKeyframe(self.name, at=attr, c=1):
+                return True
+            else:
+                return False
+        else:
+            if mc.findKeyframe(self.name, c=1):
+                return True
+            else:
+                return False
+
+    def isChildOf(self,
+                  targetObj,
+                  checkAllParents=0,
+                  childImplied=True):
+        """
+
+        :param targetObj:
+        :param checkAllParents:
+        :param childImplied:
+        :return:
+        """
+        asTrgt = asNode(targetObj)
+        if checkAllParents:
+            return self.hasParent(targetObj)
+        prntNode = self.parent()
+        if prntNode:
+            if prntNode.shortName == asTrgt.shortName:
+                return True
+            else:
+                return False
+        else:
+            return False
+
+    def hasParent(self, targetObj, numParent=None):
+        """
+
+        :param targetObj:
+        :param numParent:
+        :return:
+        """
+        asTrgt = asNode(targetObj)
+        if numParent:
+            prntNode = self.parent()
+            if prntNode:
+                if self.parent(numParent).shortName == prntNode.shortName:
+                    return True
+                else:
+                    return False
+            else:
+                return False
+        else:
+            nodeDg = self._MFnDagNode()
+            mObj = asTrgt._MObject()
+            return nodeDg.isChildOf(mObj)
 
     @property
     def asObj(self):

@@ -337,9 +337,7 @@ public:
 	static  MObject			aMatrix;
 	static  MObject			aCorrectiveGeo;
 	static  MObject			aDeformedPoints;
-	static  bool			_initialized;
-	static  MPointArray		_deformedPoints;
-	static  MMatrixArray	_matrices;
+	
 };
 
 class splineMatrix : public MPxNode

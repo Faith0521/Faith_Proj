@@ -1,14 +1,11 @@
 #include "Faith_solvers.h"
 
 MString CorrectiveShape::NodeName = "FAITH_CorrectiveShape";
-MTypeId CorrectiveShape::NodeID = MTypeId(0x0017);
+MTypeId CorrectiveShape::NodeID = MTypeId(0x00115205);
 
 MObject CorrectiveShape::aMatrix;
 MObject CorrectiveShape::aCorrectiveGeo;
 MObject CorrectiveShape::aDeformedPoints;
-bool	CorrectiveShape::_initialized = false;
-MPointArray CorrectiveShape::_deformedPoints;
-MMatrixArray CorrectiveShape::_matrices;
 
 CorrectiveShape::CorrectiveShape()
 {
@@ -21,8 +18,17 @@ CorrectiveShape::~CorrectiveShape()
 MStatus CorrectiveShape::deform(MDataBlock& data, MItGeometry& iter, const MMatrix& mat, unsigned int multiIndex)
 {
 	MStatus status;
-	MFnMesh fnMesh = data.inputValue(aCorrectiveGeo).asMesh();
-	
+	bool	_initialized = false;
+	MPointArray		_deformedPoints;
+	MMatrixArray	_matrices;
+	MObject obj = data.inputValue(aCorrectiveGeo).asMesh();
+	MFnMesh fnMesh;
+	status = fnMesh.setObject(obj);
+	if (! status)
+	{
+		return MS::kUnknownParameter;
+	}
+
 	MPointArray correctivePoints;
 	fnMesh.getPoints(correctivePoints);
 
@@ -32,7 +38,7 @@ MStatus CorrectiveShape::deform(MDataBlock& data, MItGeometry& iter, const MMatr
 		unsigned int matrixCount = hMatrix.elementCount();
 		if (matrixCount == 0)
 		{
-			return MS::kSuccess;
+			return MS::kUnknownParameter;
 		}
 
 		for (unsigned int i=0; i<matrixCount; i++)
@@ -85,7 +91,6 @@ MStatus CorrectiveShape::initialize()
 	aMatrix = m.create("inversionMatrix", "im");
 	m.setArray(true);
 	addAttribute(aMatrix);
-	attributeAffects(aMatrix, outputGeom);
 
 	return MS::kSuccess;
 }

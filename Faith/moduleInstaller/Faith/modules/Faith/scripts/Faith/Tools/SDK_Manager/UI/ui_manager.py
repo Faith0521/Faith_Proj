@@ -1,7 +1,7 @@
 import sys
 from functools import partial
 
-import pymel.core as pm
+import pymel.core as pm,maya.mel as mel
 
 # ui import
 from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
@@ -109,8 +109,10 @@ class DockableMainUI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         menu_item_01.triggered.connect(self._exportSDK)
         self.comp_menu.addSeparator()
         menu_item_02 = self.comp_menu.addAction("Import Node")
+        menu_item_02.triggered.connect(self._importSDK)
         self.comp_menu.addSeparator()
         menu_item_03 = self.comp_menu.addAction("Clear Useless Nodes")
+        menu_item_03.triggered.connect(self.delUselessNode)
 
         self.comp_menu.move(parentPosition + QPos)
         self.comp_menu.show()
@@ -249,11 +251,15 @@ class DockableMainUI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         menu_item_01.triggered.connect(self.mirrorDriverKeys)
         self.comp_menu.addSeparator()
         menu_item_02 = self.comp_menu.addAction("Refresh List")
-
+        menu_item_02.triggered.connect(lambda: self.refreshList(node=self.mainUI.node_le.text()))
         self.comp_menu.move(parentPosition + QPos)
         self.comp_menu.show()
 
     def _exportSDK(self):
+        """
+
+        :return:
+        """
         filepath,type = QtWidgets.QFileDialog.getSaveFileName(self,'export','/','json(*.json)')
         if not filepath:
             return
@@ -266,6 +272,20 @@ class DockableMainUI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
             MToast.success("Export Success!", self)
         except:
             MToast.error("Export Failed!", self)
+
+    def _importSDK(self):
+        """
+
+        :return:
+        """
+        filepath, type = QtWidgets.QFileDialog.getOpenFileName(self, 'import', '/', 'json(*.json)')
+        if not filepath:
+            return
+        try:
+            aboutSDK.importSDKs(filepath)
+            MToast.success("Import Success!", self)
+        except:
+            MToast.error("Import Failed!", self)
 
     def mirrorDrivenKeys(self):
         node = self.mainUI.node_le.text()
@@ -288,6 +308,50 @@ class DockableMainUI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
                 aboutSDK.mirrorSDKs([node], attributes=[attr], invertDriver=False, invertDriven=False)
             else:
                 MMessage.warning("Selected item {0}.{1} is not exists.".format(node, attr), parent = self)
+
+    def delUselessNode(self):
+
+        '''delete all usdless node'''
+        # -------------------------------------------------
+        # Delete all usdless node in current sence.
+        # -------------------------------------------------
+
+        try:
+            mel.eval('hyperShadePanelMenuCommand("hyperShadePanel1", "deleteUnusedNodes")')
+        except:
+            pass
+
+        ani = pm.ls(type="animCurve")
+        bw = pm.ls(type="blendWeighted")
+        ani.extend(bw)
+        if len(ani) == 0:
+            pass
+        else:
+            pointsNum = len(ani) - 1
+            gMainProgressBar = mel.eval('$tmp = $gMainProgressBar');
+            pm.progressBar(gMainProgressBar,
+                           edit=True,
+                           beginProgress=True,
+                           isInterruptable=True,
+                           status='delete useless nodes ......',
+                           maxValue=pointsNum)
+            for x in ani:
+                if pm.progressBar(gMainProgressBar, query=True, isCancelled=True):
+                    break
+                if pm.objExists(x):
+                    hasInput = pm.listConnections(x, s=True, d=False, scn=True)
+                    hasOutput = pm.listConnections(x, s=False, d=True, scn=True)
+                    if 'hyperLayout' in str(hasOutput) and len(hasOutput) == 1:
+                        hasOutput = None
+
+                    isLocked = pm.lockNode(x, q=1, l=1)[0]
+                    if isLocked == True:
+                        pm.lockNode(x, l=False)
+                    if hasInput == None or hasOutput == None:
+                        pm.delete(x)
+                        print ("Delete useless node %s." % (x))
+                pm.progressBar(gMainProgressBar, edit=True, step=1)
+            pm.progressBar(gMainProgressBar, edit=True, endProgress=True)
 
 def show_guide_component_manager(*args):
     aboutUI.showDialog(DockableMainUI, dockable=True)

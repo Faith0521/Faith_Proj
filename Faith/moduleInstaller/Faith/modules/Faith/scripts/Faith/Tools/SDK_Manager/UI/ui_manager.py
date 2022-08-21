@@ -55,7 +55,7 @@ class DockableMainUI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.create_window()
         self.create_layout()
         self.create_connections()
-        # self.refreshList()
+        # # self.refreshList()
 
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
 
@@ -176,7 +176,7 @@ class DockableMainUI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
                 self.allSDKInfo_dict = aboutSDK.getSDKInfoFromNode(node, "front")
                 for animNode, infoDict in self.allSDKInfo_dict.items():
                     drivenList.extend(infoDict["drivenAttrs"])
-                drivenList = set(drivenList)    
+                drivenList = set(drivenList)
                 for obj in drivenList:
                     model_01.appendRow(QtGui.QStandardItem(obj))
                 self.__proxyModel02.setSourceModel(model_01)

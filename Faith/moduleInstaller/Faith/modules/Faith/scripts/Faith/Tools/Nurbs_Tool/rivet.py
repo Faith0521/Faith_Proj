@@ -82,6 +82,7 @@ def pin_to_surface(oNurbs, sourceObj=None, uPos=0.5, vPos=0.5,connection=None):
     mtx.output.connect(outMatrix.inputMatrix)
     outMatrix.outputTranslate.connect(result.translate)
     outMatrix.outputRotate.connect(result.rotate)
+    # outMatrix.outputScale.connect(result.scale)
 
     '''
     # Normalize these vectors

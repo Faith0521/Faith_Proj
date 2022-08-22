@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>281</width>
-    <height>439</height>
+    <height>543</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -76,10 +76,10 @@
     <widget class="MLineEdit" name="search_le"/>
    </item>
    <item>
-    <widget class="QListView" name="target_list"/>
+    <widget class="QListWidget" name="target_list"/>
    </item>
    <item>
-    <widget class="DragQListView" name="inbetween_list">
+    <widget class="QListWidget" name="inbetween_list">
      <property name="maximumSize">
       <size>
        <width>1111111</width>
@@ -148,7 +148,7 @@
      <item>
       <layout class="QHBoxLayout" name="axis_hb">
        <item>
-        <widget class="QLabel" name="axis_lb">
+        <widget class="MLabel" name="axis_lb">
          <property name="font">
           <font>
            <family>Segoe UI</family>
@@ -215,7 +215,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="name_le">
+        <widget class="MLineEdit" name="name_le">
          <property name="font">
           <font>
            <family>Segoe UI</family>
@@ -245,11 +245,6 @@
   </layout>
  </widget>
  <customwidgets>
-  <customwidget>
-   <class>DragQListView</class>
-   <extends>QListView</extends>
-   <header>Faith.Core.aboutUI</header>
-  </customwidget>
   <customwidget>
    <class>MPushButton</class>
    <extends>QPushButton</extends>

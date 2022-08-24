@@ -36,5 +36,7 @@ class TstMain(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.gte_layout = QtWidgets.QVBoxLayout()
         self.gte_layout.addWidget(self.gteUIInst)
         self.setLayout(self.gte_layout)
+
+
 def show():
     aboutUI.showDialog(TstMain,dockable=True)

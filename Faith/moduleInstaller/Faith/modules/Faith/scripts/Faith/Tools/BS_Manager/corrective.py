@@ -187,4 +187,8 @@ def set_matrix_cell(matrix, value, row, column):
     @param[in] column Column number.
     """
     OpenMaya.MScriptUtil.setDoubleArray(matrix[row], column, value)
-invert()
+
+
+
+
+

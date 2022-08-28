@@ -21,8 +21,8 @@ class Ui_item_main(object):
         self.horizontalLayout.setSpacing(6)
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.val_lb = MLabel().strong()
-        self.val_lb.setMinimumSize(QtCore.QSize(25, 25))
-        self.val_lb.setMaximumSize(QtCore.QSize(25, 25))
+        self.val_lb.setMinimumSize(QtCore.QSize(40, 25))
+        # self.val_lb.setMaximumSize(QtCore.QSize(25, 25))
         self.val_lb.setObjectName("val_lb")
         self.horizontalLayout.addWidget(self.val_lb)
         self.connect_btn = MPushButton().small()
@@ -39,7 +39,7 @@ class Ui_item_main(object):
         self.combo_btn.setObjectName("combo_btn")
         self.horizontalLayout.addWidget(self.combo_btn)
         self.targtName_le = MLineEdit().small()
-        self.targtName_le.setEnabled(False)
+        # self.targtName_le.setEnabled(False)
         self.targtName_le.setMaximumSize(QtCore.QSize(16777215, 25))
         self.targtName_le.setObjectName("targtName_le")
         self.horizontalLayout.addWidget(self.targtName_le)
@@ -50,7 +50,7 @@ class Ui_item_main(object):
     def retranslateUi(self, item_main):
         _translate = QtCore.QCoreApplication.translate
         item_main.setWindowTitle(_translate("item_main", "Form"))
-        self.val_lb.setText(_translate("item_main", "0.0"))
+        self.val_lb.setText(_translate("item_main", "0.000"))
 from dayu_widgets.label import MLabel
 from dayu_widgets.line_edit import MLineEdit
 from dayu_widgets.push_button import MPushButton

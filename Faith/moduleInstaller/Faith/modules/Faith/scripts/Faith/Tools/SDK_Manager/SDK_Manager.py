@@ -94,6 +94,7 @@ class DockableMainUI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.mainUI.driver_list.customContextMenuRequested.connect(self._component_driver_menu)
         self.mainUI.driven_list.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.mainUI.driven_list.customContextMenuRequested.connect(self._component_driven_menu)
+        self.mainUI.mirror_btn.clicked.connect(self.mirrorSDK)
 
     def le_menu(self, QPos):
         """
@@ -294,7 +295,7 @@ class DockableMainUI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
             attr = i.data()
             isAttr = pm.objExists(node + '.' + attr)
             if isAttr:
-                aboutSDK.mirrorSDKs([node], attributes=[attr], invertDriver=False, invertDriven=False)
+                aboutSDK.mirrorSDKs([node], attributes=[attr],destination="front")
             else:
                 MMessage.warning("Selected item {0}.{1} is not exists.".format(node, attr), parent = self)
 
@@ -305,9 +306,20 @@ class DockableMainUI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
             attr = i.data()
             isAttr = pm.objExists(node + '.' + attr)
             if isAttr:
-                aboutSDK.mirrorSDKs([node], attributes=[attr], invertDriver=False, invertDriven=False)
+                aboutSDK.mirrorSDKs([node], attributes=[attr],destination="after")
             else:
                 MMessage.warning("Selected item {0}.{1} is not exists.".format(node, attr), parent = self)
+
+    def mirrorSDK(self):
+        """
+
+        @return:
+        """
+        node = self.mainUI.node_le.text()
+        if self.mainUI.frnt_rbtn.isChecked():
+            aboutSDK.mirrorSDKs([node], attributes=[], destination="front")
+        else:
+            aboutSDK.mirrorSDKs([node], attributes=[], destination="after")
 
     def delUselessNode(self):
 

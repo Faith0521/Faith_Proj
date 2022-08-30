@@ -343,7 +343,7 @@ MStatus  transferSkinWeights::importWeightInfo(std::ifstream& inFile, MDagPath& 
 	MObjectArray oJoints;
 	status = setInfoToSkinNode(weightInfo, skinNode, oJoints);
 	char copySkinBuffer[512];
-	sprintf(copySkinBuffer, "copySkinWeights -noMirror -surfaceAssociation closestPoint -influenceAssociation closestJoint -normalize %s %s;",
+	sprintf(copySkinBuffer, "copySkinWeights -surfaceAssociation closestPoint -influenceAssociation label -influenceAssociation oneToOne -influenceAssociation oneToOne -normalize %s %s;",
 		tempTransform.fullPathName().asChar(), targetNode.fullPathName().asChar());
 	MGlobal::executeCommand(copySkinBuffer);
 
@@ -463,21 +463,21 @@ MStatus transferSkinWeights::getFileInfo(std::ifstream& inFile, fileInfo* pInfo,
 		matrixPositions[i].y = matrixPoint[1];
 		matrixPositions[i].z = matrixPoint[2];
 		matrixPositions[i].w = 1.0;
-		jntStrArray[i] = jnt_str;
+		//jntStrArray[i] = jnt_str;
 
-		MFnDagNode dagFn;
-		bool isObjectExists = false;
-		for (MItDag itDag(MItDag::kDepthFirst, MFn::kInvalid); !itDag.isDone(); itDag.next()) {
-			dagFn.setObject(itDag.currentItem());
-			if (dagFn.name() == jnt_str) {
-				isObjectExists = true;
-				break;
-			}
-		}
-		if (!isObjectExists) {
-			MGlobal::displayError(jnt_str + " is not exists in the scene.");
-			return MS::kFailure;
-		}
+		//MFnDagNode dagFn;
+		//bool isObjectExists = false;
+		//for (MItDag itDag(MItDag::kDepthFirst, MFn::kInvalid); !itDag.isDone(); itDag.next()) {
+		//	dagFn.setObject(itDag.currentItem());
+		//	if (dagFn.name() == jnt_str) {
+		//		isObjectExists = true;
+		//		break;
+		//	}
+		//}
+		//if (!isObjectExists) {
+		//	MGlobal::displayError(jnt_str + " is not exists in the scene.");
+		//	return MS::kFailure;
+		//}
 
 	}
 
@@ -534,7 +534,6 @@ MStatus transferSkinWeights::getFileInfo(std::ifstream& inFile, fileInfo* pInfo,
 		}
 	}
 
-	MGlobal::displayInfo("8");
 	return MS::kSuccess;
 }
 

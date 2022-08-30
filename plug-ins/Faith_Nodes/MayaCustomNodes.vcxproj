@@ -13,7 +13,6 @@
   <ItemGroup>
     <ClCompile Include="BlendMatrix.cpp" />
     <ClCompile Include="CorrectiveShape.cpp" />
-    <ClCompile Include="Faith_solvers.cpp" />
     <ClCompile Include="IKNode.cpp" />
     <ClCompile Include="MatrixMult.cpp" />
     <ClCompile Include="nearstPoint.cpp" />

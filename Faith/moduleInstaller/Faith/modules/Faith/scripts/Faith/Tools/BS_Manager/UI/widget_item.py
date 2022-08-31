@@ -39,7 +39,7 @@ class Ui_item_main(object):
         self.combo_btn.setObjectName("combo_btn")
         self.horizontalLayout.addWidget(self.combo_btn)
         self.targtName_le = MLineEdit().small()
-        self.targtName_le.setEnabled(False)
+        # self.targtName_le.setEnabled(False)
         self.targtName_le.setMaximumSize(QtCore.QSize(16777215, 25))
         self.targtName_le.setObjectName("targtName_le")
         self.horizontalLayout.addWidget(self.targtName_le)

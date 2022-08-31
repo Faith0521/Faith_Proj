@@ -7,33 +7,22 @@ import maya.cmds as cmds
 import maya.OpenMaya as OpenMaya
 import math
 
-from Faith.Core import aboutPy
-
-PY2 = aboutPy.PY2
-if PY2:
-    UNICODE_TYPE = basestring
-else:
-    UNICODE_TYPE = str
-
-
-def invert(base=None, name=None):
+def invert(base=None, corrective=None, name=None):
     """Inverts a shape through the deformation chain.
     @param[in] base Deformed base mesh.
     @param[in] corrective Sculpted corrective mesh.
     @param[in] name Name of the generated inverted shape.
     @return The name of the inverted shape.
     """
-    if not base:
+    if not base or not corrective:
         sel = cmds.ls(sl=True)
-        if not sel or len(sel) != 1:
-            raise RuntimeError('Select one base skin mesh.')
-        base = sel[0]
+        if not sel or len(sel) != 2:
+            raise RuntimeError('Select base then corrective')
+        base, corrective = sel
 
     # Get points on base mesh
     base_points = get_points(base)
     point_count = base_points.length()
-
-    corrective = cmds.duplicate(base, n = base + "_corrective", rr = True)[0]
 
     # Get points on corrective mesh
     corrective_points = get_points(corrective)
@@ -104,7 +93,7 @@ def invert(base=None, name=None):
     cmds.connectAttr('%s.outMesh' % get_shape(corrective), '%s.correctiveMesh' % deformer)
 
     cmds.undoInfo(closeChunk=True)
-    return [corrective,inverted_shapes]
+    return inverted_shapes
 
 
 def get_shape(node, intermediate=False):
@@ -159,7 +148,7 @@ def get_points(path, space=OpenMaya.MSpace.kObject):
     @param[in] space Space to get the points.
     @return The MPointArray of points.
     """
-    if isinstance(path, UNICODE_TYPE):
+    if isinstance(path, str):
         path = get_dag_path(get_shape(path))
     it_geo = OpenMaya.MItGeometry(path)
     points = OpenMaya.MPointArray()
@@ -173,7 +162,7 @@ def set_points(path, points, space=OpenMaya.MSpace.kObject):
     @param[in] points MPointArray of points.
     @param[in] space Space to get the points.
     """
-    if isinstance(path, UNICODE_TYPE):
+    if isinstance(path, str):
         path = get_dag_path(get_shape(path))
     it_geo = OpenMaya.MItGeometry(path)
     it_geo.setAllPositions(points, space)

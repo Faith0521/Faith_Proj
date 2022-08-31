@@ -8,6 +8,7 @@ from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 from PySide2 import QtCore, QtWidgets, QtGui
 from Faith.Tools.BS_Manager.UI import BS_List as listui
 from Faith.Tools.BS_Manager.UI import widget_item as itemui
+reload(itemui)
 from Faith.Tools.BS_Manager.UI import MainWin as mainWin
 from Faith.Core import aboutUI
 from dayu_widgets.line_tab_widget import MLineTabWidget
@@ -34,15 +35,13 @@ class BS_MainUI(QtWidgets.QMainWindow, mainWin.Ui_MainWindow):
 
 class BS_Manager(MayaQWidgetDockableMixin, QtWidgets.QDialog):
     def __init__(self, parent=None):
-        self.uiName = "BS_Manager"
         super(BS_Manager, self).__init__(parent=parent)
-        self.start_dir = cmds.workspace(q=True, rootDirectory=True)
+        self.uiName = "BS_Manager"
         self.mainUI = BS_MainUI()
         self.listUI = BS_ListUI()
         self.init_UI()
         self.create_window()
         self.create_connections()
-        self.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
 
     def init_UI(self):
         self.main_lay = QtWidgets.QVBoxLayout()
@@ -57,82 +56,32 @@ class BS_Manager(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.setLayout(self.main_lay)
 
     def create_window(self):
-        self.setObjectName(self.uiName)
-        self.setWindowFlags(QtCore.Qt.Window)
-        self.setWindowTitle("BS Manager v0.0.1")
-        self.listUI.target_lb.setPixmap(QtGui.QPixmap("SHAPES_btn_mesh_150.png"))
+        self.listUI.edit_btn.setStyleSheet("QPushButton{border-image:'SHAPES_regionColor4Paint_150.png';}")
         self.listUI.load_btn.setIcon(MIcon("SHAPES_btn_mesh_150.png"))
-        self.listUI.edit_btn.setIcon(MIcon("SHAPES_regionColor4Paint_150.png"))
+        # self.listUI.edit_btn.setIcon(MIcon("SHAPES_regionColor4Paint_150.png"))
         self.listUI.delete_btn.setIcon(MIcon("SHAPES_trash_150.png"))
         self.listUI.cancel_btn.setIcon(MIcon("SHAPES_dismiss_150.png"))
 
     def create_connections(self):
         self.listUI.load_btn.clicked.connect(self.refresh)
-        self.listUI.target_list.itemSelectionChanged.connect(self.refreshList)
-        self.listUI.target_list.itemDoubleClicked.connect(self.EnableLine)
-        self.listUI.edit_btn.clicked.connect(self.sculptMesh)
+        self.listUI.target_list.itemSelectionChanged.connect(self.refreshBtList)
 
-    def EnableLine(self):
-        """
-
-        @return:
-        """
-
-        current_widget = self.listUI.target_list.itemWidget(self.listUI.target_list.currentItem())
-        current_widget.targtName_le.setEnabled(True)
-        current_widget.targtName_le.returnPressed.connect(self.renameTarget)
-
-    def renameTarget(self):
-        """
-
-        @return:
-        """
-        self.targetBlendShape = cmds.listAttr(self.BlendNode + '.weight', multi=True)
-        for i in range(self.listUI.target_list.count()):
-            widget = self.listUI.target_list.itemWidget(self.listUI.target_list.item(i))
-            if self.targetBlendShape:
-                if widget.targtName_le.text() != self.targetBlendShape[i]:
-                    cmds.aliasAttr(widget.targtName_le.text(), self.BlendNode + '.' + self.targetBlendShape[i])
-
-    def sculptMesh(self):
-        """
-
-        @return:
-        """
-        self.BlendNode = self.listUI.load_le.text()
-        if not cmds.objExists(self.BlendNode):
-            return False
-        currentMode = cmds.getAttr(self.BlendNode + ".editMode")
-        if currentMode == "Default":
-            cmds.setAttr(self.BlendNode + ".editMode", "Edit", type="string")
-            self.listUI.edit_btn.setIcon(MIcon("SHAPES_regionColor1Paint_200.png", self))
-        if currentMode == "Edit":
-            cmds.setAttr(self.BlendNode + ".editMode", "Default", type="string")
-            self.listUI.edit_btn.setIcon(MIcon("SHAPES_regionColor4Paint_150.png", self))
-
-    def refreshList(self):
+    def refreshBtList(self):
         """
 
         :return:s
         """
-        try:
-            self.renameTarget()
-        except:
-            RuntimeError()
-
         current_widget = self.listUI.target_list.itemWidget(self.listUI.target_list.currentItem())
-        for i in range(self.listUI.target_list.count()):
-            widget = self.listUI.target_list.itemWidget(self.listUI.target_list.item(i))
-            if widget.targtName_le.text() != current_widget.targtName_le.text():
-                widget.targtName_le.setEnabled(False)
+        current_widget.connect_btn.clicked.connect(lambda : self.refresh_cnBtn(current_widget.connect_btn))
+        print(current_widget.targtName_le.text())
 
-        targetName = current_widget.targtName_le.text()
-        if not cmds.objExists(self.BlendNode + ".CurrentItemName"):
-            cmds.addAttr(self.BlendNode, ln="CurrentItemName", dt="string")
-            cmds.setAttr(self.BlendNode + ".CurrentItemName", targetName, type="string")
-        else:
-            cmds.setAttr(self.BlendNode + ".CurrentItemName", targetName, type="string")
+    def refresh_cnBtn(self, btn):
+        """
 
+        :return:
+        """
+        # btn.setIcon(MIcon("SHAPES_confirm_150.png", self))
+        return
 
     def refresh(self):
         """
@@ -149,44 +98,67 @@ class BS_Manager(MayaQWidgetDockableMixin, QtWidgets.QDialog):
             pass
 
         if BlendShapeNode.__len__() != 0:
-            self.BlendNode = BlendShapeNode[0]
+            BlendNode = BlendShapeNode[0]
         else:
-            self.BlendNode = ""
+            BlendNode = ""
         indexIntS = []
 
-        if self.BlendNode != "":
-            self.targetBlendShape = cmds.listAttr(self.BlendNode + '.weight', multi=True)
-            targetInt = cmds.blendShape(self.BlendNode, query=True, wc=True)
-            if not cmds.objExists(self.BlendNode + ".editMode"):
-                cmds.addAttr(self.BlendNode, ln="editMode", dt="string")
-            cmds.setAttr(self.BlendNode + ".editMode", "Default", type="string")
-
+        if BlendNode != "":
+            targetBlendShape = cmds.listAttr(BlendNode + '.weight', multi=True)
+            targetInt = cmds.blendShape(BlendNode, query=True, wc=True)
+            # print(targetBlendShape, targetInt)
             if targetInt > 0:
-                for i,target in enumerate(self.targetBlendShape):
+                for i,target in enumerate(targetBlendShape):
                     listItemUI = BS_itemUI()
                     myQListWidgetItem = QtWidgets.QListWidgetItem(self.listUI.target_list)
                     myQListWidgetItem.setSizeHint(listItemUI.sizeHint())
 
                     listItemUI.targtName_le.setText(target)
-                    targetValue = float(cmds.getAttr(self.BlendNode + '.' + target))
+                    targetValue = cmds.getAttr(BlendNode + '.' + target)
                     listItemUI.val_lb.setText(str(round(targetValue,3)))
-                    listItemUI.connect_btn.setToolTip("Select or delete driver")
-                    listItemUI.combo_btn.setToolTip("Create combo")
-                    # QtWidgets.QPushButton.setToolTip()
-                    targetConnect = cmds.listConnections(self.BlendNode + '.' + target, s=True, d=False)
 
-                    if targetValue < 0.0001:
-                        targetValue = 0
-                    if targetConnect == None and targetValue >= 0.001:
-                        listItemUI.connect_btn.setIcon(MIcon("SHAPES_regionColor1_200.png", self))
-                    elif targetConnect == None and targetValue == 0:
+                    connections = pm.listConnections(BlendNode + '.' + target, s=True, d=False)
+                    if connections and targetValue == 0:
+                        listItemUI.connect_btn.setIcon(MIcon("SHAPES_regionColor4_200.png", self))
+                    elif not connections and targetValue > 0:
                         listItemUI.connect_btn.setIcon(MIcon("SHAPES_regionColor1_200.png", self))
                     else:
-                        listItemUI.connect_btn.setIcon(MIcon("SHAPES_regionColor4_200.png", self))
+                        listItemUI.connect_btn.setIcon(MIcon("SHAPES_regionColor2_200.png", self))
 
                     self.listUI.target_list.addItem(myQListWidgetItem)
                     self.listUI.target_list.setItemWidget(myQListWidgetItem, listItemUI)
+        # selected_node = pm.selected()
+        # if not selected_node:
+        #     return
+        #
+        # mesh = pm.listRelatives(selected_node, s=1, type="mesh")
+        # if not mesh:
+        #
+        #     return False
+        #
+        #
+        #
+        # shape = ""
+        # if self.listUI.load_le.text() != "":
+        #     shape = self.listUI.load_le.text()
+        #
+        # shapeNode = pm.PyNode(shape)
+        # bsNodes = shapeNode.history(type = "blendShape")
+        # if len(bsNodes) >= 1:
+        #     MMessage.error("Have too many bs nodes!", self)
+        #
+        # bs_node = bsNodes[0]
+        # if not mc.nodeType(selected_node)
+        # self.listUI.load_le
+        # for i in range(5):
+            # self.listItemUI.connect_btn.setText(str(i))
 
+        # for i in range(8):
+        # widget = QtWidgets.QWidget()
+        # main_lay = QtWidgets.QHBoxLayout(widget)
+        # btn = QtWidgets.QPushButton("aaaa")
+        # main_lay.addWidget(btn)
+        # self.listUI.target_list.setItemWidget(item, widget)
 
     def getMesh(self):
         sel = cmds.ls(sl=1)

@@ -1,0 +1,14 @@
+<RCC>
+  <qresource prefix="icon">
+    <file>SHAPES_weightExport_200_light.png</file>
+    <file>SHAPES_weightExport_200.png</file>
+    <file>SHAPES_keyDeleteAll_200_light.png</file>
+    <file>SHAPES_keyDeleteAll_200.png</file>
+    <file>breakOff_64_light.png</file>
+    <file>breakOff_64.png</file>
+    <file>SHAPES_preferences_150_light.png</file>
+    <file>SHAPES_preferences_150.png</file>
+    <file>SHAPES_weightPaste_200.png</file>
+    <file>SHAPES_weightPaste_200_light.png</file>
+  </qresource>
+</RCC>

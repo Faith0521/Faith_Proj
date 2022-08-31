@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>281</width>
-    <height>543</height>
+    <width>277</width>
+    <height>539</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -35,6 +35,9 @@
          <family>Segoe UI</family>
         </font>
        </property>
+       <property name="toolTip">
+        <string>Load mesh</string>
+       </property>
        <property name="text">
         <string>Load</string>
        </property>
@@ -50,6 +53,81 @@
        <property name="placeholderText">
         <string>Load one mesh with BS</string>
        </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="setting_btn">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>25</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>25</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="toolTip">
+        <string>Settings</string>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton{
+border-image: url(:/icon/SHAPES_preferences_150.png);
+}
+QPushButton:hover{
+border-image: url(:/icon/SHAPES_preferences_150_light.png);
+}
+QPushButton:pressed{
+border-image: url(:/icon/SHAPES_preferences_150.png);
+}</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="bs_hb">
+     <item>
+      <widget class="MLabel" name="bs_lb">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>30</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>50</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="font">
+        <font>
+         <family>Segoe UI</family>
+        </font>
+       </property>
+       <property name="text">
+        <string>BS Name</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="MComboBox" name="bs_cb">
+       <property name="font">
+        <font>
+         <family>Segoe UI</family>
+        </font>
+       </property>
+       <item>
+        <property name="text">
+         <string>None</string>
+        </property>
+       </item>
       </widget>
      </item>
     </layout>
@@ -73,7 +151,38 @@
     </widget>
    </item>
    <item>
-    <widget class="MLineEdit" name="search_le"/>
+    <layout class="QHBoxLayout" name="search_hb">
+     <item>
+      <widget class="QPushButton" name="search_btn">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>25</height>
+        </size>
+       </property>
+       <property name="toolTip">
+        <string>Case sensetive search</string>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton{
+border-image: url(:/icon/SHAPES_weightPaste_200.png);
+}
+QPushButton:hover{
+border-image: url(:/icon/SHAPES_weightPaste_200_light.png);
+}
+QPushButton:pressed{
+border-image: url(:/icon/SHAPES_weightPaste_200.png);
+}</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="MLineEdit" name="search_le"/>
+     </item>
+    </layout>
    </item>
    <item>
     <widget class="QListWidget" name="target_list"/>
@@ -97,6 +206,12 @@
          <family>Segoe UI</family>
         </font>
        </property>
+       <property name="toolTip">
+        <string>Edit blendShape</string>
+       </property>
+       <property name="styleSheet">
+        <string notr="true"/>
+       </property>
        <property name="text">
         <string>Edit</string>
        </property>
@@ -108,6 +223,9 @@
         <font>
          <family>Segoe UI</family>
         </font>
+       </property>
+       <property name="toolTip">
+        <string>Delete blendShape</string>
        </property>
        <property name="text">
         <string>Delete</string>
@@ -265,7 +383,14 @@
    <extends>QRadioButton</extends>
    <header>dayu_widgets.radio_button</header>
   </customwidget>
+  <customwidget>
+   <class>MComboBox</class>
+   <extends>QComboBox</extends>
+   <header>dayu_widgets.combo_box</header>
+  </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="../../../../dayu_widgets/static/icon.qrc"/>
+ </resources>
  <connections/>
 </ui>

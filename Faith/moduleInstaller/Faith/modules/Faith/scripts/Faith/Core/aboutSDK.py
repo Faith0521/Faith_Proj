@@ -2,7 +2,7 @@
 # @Author: YinYuFei
 # @Date:   2022-06-19 16:49:53
 # @Last Modified by:   yinyufei
-# @Last Modified time: 2022-08-29 17:55:07
+# @Last Modified time: 2022-08-04 09:45:03
 
 from Faith.Core import aboutPy, utils
 import json
@@ -11,7 +11,7 @@ if aboutPy.PY2:
 else:
     import _pickle
 import pprint,re
-import pymel.core as pm,maya.mel as mel,maya.cmds as mc
+import pymel.core as pm,maya.mel as mel
 
 SDK_UTILITY_TYPE = ("blendWeighted",)
 SDK_ANIMCURVES_TYPE = ("animCurveUA", "animCurveUL", "animCurveUU")
@@ -356,7 +356,7 @@ def getConnectedSDKs(attribute = "",
     return retrievedSDKNodes
 
 
-def mirrorSDKs(nodes, attributes=[], destination="front"):
+def mirrorSDKs(nodes, attributes=[], invertDriver=True, invertDriven=True):
     """
 
     :param nodes:
@@ -379,17 +379,17 @@ def mirrorSDKs(nodes, attributes=[], destination="front"):
                     testConnections = pm.listConnections("%s.%s"%(node, eachAttr),
                                                          plugs = True)
                     if testConnections:
-                        mirrorKeys("%s.%s"%(node, eachAttr),destination=destination)
+                        mirrorKeys("%s.%s"%(node, eachAttr), invertDriver=invertDriver, invertDriven=invertDriven)
         else:
             for eachAttr in attributes:
                 if pm.objExists("%s.%s"%(node, eachAttr)):
                     testConnections = pm.listConnections("%s.%s"%(node, eachAttr),
                                                          plugs = True)
                     if testConnections:
-                        mirrorKeys("%s.%s"%(node, eachAttr),destination=destination)
+                        mirrorKeys("%s.%s"%(node, eachAttr), invertDriver=invertDriver, invertDriven=invertDriven)
 
 
-def mirrorKeys(attr, destination="front"):
+def mirrorKeys(attr, invertDriver=True, invertDriven=True):
     """
 
     :param node:
@@ -399,23 +399,20 @@ def mirrorKeys(attr, destination="front"):
     :return:
     """
 
-    sourceSDKInfo = getConnectedSDKs(attr,destination)
+    sourceSDKInfo = getConnectedSDKs(attr,"front")
     sourceSDKInfo.extend(getMultSDKs(attr))
-    # print(sourceSDKInfo)
     for source, dest in sourceSDKInfo:
         info = {}
-        if destination == "front":
-            info[source.nodeName()] = getSDKInfo(source.node())
-        else:
-            info[source.nodeName()] = getSDKInfo(dest.node())
-        # print(info)
-        invertKeyValues(info)
+        info[source.nodeName()] = getSDKInfo(source.node())
+        invertKeyValues(info,
+                        invertDriver=invertDriver,
+                        invertDriven=invertDriven)
 
 
-def invertKeyValues(sdkInfo):
+def invertKeyValues(sdkInfo, invertDriver=True, invertDriven=True):
 
-    LeftKey = ['L_','l_','lf_','Lf_','_L','_l','_lf','_Lf','Left_','_Left']
-    RightKey = ['R_','r_','rt_','Rt_','_R','_r','_rt','_Rt','Right_','_Right']
+    LeftKey = ['L_','l_','lf_','Lf_','_L','_l','_lf','_Lf']
+    RightKey = ['R_','r_','rt_','Rt_','_R','_r','_rt','_Rt']
     for animNode,infoDict in sdkInfo.items():
         animKeys = infoDict["keys"]
         driverNode = infoDict['driverNode']
@@ -424,32 +421,40 @@ def invertKeyValues(sdkInfo):
         drivenNodes = infoDict['drivenNodes']
         drivenAttrs = infoDict['drivenAttrs']
 
+        for i in range(len(LeftKey)):
+            if re.search('^'+ LeftKey[i], driverNode) or re.search(LeftKey[i]+'$', driverNode):
+                driverNode = driverNode.replace(LeftKey[i],RightKey[i])
+            if re.search('^'+ LeftKey[i], driverAttr) or re.search(LeftKey[i]+'$', driverAttr):
+                driverAttr = driverAttr.replace(LeftKey[i],RightKey[i])
+            for j in range(len(drivenNodes)):
+                if re.search('^'+ LeftKey[i], drivenNodes[j]) or re.search(LeftKey[i]+'$', drivenNodes[j]):
+                    drivenNodes[j] = drivenNodes[j].replace(LeftKey[i],RightKey[i])
+                if re.search('^' + LeftKey[i], drivenAttrs[j]) or re.search(LeftKey[i] + '$', drivenAttrs[j]):
+                    drivenAttrs[j] = drivenAttrs[j].replace(LeftKey[i], RightKey[i])
+
         for j in range(len(drivenNodes)):
             for index in range(0, len(animKeys)):
                 frameValue = animKeys[index]
+                if invertDriver and invertDriven:
+                    timeValue = frameValue[0] * -1
+                    value = frameValue[1] * -1
+                if invertDriver and not invertDriven:
+                    timeValue = frameValue[0]
+                    value = frameValue[1] * -1
+                if not invertDriver and invertDriven:
+                    timeValue = frameValue[0]
+                    value = frameValue[1] * -1
+                else:
+                    timeValue = frameValue[0]
+                    value = frameValue[1]
 
                 connectionObj = pm.connectionInfo(drivenNodes[j] + '.' + drivenAttrs[j], sfd=1)
                 
                 if connectionObj != '' and 'animCurve' in pm.nodeType(connectionObj):
                     pass
 
-                checkResult = checkSymAttrIfMirror(driverNode + "." + driverAttr, drivenNodes[j] + "." + drivenAttrs[j])
-
-                driverattr = checkResult[0]
-                drivenattr = checkResult[1]
-
-                if '-' in driverattr and '-' not in drivenattr:
-                    pm.setDrivenKeyframe(drivenattr.split('.')[0], at=drivenattr.split('.')[1], cd=driverattr[:-1],
-                                         dv=float(frameValue[0]) * -1, v=float(frameValue[1]))
-                elif '-' not in driverattr and '-' in drivenattr:
-                    pm.setDrivenKeyframe(drivenattr.split('.')[0], at=drivenattr.split('.')[1][:-1], cd=driverattr,
-                                         dv=float(frameValue[0]), v=float(frameValue[1]) * (-1))
-                elif '-' in driverattr and '-' in drivenattr:
-                    pm.setDrivenKeyframe(drivenattr.split('.')[0], at=drivenattr.split('.')[1][:-1],
-                                         cd=driverattr[:-1], dv=float(frameValue[0]) * -1, v=float(frameValue[1]) * (-1))
-                elif '-' not in driverattr and '-' not in drivenattr:
-                    pm.setDrivenKeyframe(drivenattr.split('.')[0], at=drivenattr.split('.')[1], cd=driverattr,
-                                         dv=float(frameValue[0]), v=float(frameValue[1]))
+                pm.setDrivenKeyframe(drivenNodes[j], at=drivenAttrs[j], cd=driverNode+'.'+driverAttr, dv=timeValue,
+                                     value=value)
 
             for index in range(0, len(animKeys)):
                 frameValue = animKeys[index]
@@ -484,10 +489,9 @@ def getAnimCurve(driverAttr, setdrivenAttr=None):
         return animCList
     elif animCList != None and setdrivenAttr != None:
         for x in animCList:
-            drivenAttr = removeEXnodes(x, 'output', 'dfs')
-            if drivenAttr:
-                if drivenAttr[0] == setdrivenAttr:
-                    setdrivenCrv.append(x)
+            drivenAttr = removeEXnodes(x, 'output', 'dfs')[0]
+            if drivenAttr == setdrivenAttr:
+                setdrivenCrv.append(x)
         return setdrivenCrv
 
 def removeEXnodes(nodeName, nodeAttr, direction):
@@ -528,370 +532,6 @@ def stripKeys(animNode):
     numKeys = len(pm.listAttr(animNode + ".ktv", multi=True)) / 3
     for x in range(0, numKeys):
         animNode.remove(0)
-
-def checkSymAttrIfMirror(baseDriverAttr, baseDrivenAttr):
-    """
-
-    @param baseDriverAttr:
-    @param baseDrivenAttr:
-    @return:
-    """
-    PrefixKey = ['L_', 'lf_', '_L', 'facial_L_', 'left_', 'Left_', 'R_', 'rt_', '_R', 'facial_R_', 'right_', 'Right_']
-    keyNum = len(PrefixKey)
-    symAttr = []
-    # -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    # check driver attribute
-    i = 0
-    while i < keyNum:
-        if PrefixKey[i] in baseDriverAttr:
-            driverAttr = (checkSymObj(orgObj=[baseDriverAttr], searchFor=PrefixKey[i],
-                                           replaceWith=PrefixKey[(i + keyNum / 2) % keyNum]))
-
-            if len(driverAttr) == 0:
-                driverAttr = baseDriverAttr
-                break
-
-            elif len(driverAttr) != 0:
-                symDriver = driverAttr.split('.')[0]
-                if 'translate' in baseDriverAttr or 'rotate' in baseDriverAttr and 'order' not in baseDriverAttr and 'Order' not in baseDriverAttr:
-                    mirrorAxis = checkSymAxis(baseDriverAttr.split('.')[0], symDriver)
-                    driverAttr = mirrorAxis[baseDriverAttr]
-            break
-        else:
-            i = i + 1
-            if i == keyNum:
-                driverAttr = baseDriverAttr
-                break
-    # -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    # check driven attribute
-    j = 0
-    while j < keyNum:
-        if PrefixKey[j] in baseDrivenAttr:
-            drivenAttr = (checkSymObj(orgObj=[baseDrivenAttr], searchFor=PrefixKey[j],
-                                           replaceWith=PrefixKey[(j + keyNum / 2) % keyNum]))
-
-            if len(drivenAttr) == 0:
-                drivenAttr = baseDrivenAttr
-                driverAttr = baseDriverAttr
-                break
-
-            elif len(drivenAttr) != 0:
-                symDriven = drivenAttr.split('.')[0]
-                if 'translate' in baseDrivenAttr or 'rotate' in baseDrivenAttr and 'order' not in baseDrivenAttr and 'Order' not in baseDrivenAttr:
-                    mirrorAxis = checkSymAxis(baseDrivenAttr.split('.')[0], symDriven)
-                    drivenAttr = mirrorAxis[baseDrivenAttr]
-
-            break
-        else:
-            j = j + 1
-            if j == keyNum:
-                if 'translate' in baseDrivenAttr or 'rotate' in baseDrivenAttr and 'order' not in baseDrivenAttr and 'Order' not in baseDrivenAttr:
-                    mirrorAxis = checkSymAxis(baseDrivenAttr.split('.')[0], baseDrivenAttr.split('.')[0])
-                    drivenAttr = mirrorAxis[baseDrivenAttr]
-                else:
-                    drivenAttr = baseDrivenAttr
-                break
-
-    symAttr.append(driverAttr)
-    symAttr.append(drivenAttr)
-    return symAttr
-
-def checkSymObj(orgObj=[], searchFor='L_', replaceWith='R_'):
-    """
-
-    @param orgObj:
-    @param searchFor:
-    @param replaceWith:
-    @return:
-    """
-    symObj = []
-    keyword = [searchFor]
-    # ------------------------------
-    if orgObj == []:
-        selobjs = mc.ls(sl=1)
-    else:
-        selobjs = orgObj
-
-    for x in selobjs:
-        for n in keyword:
-            if n not in x:
-                symObj.append(x)
-            else:
-                theOtherSideobj = x.replace(searchFor, replaceWith)
-                if mc.objExists(theOtherSideobj):
-                    symObj.append(theOtherSideobj)
-                else:
-                    mc.warning('can not find the sysmmetry : %s' % (theOtherSideobj))
-
-        symObj = sorted(set(symObj), key=symObj.index)
-
-    if len(symObj) == 1:
-        return symObj[0]
-    else:
-        return symObj
-
-def checkSymAxis(orgobj, symobj):
-    """
-
-    @param orgobj:
-    @param symobj:
-    @return:
-    """
-    symAxis = []
-
-    orghelploc = mc.spaceLocator(
-        p=(0, 0, 0), name=str(orgobj) + '_help_loc')[0]
-    symhelploc = mc.spaceLocator(
-        p=(0, 0, 0), name=str(symobj) + '_help_loc')[0]
-
-    # self.fromAtoB(orghelploc , orgobj , 1)
-    # self.fromAtoB(symhelploc , symobj , 1)
-
-    orghelplocGrp = makeObjZero('group', 'zero', 'On', orghelploc)
-    symhelplocGrp = makeObjZero('group', 'zero', 'On', symhelploc)
-
-    # update date 2017/03/16 >>
-    # set zero value in object space
-    mc.parent(orghelplocGrp, orgobj)
-    mc.parent(symhelplocGrp, symobj)
-
-    defaultAttr = ['.tx', '.ty', '.tz', '.rx',
-                   '.ry', '.rz', '.sx', '.sy', '.sz']
-    for attr in defaultAttr:
-        if 's' in attr:
-            mc.setAttr(orghelplocGrp + attr, 1)
-            mc.setAttr(symhelplocGrp + attr, 1)
-        else:
-            mc.setAttr(orghelplocGrp + attr, 0)
-            mc.setAttr(symhelplocGrp + attr, 0)
-
-    # set zero value in world space
-    mc.parent(orghelplocGrp, w=1)
-    mc.parent(symhelplocGrp, w=1)
-
-    zeroValue = ['.tx', '.ty', '.tz']
-    for x in zeroValue:
-        mc.setAttr(orghelplocGrp + x, 0)
-        mc.setAttr(symhelplocGrp + x, 0)
-
-    orgaxisValue = [(1, 0, 0), (0, 1, 0), (0, 0, 1)]
-    axisKey = ['X', 'Y', 'Z', 'X-', 'Y-', 'Z-']
-    symaxisValue = [(1, 0, 0), (0, 1, 0), (0, 0, 1),
-                    (-1, 0, 0), (0, -1, 0), (0, 0, -1)]
-
-    i = 0
-    while i < len(orgaxisValue):
-        j = 0
-
-        mc.setAttr(orghelploc + '.tx', orgaxisValue[i][0])
-        mc.setAttr(orghelploc + '.ty', orgaxisValue[i][1])
-        mc.setAttr(orghelploc + '.tz', orgaxisValue[i][2])
-
-        orgcurrentPos = mc.xform(orghelploc, q=1, t=1, ws=1)
-
-        orgcurrentPos[0] = round(orgcurrentPos[0], 1)
-        orgcurrentPos[1] = round(orgcurrentPos[1], 1)
-        orgcurrentPos[2] = round(orgcurrentPos[2], 1)
-
-        mc.setAttr(orghelploc + '.tx', 0)
-        mc.setAttr(orghelploc + '.ty', 0)
-        mc.setAttr(orghelploc + '.tz', 0)
-
-        while j < len(symaxisValue):
-
-            mc.setAttr(symhelploc + '.tx', symaxisValue[j][0])
-            mc.setAttr(symhelploc + '.ty', symaxisValue[j][1])
-            mc.setAttr(symhelploc + '.tz', symaxisValue[j][2])
-
-            symcurrentPos = mc.xform(symhelploc, q=1, t=1, ws=1)
-
-            symcurrentPos[0] = round(symcurrentPos[0], 1)
-            symcurrentPos[1] = round(symcurrentPos[1], 1)
-            symcurrentPos[2] = round(symcurrentPos[2], 1)
-
-            mc.setAttr(symhelploc + '.tx', 0)
-            mc.setAttr(symhelploc + '.ty', 0)
-            mc.setAttr(symhelploc + '.tz', 0)
-
-            if symcurrentPos[0] * -1 == orgcurrentPos[0] and symcurrentPos[1] == orgcurrentPos[1] and symcurrentPos[
-                2] == orgcurrentPos[2]:
-
-                symAxis.append(orgobj + '.translate' + axisKey[i])
-                symAxis.append(symobj + '.translate' + axisKey[j])
-
-                # check rotate
-                # create rotate help locator
-                orgRollLoc = mc.spaceLocator(
-                    p=(0, 0, 0), name=str(orgobj) + '_roll_loc')[0]
-                symRollLoc = mc.spaceLocator(
-                    p=(0, 0, 0), name=str(symobj) + '_roll_loc')[0]
-
-                # sym help loc
-                mc.setAttr(orgRollLoc + '.tx', 1)
-                mc.setAttr(symRollLoc + '.tx', -1)
-                mc.setAttr(orgRollLoc + '.ty', 1)
-                mc.setAttr(symRollLoc + '.ty', 1)
-
-                mc.parentConstraint(orghelploc, orgRollLoc, mo=True)
-                mc.parentConstraint(symhelploc, symRollLoc, mo=True)
-
-                # give help loc rotate
-                mc.setAttr(orghelploc + '.rotate' + axisKey[i], 10)
-
-                # check rotate at two type
-                if '-' in axisKey[j]:
-                    mc.setAttr(symhelploc + '.rotate' +
-                               axisKey[j][:-1], -10)
-                    orgRollLocPos = mc.xform(orgRollLoc, q=1, t=1, ws=1)
-                    symRollLocPos = mc.xform(symRollLoc, q=1, t=1, ws=1)
-
-                    orgRollLocPos[0] = round(orgRollLocPos[0], 1)
-                    orgRollLocPos[1] = round(orgRollLocPos[1], 1)
-                    orgRollLocPos[2] = round(orgRollLocPos[2], 1)
-
-                    symRollLocPos[0] = round(symRollLocPos[0], 1)
-                    symRollLocPos[1] = round(symRollLocPos[1], 1)
-                    symRollLocPos[2] = round(symRollLocPos[2], 1)
-
-                    if symRollLocPos[0] * -1 == orgRollLocPos[0] and symRollLocPos[1] == orgRollLocPos[1] and \
-                            symRollLocPos[2] == orgRollLocPos[2]:
-                        symAxis.append(orgobj + '.rotate' + axisKey[i])
-                        symAxis.append(symobj + '.rotate' + axisKey[j])
-                    else:
-                        # print 'test'
-                        symAxis.append(orgobj + '.rotate' + axisKey[i])
-                        symAxis.append(
-                            symobj + '.rotate' + axisKey[j][:-1])
-
-                elif '-' not in axisKey[j]:
-                    mc.setAttr(symhelploc + '.rotate' + axisKey[j], 10)
-                    orgRollLocPos = mc.xform(orgRollLoc, q=1, t=1, ws=1)
-                    symRollLocPos = mc.xform(symRollLoc, q=1, t=1, ws=1)
-
-                    orgRollLocPos[0] = round(orgRollLocPos[0], 1)
-                    orgRollLocPos[1] = round(orgRollLocPos[1], 1)
-                    orgRollLocPos[2] = round(orgRollLocPos[2], 1)
-
-                    symRollLocPos[0] = round(symRollLocPos[0], 1)
-                    symRollLocPos[1] = round(symRollLocPos[1], 1)
-                    symRollLocPos[2] = round(symRollLocPos[2], 1)
-
-                    if symRollLocPos[0] * -1 == orgRollLocPos[0] and symRollLocPos[1] == orgRollLocPos[1] and \
-                            symRollLocPos[2] == orgRollLocPos[2]:
-                        symAxis.append(orgobj + '.rotate' + axisKey[i])
-                        symAxis.append(symobj + '.rotate' + axisKey[j])
-                    else:
-                        symAxis.append(orgobj + '.rotate' + axisKey[i])
-                        symAxis.append(
-                            symobj + '.rotate' + axisKey[j] + '-')
-
-                # clean
-                mc.delete(orgRollLoc)
-                mc.delete(symRollLoc)
-            j += 1
-        i += 1
-
-    mc.delete(orghelplocGrp, symhelplocGrp)
-    axisNote = {}
-    for i in range(0, len(symAxis), 2):
-        axisNote[symAxis[i]] = symAxis[i + 1]
-    return axisNote
-
-def makeObjZero(type, suffix, rotation, *obj):
-    '''
-    #--------------------------------------------------------------------------------
-    #This Function can make object zero
-    #Note: if you want create control type is joint or you wang create sdk group on objects , you can use this script.
-    #FN: makeObjZero(sel,type,rotation)
-    #--------------------------------------------------------------------------------
-    '''
-
-    if len(obj) == 0:
-
-        mc.error(
-            '------------------------->>>You must select one or more object !<<<----------------------------')
-
-    else:
-
-        # this type is joint .
-
-        if type == 'joint':
-
-            objNum = len(obj)
-
-            for i in range(0, objNum, 1):
-
-                if rotation == 'On':
-                    mc.makeIdentity(obj[i], apply=True, t=1, r=1, s=1, n=0)
-                    mc.duplicate(obj[i], name='%s_%s' % (obj[i], suffix))
-                    childObj = mc.listRelatives('%s_%s' % (obj[i], suffix))
-
-                    if childObj == None:
-                        mc.parent(obj[i], '%s_%s' % (obj[i], suffix))
-                    else:
-                        childNum = len(childObj)
-                        mc.delete('%s_%s|%s' %
-                                  (obj[i], suffix, childObj[0]))
-                        mc.parent(obj[i], '%s_%s' % (obj[i], suffix))
-
-                elif rotation == 'Off':
-
-                    mc.makeIdentity(obj[i], apply=True, t=1, r=1, s=1, n=0)
-                    mc.duplicate(obj[i], name='%s_%s' % (obj[i], suffix))
-                    mc.makeIdentity(obj[i], apply=True, t=1, r=1, s=1, n=0)
-                    mc.setAttr('%s_%s.rotateX' % (obj[i], suffix), 0)
-                    mc.setAttr('%s_%s.rotateY' % (obj[i], suffix), 0)
-                    mc.setAttr('%s_%s.rotateZ' % (obj[i], suffix), 0)
-                    childObj = mc.listRelatives('%s_%s' % (obj[i], suffix))
-
-                    if childObj == None:
-                        mc.parent(obj[i], '%s_%s' % (obj[i], suffix))
-                    else:
-                        childNum = len(childObj)
-                        mc.delete('%s_%s|%s' %
-                                  (obj[i], suffix, childObj[0]))
-                        mc.parent(obj[i], '%s_%s' % (obj[i], suffix))
-
-        # type is group ,it is have flag rotateOn / rotateOff ,you can use
-        # it for ik controls  con sdk zero and so on.
-
-        elif type == 'group':
-
-            objNum = len(obj)
-
-            for i in range(0, objNum, 1):
-
-                grp = mc.createNode(
-                    'transform', name='%s_%s' % (obj[i], suffix))
-                parentObj = mc.listRelatives(obj[i], p=True)
-
-                if rotation == 'On':
-                    mc.delete(mc.pointConstraint(obj[i], grp, mo=False))
-                    mc.delete(mc.orientConstraint(obj[i], grp, mo=False))
-
-                    if parentObj == None:
-                        mc.parent(obj[i], grp)
-                    else:
-                        mc.parent(grp, parentObj[0])
-                        mc.parent(obj[i], grp)
-
-                    mc.select(grp)
-                    return grp
-
-                elif rotation == 'Off':
-
-                    mc.pointConstraint(obj[i], grp, mo=False)
-                    mc.delete('%s_pointConstraint1' % (grp))
-
-                    if parentObj == None:
-                        mc.parent(obj[i], grp)
-                    else:
-
-                        mc.parent(grp, parentObj[0])
-                        mc.parent(obj[i], grp)
-
-                    mc.select(grp)
-                    return grp
 
 def exportSDKs(nodes, filePath, expType="front"):
     """exports the sdk information based on the provided nodes to a json file

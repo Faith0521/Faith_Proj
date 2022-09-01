@@ -1,5 +1,9 @@
 <RCC>
   <qresource prefix="icon">
+    <file>SHAPES_additionalActions_200_light.png</file>
+    <file>SHAPES_additionalActions_200.png</file>
+    <file>SHAPES_comboMembers_200_light.png</file>
+    <file>SHAPES_comboMembers_200.png</file>
     <file>SHAPES_weightExport_200_light.png</file>
     <file>SHAPES_weightExport_200.png</file>
     <file>SHAPES_keyDeleteAll_200_light.png</file>

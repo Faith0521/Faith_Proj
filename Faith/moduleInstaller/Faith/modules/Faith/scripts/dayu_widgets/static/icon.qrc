@@ -1,5 +1,9 @@
 <RCC>
   <qresource prefix="icon">
+    <file>SHAPES_btn_locator_150_light.png</file>
+    <file>SHAPES_btn_locator_150.png</file>
+    <file>SHAPES_select_150_light.png</file>
+    <file>SHAPES_select_150.png</file>
     <file>SHAPES_additionalActions_200_light.png</file>
     <file>SHAPES_additionalActions_200.png</file>
     <file>SHAPES_comboMembers_200_light.png</file>

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>310</width>
-    <height>541</height>
+    <height>392</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,6 +18,11 @@
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
       <widget class="QLabel" name="label_2">
+       <property name="font">
+        <font>
+         <family>Consolas</family>
+        </font>
+       </property>
        <property name="text">
         <string>WD Node</string>
        </property>
@@ -25,6 +30,11 @@
      </item>
      <item>
       <widget class="QComboBox" name="comboBox">
+       <property name="font">
+        <font>
+         <family>Consolas</family>
+        </font>
+       </property>
        <item>
         <property name="text">
          <string>New</string>
@@ -34,6 +44,29 @@
      </item>
      <item>
       <widget class="QPushButton" name="pushButton_2">
+       <property name="minimumSize">
+        <size>
+         <width>20</width>
+         <height>20</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>20</width>
+         <height>20</height>
+        </size>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton{
+border-image: url(:/icon/SHAPES_select_150.png);
+}
+QPushButton:hover{
+border-image: url(:/icon/SHAPES_select_150_light.png);
+}
+QPushButton:pressed{
+border-image: url(:/icon/SHAPES_select_150_light.png);
+}</string>
+       </property>
        <property name="text">
         <string/>
        </property>
@@ -41,6 +74,18 @@
      </item>
      <item>
       <widget class="QPushButton" name="pushButton_5">
+       <property name="minimumSize">
+        <size>
+         <width>20</width>
+         <height>20</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>20</width>
+         <height>20</height>
+        </size>
+       </property>
        <property name="text">
         <string/>
        </property>
@@ -48,6 +93,18 @@
      </item>
      <item>
       <widget class="QPushButton" name="pushButton_6">
+       <property name="minimumSize">
+        <size>
+         <width>20</width>
+         <height>20</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>20</width>
+         <height>20</height>
+        </size>
+       </property>
        <property name="text">
         <string/>
        </property>
@@ -61,6 +118,11 @@
       <layout class="QHBoxLayout" name="horizontalLayout_3">
        <item>
         <widget class="QLabel" name="label_3">
+         <property name="font">
+          <font>
+           <family>Consolas</family>
+          </font>
+         </property>
          <property name="text">
           <string>Driver Object</string>
          </property>
@@ -71,6 +133,29 @@
        </item>
        <item>
         <widget class="QPushButton" name="pushButton">
+         <property name="minimumSize">
+          <size>
+           <width>20</width>
+           <height>20</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>20</width>
+           <height>20</height>
+          </size>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QPushButton{
+border-image: url(:/icon/SHAPES_select_150.png);
+}
+QPushButton:hover{
+border-image: url(:/icon/SHAPES_select_150_light.png);
+}
+QPushButton:pressed{
+border-image: url(:/icon/SHAPES_select_150_light.png);
+}</string>
+         </property>
          <property name="text">
           <string/>
          </property>
@@ -82,6 +167,11 @@
       <layout class="QHBoxLayout" name="horizontalLayout_4">
        <item>
         <widget class="QLabel" name="label_4">
+         <property name="font">
+          <font>
+           <family>Consolas</family>
+          </font>
+         </property>
          <property name="text">
           <string>Parent</string>
          </property>
@@ -92,6 +182,29 @@
        </item>
        <item>
         <widget class="QPushButton" name="pushButton_3">
+         <property name="minimumSize">
+          <size>
+           <width>20</width>
+           <height>20</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>20</width>
+           <height>20</height>
+          </size>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QPushButton{
+border-image: url(:/icon/SHAPES_select_150.png);
+}
+QPushButton:hover{
+border-image: url(:/icon/SHAPES_select_150_light.png);
+}
+QPushButton:pressed{
+border-image: url(:/icon/SHAPES_select_150_light.png);
+}</string>
+         </property>
          <property name="text">
           <string/>
          </property>
@@ -103,6 +216,11 @@
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
         <widget class="QLabel" name="label">
+         <property name="font">
+          <font>
+           <family>Consolas</family>
+          </font>
+         </property>
          <property name="text">
           <string>Controller</string>
          </property>
@@ -113,6 +231,29 @@
        </item>
        <item>
         <widget class="QPushButton" name="pushButton_4">
+         <property name="minimumSize">
+          <size>
+           <width>20</width>
+           <height>20</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>20</width>
+           <height>20</height>
+          </size>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QPushButton{
+border-image: url(:/icon/SHAPES_select_150.png);
+}
+QPushButton:hover{
+border-image: url(:/icon/SHAPES_select_150_light.png);
+}
+QPushButton:pressed{
+border-image: url(:/icon/SHAPES_select_150_light.png);
+}</string>
+         </property>
          <property name="text">
           <string/>
          </property>
@@ -126,8 +267,13 @@
     <layout class="QHBoxLayout" name="horizontalLayout_6">
      <item>
       <widget class="QLabel" name="label_5">
+       <property name="font">
+        <font>
+         <family>Consolas</family>
+        </font>
+       </property>
        <property name="text">
-        <string>TextLabel</string>
+        <string>Attributes</string>
        </property>
       </widget>
      </item>
@@ -139,16 +285,14 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_7">
      <item>
-      <widget class="QLabel" name="label_6">
-       <property name="text">
-        <string>TextLabel</string>
-       </property>
-      </widget>
-     </item>
-     <item>
       <widget class="QCheckBox" name="checkBox">
+       <property name="font">
+        <font>
+         <family>Consolas</family>
+        </font>
+       </property>
        <property name="text">
-        <string>CheckBox</string>
+        <string>allow Negative</string>
        </property>
       </widget>
      </item>
@@ -156,6 +300,11 @@
    </item>
    <item>
     <widget class="QPushButton" name="pushButton_7">
+     <property name="font">
+      <font>
+       <family>Consolas</family>
+      </font>
+     </property>
      <property name="text">
       <string>Create</string>
      </property>
@@ -166,6 +315,8 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="../../../../dayu_widgets/static/icon.qrc"/>
+ </resources>
  <connections/>
 </ui>

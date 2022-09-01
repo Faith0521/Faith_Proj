@@ -32,7 +32,7 @@
       <widget class="MPushButton" name="load_btn">
        <property name="font">
         <font>
-         <family>Segoe UI</family>
+         <family>Consolas</family>
         </font>
        </property>
        <property name="toolTip">
@@ -108,7 +108,7 @@ border-image: url(:/icon/SHAPES_preferences_150_light.png);
        </property>
        <property name="font">
         <font>
-         <family>Segoe UI</family>
+         <family>Consolas</family>
         </font>
        </property>
        <property name="text">
@@ -120,7 +120,7 @@ border-image: url(:/icon/SHAPES_preferences_150_light.png);
       <widget class="MComboBox" name="bs_cb">
        <property name="font">
         <font>
-         <family>Segoe UI</family>
+         <family>Consolas</family>
         </font>
        </property>
        <item>
@@ -136,7 +136,10 @@ border-image: url(:/icon/SHAPES_preferences_150_light.png);
     <widget class="MLabel" name="target_lb">
      <property name="font">
       <font>
-       <family>Segoe UI</family>
+       <family>Consolas</family>
+       <pointsize>11</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
       </font>
      </property>
      <property name="cursor">
@@ -171,7 +174,7 @@ border-image: url(:/icon/SHAPES_preferences_150_light.png);
        </property>
        <property name="font">
         <font>
-         <family>Segoe UI</family>
+         <family>Consolas</family>
         </font>
        </property>
        <property name="toolTip">
@@ -312,120 +315,6 @@ border-image: url(:/icon/SHAPES_weightExport_200_light.png);
      </property>
     </widget>
    </item>
-   <item>
-    <layout class="QVBoxLayout" name="mirror_vb">
-     <item>
-      <widget class="MLabel" name="mirror_lb">
-       <property name="font">
-        <font>
-         <family>Segoe UI</family>
-        </font>
-       </property>
-       <property name="text">
-        <string>Mirror Target</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="axis_hb">
-       <item>
-        <widget class="MLabel" name="axis_lb">
-         <property name="font">
-          <font>
-           <family>Segoe UI</family>
-          </font>
-         </property>
-         <property name="text">
-          <string>Axis</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="MRadioButton" name="x_rb">
-         <property name="font">
-          <font>
-           <family>Segoe UI</family>
-          </font>
-         </property>
-         <property name="text">
-          <string>X</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="MRadioButton" name="y_rb">
-         <property name="font">
-          <font>
-           <family>Segoe UI</family>
-          </font>
-         </property>
-         <property name="text">
-          <string>Y</string>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="MRadioButton" name="z_rb">
-         <property name="font">
-          <font>
-           <family>Segoe UI</family>
-          </font>
-         </property>
-         <property name="text">
-          <string>Z</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="name_hb">
-       <item>
-        <widget class="MLabel" name="name_lb">
-         <property name="font">
-          <font>
-           <family>Segoe UI</family>
-          </font>
-         </property>
-         <property name="text">
-          <string>Name Of Copy</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="MLineEdit" name="name_le">
-         <property name="font">
-          <font>
-           <family>Segoe UI</family>
-          </font>
-         </property>
-         <property name="placeholderText">
-          <string>Mirror Name Of Shape</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <widget class="MPushButton" name="mirror_btn">
-       <property name="font">
-        <font>
-         <family>Segoe UI</family>
-        </font>
-       </property>
-       <property name="text">
-        <string>Mirror Target</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
   </layout>
  </widget>
  <customwidgets>
@@ -445,14 +334,9 @@ border-image: url(:/icon/SHAPES_weightExport_200_light.png);
    <header>dayu_widgets.label</header>
   </customwidget>
   <customwidget>
-   <class>MRadioButton</class>
-   <extends>QRadioButton</extends>
-   <header>dayu_widgets.radio_button</header>
-  </customwidget>
-  <customwidget>
    <class>MComboBox</class>
    <extends>QComboBox</extends>
-   <header>dayu_widgets.combo_box</header>
+   <header location="global">dayu_widgets.combo_box</header>
   </customwidget>
  </customwidgets>
  <resources>

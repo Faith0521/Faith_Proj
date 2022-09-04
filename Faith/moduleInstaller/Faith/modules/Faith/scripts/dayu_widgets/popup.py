@@ -100,7 +100,7 @@ class MPopup(QtWidgets.QFrame):
     def mousePressEvent(self, event):
         if event.button() == QtCore.Qt.LeftButton:
             self.mouse_pos = event.pos()
-        return super(MPopup, self).mousePressEvent(event)
+        return super(MPopup, self).mousePressEvent()
 
     def mouseReleaseEvent(self, event):
         self.mouse_pos = None

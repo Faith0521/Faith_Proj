@@ -6,14 +6,23 @@ import pymel.core as pm,maya.mel as mel,maya.cmds as mc,maya.cmds as cmds
 # ui import
 from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 from PySide2 import QtCore, QtWidgets, QtGui
+
 from Faith.Tools.BS_Manager.UI import BS_List as listui
-from Faith.Tools.BS_Manager.UI import widget_item as itemui
+from Faith.Tools.BS_Manager.UI import list_item as itemui
+reload(itemui)
+from Faith.Tools.BS_Manager.UI import item_widget as co_widget
+reload(co_widget)
+from Faith.Tools.BS_Manager.UI import BS_clone as cloneui
 from Faith.Tools.BS_Manager.UI import MainWin as mainWin
 from Faith.Core import aboutUI
+
+# widgets import
 from dayu_widgets.line_tab_widget import MLineTabWidget
 from dayu_widgets.message import MMessage
 from dayu_widgets.toast import MToast
+from dayu_widgets.collapse import MCollapse
 from dayu_widgets.qt import MIcon
+
 
 class BS_ListUI(QtWidgets.QWidget, listui.Ui_BS_ListMain):
     def __init__(self, parent=None):
@@ -22,15 +31,30 @@ class BS_ListUI(QtWidgets.QWidget, listui.Ui_BS_ListMain):
         self.setupUi(self)
         self.installEventFilter(self)
 
-class BS_itemUI(QtWidgets.QWidget, itemui.Ui_item_main):
+
+class BS_itemUI(QtWidgets.QWidget, itemui.Ui_listItem_Main):
     def __init__(self, parent=None):
         super(BS_itemUI, self).__init__(parent)
         self.setupUi(self)
 
+
+class BS_CoItemUI(QtWidgets.QWidget, co_widget.Ui_tab_main):
+    def __init__(self, parent=None):
+        super(BS_CoItemUI, self).__init__(parent)
+        self.setupUi(self)
+
+
+class BS_CloneUI(QtWidgets.QWidget, cloneui.Ui_Clone_Main):
+    def __init__(self, parent=None):
+        super(BS_CloneUI, self).__init__(parent)
+        self.setupUi(self)
+
+
 class BS_MainUI(QtWidgets.QMainWindow, mainWin.Ui_MainWindow):
     def __init__(self, parent=None):
         super(BS_MainUI, self).__init__(parent)
-        self.setupUi(self)
+        ui = self.setupUi(self)
+
 
 class BS_Manager(MayaQWidgetDockableMixin, QtWidgets.QDialog):
     def __init__(self, parent=None):
@@ -39,28 +63,62 @@ class BS_Manager(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.start_dir = cmds.workspace(q=True, rootDirectory=True)
         self.mainUI = BS_MainUI()
         self.listUI = BS_ListUI()
-        self.init_UI()
-        self.create_window()
+        self.collapse_item = BS_CoItemUI()
+        self.cloneUI = BS_CloneUI()
+        self.create_widgets()
+        self.create_layouts()
         self.create_connections()
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
 
-    def init_UI(self):
-        self.main_lay = QtWidgets.QVBoxLayout()
-        tab_center = MLineTabWidget()
-        tab_center.add_tab(self.listUI,
-                           {'text': u'BS Editer', 'svg': 'user_line.svg'})
-        tab_center.tool_button_group.set_dayu_checked(0)
-        self.main_lay.addWidget(self.mainUI)
-        self.main_lay.addWidget(tab_center)
-        self.main_lay.addSpacing(20)
-        self.main_lay.addStretch()
-        self.setLayout(self.main_lay)
-
-    def create_window(self):
+    def create_widgets(self):
         self.setObjectName(self.uiName)
         self.setWindowFlags(QtCore.Qt.Window)
         self.setWindowTitle("BS Manager v0.0.1")
         self.listUI.load_btn.setIcon(MIcon("SHAPES_btn_mesh_200.png", self))
+
+        self.collapsible_wdg_a = aboutUI.createCollapsibleWidget(self.listUI.list_widget, True, "BlendShape Editer")
+        self.collapsible_wdg_b = aboutUI.createCollapsibleWidget(self.collapse_item.mirror_widget, False, "Mirror Target")
+        self.collapsible_wdg_c = aboutUI.createCollapsibleWidget(self.collapse_item.drive_sidget, False, "Drive Atrributes")
+
+        self.clone_collapsible_a = aboutUI.createCollapsibleWidget(self.cloneUI.load_widget, True, "Load Mesh")
+        self.clone_collapsible_b = aboutUI.createCollapsibleWidget(self.cloneUI.cloneList_widget, True, "Target List")
+
+
+    def createScrollWidget(self, widgets):
+        body_wdg = QtWidgets.QWidget()
+
+        body_layout = QtWidgets.QVBoxLayout(body_wdg)
+        body_layout.setContentsMargins(4, 2, 4, 2)
+        body_layout.setSpacing(3)
+        body_layout.setAlignment(QtCore.Qt.AlignTop)
+
+        for widget in widgets:
+            body_layout.addWidget(widget)
+
+        body_scroll_area = QtWidgets.QScrollArea()
+        body_scroll_area.setFrameShape(QtWidgets.QFrame.NoFrame)
+        body_scroll_area.setWidgetResizable(True)
+        body_scroll_area.setWidget(body_wdg)
+
+        return body_scroll_area
+
+    def create_layouts(self):
+        self.body_scroll_area = self.createScrollWidget([self.collapsible_wdg_a,self.collapsible_wdg_b,
+                                                         self.collapsible_wdg_c])
+        self.clone_scroll_area = self.createScrollWidget([self.clone_collapsible_a, self.clone_collapsible_b])
+
+
+        main_layout = QtWidgets.QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+
+        tab_center = MLineTabWidget()
+        tab_center.add_tab(self.body_scroll_area,
+                           {'text': u'BS Editer', 'svg': 'SHAPES_drivenSet_200.png'})
+        tab_center.add_tab(self.clone_scroll_area,
+                           {'text': u'BS Clone', 'svg': 'SHAPES_editAddNode_200.png'})
+        self.mainUI.verticalLayout_2.addWidget(tab_center)
+
+        main_layout.addWidget(self.mainUI)
 
     def create_connections(self):
         self.listUI.load_btn.clicked.connect(self.refresh)
@@ -135,6 +193,8 @@ class BS_Manager(MayaQWidgetDockableMixin, QtWidgets.QDialog):
 
         :return:
         """
+        currentHeight = self.listUI.target_list.height()
+        self.listUI.target_list.setMinimumSize(QtCore.QSize(0, currentHeight+100))
         self.loadMesh(self.getMesh())
         MeshNode = self.listUI.load_le.text()
         BlendShapeNode = []
@@ -174,11 +234,11 @@ class BS_Manager(MayaQWidgetDockableMixin, QtWidgets.QDialog):
                     if targetValue < 0.0001:
                         targetValue = 0
                     if targetConnect == None and targetValue >= 0.001:
-                        listItemUI.connect_btn.setIcon(MIcon("SHAPES_regionColor1_200.png", self))
+                        listItemUI.connect_btn.setIcon(MIcon("SHAPES_regionColor1.png", self))
                     elif targetConnect == None and targetValue == 0:
-                        listItemUI.connect_btn.setIcon(MIcon("SHAPES_regionColor1_200.png", self))
+                        listItemUI.connect_btn.setIcon(MIcon("SHAPES_regionColor1.png", self))
                     else:
-                        listItemUI.connect_btn.setIcon(MIcon("SHAPES_regionColor4_200.png", self))
+                        listItemUI.connect_btn.setIcon(MIcon("SHAPES_regionColor4.png", self))
 
                     self.listUI.target_list.addItem(myQListWidgetItem)
                     self.listUI.target_list.setItemWidget(myQListWidgetItem, listItemUI)

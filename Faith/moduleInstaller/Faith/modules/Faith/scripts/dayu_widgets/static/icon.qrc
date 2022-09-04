@@ -1,17 +1,21 @@
 <RCC>
   <qresource prefix="icon">
+    <file>save_fill_light.png</file>
+    <file>save_fill.png</file>
+    <file>SHAPES_addGroup_light.png</file>
+    <file>SHAPES_addGroup.png</file>
+    <file>SHAPES_additionalActions_light.png</file>
+    <file>SHAPES_additionalActions.png</file>
+    <file>SHAPES_keyDeleteAll_light.png</file>
+    <file>SHAPES_keyDeleteAll.png</file>
     <file>SHAPES_btn_locator_150_light.png</file>
     <file>SHAPES_btn_locator_150.png</file>
     <file>SHAPES_select_150_light.png</file>
     <file>SHAPES_select_150.png</file>
-    <file>SHAPES_additionalActions_200_light.png</file>
-    <file>SHAPES_additionalActions_200.png</file>
     <file>SHAPES_comboMembers_200_light.png</file>
     <file>SHAPES_comboMembers_200.png</file>
     <file>SHAPES_weightExport_200_light.png</file>
     <file>SHAPES_weightExport_200.png</file>
-    <file>SHAPES_keyDeleteAll_200_light.png</file>
-    <file>SHAPES_keyDeleteAll_200.png</file>
     <file>breakOff_64_light.png</file>
     <file>breakOff_64.png</file>
     <file>SHAPES_preferences_150_light.png</file>

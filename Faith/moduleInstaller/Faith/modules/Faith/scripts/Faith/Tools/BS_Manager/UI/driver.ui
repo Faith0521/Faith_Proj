@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>310</width>
-    <height>392</height>
+    <width>354</width>
+    <height>584</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,9 +15,9 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
+    <layout class="QHBoxLayout" name="node_hb">
      <item>
-      <widget class="QLabel" name="label_2">
+      <widget class="MLabel" name="node_lb">
        <property name="font">
         <font>
          <family>Consolas</family>
@@ -29,7 +29,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QComboBox" name="comboBox">
+      <widget class="MComboBox" name="node_combo">
        <property name="font">
         <font>
          <family>Consolas</family>
@@ -43,7 +43,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton_2">
+      <widget class="QPushButton" name="nodeSelect_btn">
        <property name="minimumSize">
         <size>
          <width>20</width>
@@ -55,6 +55,9 @@
          <width>20</width>
          <height>20</height>
         </size>
+       </property>
+       <property name="toolTip">
+        <string>Select</string>
        </property>
        <property name="styleSheet">
         <string notr="true">QPushButton{
@@ -73,7 +76,7 @@ border-image: url(:/icon/SHAPES_select_150_light.png);
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton_5">
+      <widget class="QPushButton" name="nodeSave_btn">
        <property name="minimumSize">
         <size>
          <width>20</width>
@@ -85,6 +88,20 @@ border-image: url(:/icon/SHAPES_select_150_light.png);
          <width>20</width>
          <height>20</height>
         </size>
+       </property>
+       <property name="toolTip">
+        <string>Export</string>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton{
+border-image: url(:/icon/save_fill.png);
+}
+QPushButton:hover{
+border-image: url(:/icon/save_fill_light.png);
+}
+QPushButton:pressed{
+border-image: url(:/icon/save_fill_light.png);
+}</string>
        </property>
        <property name="text">
         <string/>
@@ -92,7 +109,7 @@ border-image: url(:/icon/SHAPES_select_150_light.png);
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton_6">
+      <widget class="QPushButton" name="nodeOpen_btn">
        <property name="minimumSize">
         <size>
          <width>20</width>
@@ -104,6 +121,20 @@ border-image: url(:/icon/SHAPES_select_150_light.png);
          <width>20</width>
          <height>20</height>
         </size>
+       </property>
+       <property name="toolTip">
+        <string>Import</string>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton{
+border-image: url(:/icon/SHAPES_addGroup.png);
+}
+QPushButton:hover{
+border-image: url(:/icon/SHAPES_addGroup_light.png);
+}
+QPushButton:pressed{
+border-image: url(:/icon/SHAPES_addGroup_light.png);
+}</string>
        </property>
        <property name="text">
         <string/>
@@ -113,26 +144,35 @@ border-image: url(:/icon/SHAPES_select_150_light.png);
     </layout>
    </item>
    <item>
-    <layout class="QVBoxLayout" name="verticalLayout">
+    <layout class="QVBoxLayout" name="driver_vb">
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_3">
+      <layout class="QHBoxLayout" name="driverObj_hb">
        <item>
-        <widget class="QLabel" name="label_3">
+        <widget class="MLabel" name="driver_lb">
          <property name="font">
           <font>
            <family>Consolas</family>
           </font>
          </property>
          <property name="text">
-          <string>Driver Object</string>
+          <string>Driver Joint</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="lineEdit"/>
+        <widget class="MLineEdit" name="driver_le">
+         <property name="font">
+          <font>
+           <family>Consolas</family>
+          </font>
+         </property>
+         <property name="placeholderText">
+          <string>Select one driver joint.</string>
+         </property>
+        </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton">
+        <widget class="QPushButton" name="driverSelect_btn">
          <property name="minimumSize">
           <size>
            <width>20</width>
@@ -144,6 +184,9 @@ border-image: url(:/icon/SHAPES_select_150_light.png);
            <width>20</width>
            <height>20</height>
           </size>
+         </property>
+         <property name="toolTip">
+          <string>Select</string>
          </property>
          <property name="styleSheet">
           <string notr="true">QPushButton{
@@ -164,9 +207,9 @@ border-image: url(:/icon/SHAPES_select_150_light.png);
       </layout>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_4">
+      <layout class="QHBoxLayout" name="parent_hb">
        <item>
-        <widget class="QLabel" name="label_4">
+        <widget class="MLabel" name="parent_lb">
          <property name="font">
           <font>
            <family>Consolas</family>
@@ -178,10 +221,16 @@ border-image: url(:/icon/SHAPES_select_150_light.png);
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="lineEdit_3"/>
+        <widget class="MLineEdit" name="parent_le">
+         <property name="font">
+          <font>
+           <family>Consolas</family>
+          </font>
+         </property>
+        </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton_3">
+        <widget class="QPushButton" name="parentSelect_btn">
          <property name="minimumSize">
           <size>
            <width>20</width>
@@ -193,6 +242,9 @@ border-image: url(:/icon/SHAPES_select_150_light.png);
            <width>20</width>
            <height>20</height>
           </size>
+         </property>
+         <property name="toolTip">
+          <string>Select</string>
          </property>
          <property name="styleSheet">
           <string notr="true">QPushButton{
@@ -213,9 +265,9 @@ border-image: url(:/icon/SHAPES_select_150_light.png);
       </layout>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout">
+      <layout class="QHBoxLayout" name="control_hb">
        <item>
-        <widget class="QLabel" name="label">
+        <widget class="MLabel" name="contrl_lb">
          <property name="font">
           <font>
            <family>Consolas</family>
@@ -227,10 +279,16 @@ border-image: url(:/icon/SHAPES_select_150_light.png);
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="lineEdit_2"/>
+        <widget class="MLineEdit" name="control_le">
+         <property name="font">
+          <font>
+           <family>Consolas</family>
+          </font>
+         </property>
+        </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton_4">
+        <widget class="QPushButton" name="controlSelect_btn">
          <property name="minimumSize">
           <size>
            <width>20</width>
@@ -242,6 +300,9 @@ border-image: url(:/icon/SHAPES_select_150_light.png);
            <width>20</width>
            <height>20</height>
           </size>
+         </property>
+         <property name="toolTip">
+          <string>Select</string>
          </property>
          <property name="styleSheet">
           <string notr="true">QPushButton{
@@ -264,42 +325,124 @@ border-image: url(:/icon/SHAPES_select_150_light.png);
     </layout>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_6">
+    <layout class="QHBoxLayout" name="allow_hb">
      <item>
-      <widget class="QLabel" name="label_5">
+      <widget class="MCheckBox" name="allow_cb">
        <property name="font">
         <font>
          <family>Consolas</family>
         </font>
        </property>
        <property name="text">
-        <string>Attributes</string>
+        <string>Allow Negative</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QComboBox" name="comboBox_2"/>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_7">
-     <item>
-      <widget class="QCheckBox" name="checkBox">
+      <widget class="MCheckBox" name="checkBox">
        <property name="font">
         <font>
          <family>Consolas</family>
         </font>
        </property>
        <property name="text">
-        <string>allow Negative</string>
+        <string>Show Icon</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
     </layout>
    </item>
    <item>
-    <widget class="QPushButton" name="pushButton_7">
+    <layout class="QHBoxLayout" name="axis_hb">
+     <item>
+      <widget class="MLabel" name="label">
+       <property name="font">
+        <font>
+         <family>Consolas</family>
+        </font>
+       </property>
+       <property name="text">
+        <string>Twist Axis</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="MComboBox" name="comboBox">
+       <property name="font">
+        <font>
+         <family>Consolas</family>
+        </font>
+       </property>
+       <item>
+        <property name="text">
+         <string>X</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Y</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Z</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="mode_hb">
+     <item>
+      <widget class="MLabel" name="mode_lb">
+       <property name="font">
+        <font>
+         <family>Consolas</family>
+        </font>
+       </property>
+       <property name="text">
+        <string>Mode</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="MComboBox" name="mode_combo">
+       <property name="font">
+        <font>
+         <family>Consolas</family>
+        </font>
+       </property>
+       <item>
+        <property name="text">
+         <string>Rotate</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Rotate/Twist</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Twist</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="create_hb"/>
+   </item>
+   <item>
+    <widget class="MPushButton" name="create_btn">
      <property name="font">
       <font>
        <family>Consolas</family>
@@ -311,10 +454,71 @@ border-image: url(:/icon/SHAPES_select_150_light.png);
     </widget>
    </item>
    <item>
-    <widget class="QListWidget" name="listWidget"/>
+    <widget class="QListWidget" name="bridge_list"/>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="apply_hb">
+     <item>
+      <widget class="QPushButton" name="apply_btn">
+       <property name="font">
+        <font>
+         <family>Consolas</family>
+         <pointsize>11</pointsize>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>Apply</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="mirror_btn">
+       <property name="font">
+        <font>
+         <family>Consolas</family>
+         <pointsize>11</pointsize>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>Mirror</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>MPushButton</class>
+   <extends>QPushButton</extends>
+   <header>dayu_widgets.push_button</header>
+  </customwidget>
+  <customwidget>
+   <class>MLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>dayu_widgets.line_edit</header>
+  </customwidget>
+  <customwidget>
+   <class>MLabel</class>
+   <extends>QLabel</extends>
+   <header>dayu_widgets.label</header>
+  </customwidget>
+  <customwidget>
+   <class>MComboBox</class>
+   <extends>QComboBox</extends>
+   <header location="global">dayu_widgets.combo_box</header>
+  </customwidget>
+  <customwidget>
+   <class>MCheckBox</class>
+   <extends>QCheckBox</extends>
+   <header>dayu_widgets.check_box</header>
+  </customwidget>
+ </customwidgets>
  <resources>
   <include location="../../../../dayu_widgets/static/icon.qrc"/>
  </resources>

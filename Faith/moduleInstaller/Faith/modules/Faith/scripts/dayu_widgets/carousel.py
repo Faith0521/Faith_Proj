@@ -43,7 +43,7 @@ class MGuidPrivate(QtWidgets.QFrame):
     def mousePressEvent(self, event):
         if event.buttons() == QtCore.Qt.LeftButton:
             self.sig_go_to_page.emit()
-        return super(MGuidPrivate, self).mousePressEvent(event)
+        return super(MGuidPrivate, self).mousePressEvent()
 
 
 @property_mixin

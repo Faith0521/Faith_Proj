@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import sys
 from functools import partial
 
@@ -9,13 +10,15 @@ from PySide2 import QtCore, QtWidgets, QtGui
 
 from Faith.Tools.BS_Manager.UI import BS_List as listui
 from Faith.Tools.BS_Manager.UI import list_item as itemui
-reload(itemui)
 from Faith.Tools.BS_Manager.UI import item_widget as co_widget
-reload(co_widget)
 from Faith.Tools.BS_Manager.UI import BS_clone as cloneui
+from Faith.Tools.BS_Manager.UI import between_item as betweenui
 from Faith.Tools.BS_Manager.UI import MainWin as mainWin
 from Faith.Core import aboutUI
-
+reload(aboutUI)
+reload(listui)
+reload(co_widget)
+reload(betweenui)
 # widgets import
 from dayu_widgets.line_tab_widget import MLineTabWidget
 from dayu_widgets.message import MMessage
@@ -50,6 +53,12 @@ class BS_CloneUI(QtWidgets.QWidget, cloneui.Ui_Clone_Main):
         self.setupUi(self)
 
 
+class BS_betweenUI(QtWidgets.QWidget, betweenui.Ui_in_item_Main):
+    def __init__(self, parent=None):
+        super(BS_betweenUI, self).__init__(parent)
+        self.setupUi(self)
+
+
 class BS_MainUI(QtWidgets.QMainWindow, mainWin.Ui_MainWindow):
     def __init__(self, parent=None):
         super(BS_MainUI, self).__init__(parent)
@@ -65,6 +74,7 @@ class BS_Manager(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.listUI = BS_ListUI()
         self.collapse_item = BS_CoItemUI()
         self.cloneUI = BS_CloneUI()
+        self.betweenUI = BS_betweenUI()
         self.create_widgets()
         self.create_layouts()
         self.create_connections()
@@ -74,14 +84,16 @@ class BS_Manager(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.setObjectName(self.uiName)
         self.setWindowFlags(QtCore.Qt.Window)
         self.setWindowTitle("BS Manager v0.0.1")
+
         self.listUI.load_btn.setIcon(MIcon("SHAPES_btn_mesh_200.png", self))
 
-        self.collapsible_wdg_a = aboutUI.createCollapsibleWidget(self.listUI.list_widget, True, "BlendShape Editer")
-        self.collapsible_wdg_b = aboutUI.createCollapsibleWidget(self.collapse_item.mirror_widget, False, "Mirror Target")
-        self.collapsible_wdg_c = aboutUI.createCollapsibleWidget(self.collapse_item.drive_sidget, False, "Drive Atrributes")
+        self.collapsible_wdg_a = aboutUI.createCollapsibleWidget(self.listUI.list_widget, True, u"BS编辑")
+        self.collapsible_wdg_b = aboutUI.createCollapsibleWidget(None, False,u"通道")
+        self.collapsible_wdg_c = aboutUI.createCollapsibleWidget(self.collapse_item.mirror_widget, False, u"镜像目标体")
+        self.collapsible_wdg_d = aboutUI.createCollapsibleWidget(self.collapse_item.drive_widget, False, u"驱动属性")
 
-        self.clone_collapsible_a = aboutUI.createCollapsibleWidget(self.cloneUI.load_widget, True, "Load Mesh")
-        self.clone_collapsible_b = aboutUI.createCollapsibleWidget(self.cloneUI.cloneList_widget, True, "Target List")
+        self.clone_collapsible_a = aboutUI.createCollapsibleWidget(self.cloneUI.load_widget, True, u"加载模型")
+        self.clone_collapsible_b = aboutUI.createCollapsibleWidget(self.cloneUI.cloneList_widget, True, u"目标体列表")
 
 
     def createScrollWidget(self, widgets):
@@ -104,7 +116,7 @@ class BS_Manager(MayaQWidgetDockableMixin, QtWidgets.QDialog):
 
     def create_layouts(self):
         self.body_scroll_area = self.createScrollWidget([self.collapsible_wdg_a,self.collapsible_wdg_b,
-                                                         self.collapsible_wdg_c])
+                                                         self.collapsible_wdg_c,self.collapsible_wdg_d])
         self.clone_scroll_area = self.createScrollWidget([self.clone_collapsible_a, self.clone_collapsible_b])
 
 
@@ -116,6 +128,12 @@ class BS_Manager(MayaQWidgetDockableMixin, QtWidgets.QDialog):
                            {'text': u'BS Editer', 'svg': 'SHAPES_drivenSet_200.png'})
         tab_center.add_tab(self.clone_scroll_area,
                            {'text': u'BS Clone', 'svg': 'SHAPES_editAddNode_200.png'})
+        tab_center.setStyleSheet("""
+        QWidget{
+            font-size: 14px;
+            font-family: 楷体;
+        } 
+        """)
         self.mainUI.verticalLayout_2.addWidget(tab_center)
 
         main_layout.addWidget(self.mainUI)
@@ -123,8 +141,20 @@ class BS_Manager(MayaQWidgetDockableMixin, QtWidgets.QDialog):
     def create_connections(self):
         self.listUI.load_btn.clicked.connect(self.refresh)
         self.listUI.target_list.itemSelectionChanged.connect(self.refreshList)
+        self.listUI.target_list.itemClicked.connect(self.refreshChannels)
         self.listUI.target_list.itemDoubleClicked.connect(self.EnableLine)
         # self.listUI.edit_btn.clicked.connect(self.sculptMesh)
+
+    def refreshChannels(self):
+        """
+
+        :return:
+        """
+        current_widget = self.listUI.target_list.itemWidget(self.listUI.target_list.currentItem())
+        if not current_widget:
+            return False
+        self.collapsible_wdg_b.add_widget(self.betweenUI)
+        
 
     def EnableLine(self):
         """

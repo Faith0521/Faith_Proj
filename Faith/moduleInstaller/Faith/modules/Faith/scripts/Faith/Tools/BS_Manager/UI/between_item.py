@@ -14,40 +14,31 @@ from PySide2 import QtCore, QtGui, QtWidgets
 class Ui_in_item_Main(object):
     def setupUi(self, in_item_Main):
         in_item_Main.setObjectName("in_item_Main")
-        in_item_Main.resize(317, 43)
+        in_item_Main.resize(372, 43)
         self.horizontalLayout = QtWidgets.QHBoxLayout(in_item_Main)
         self.horizontalLayout.setObjectName("horizontalLayout")
-        self.edit_btn = MPushButton(in_item_Main)
-        self.edit_btn.setMinimumSize(QtCore.QSize(25, 25))
-        self.edit_btn.setMaximumSize(QtCore.QSize(25, 25))
-        self.edit_btn.setStyleSheet("QPushButton{\n"
-"border-image: url(:/icon/SHAPES_additionalActions.png);\n"
-"}\n"
-"QPushButton:hover{\n"
-"border-image: url(:/icon/SHAPES_additionalActions_light.png);\n"
-"}\n"
-"QPushButton:pressed{\n"
-"border-image: url(:/icon/SHAPES_additionalActions_light.png);\n"
-"}\n"
-"")
-        self.edit_btn.setText("")
-        self.edit_btn.setObjectName("edit_btn")
-        self.horizontalLayout.addWidget(self.edit_btn)
-        spacerItem = QtWidgets.QSpacerItem(4, 21, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout.addItem(spacerItem)
-        self.val_le = MLineEdit(in_item_Main)
-        self.val_le.setMaximumSize(QtCore.QSize(35, 16777215))
+        self.base_lb = MLabel()
         font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        self.val_le.setFont(font)
-        self.val_le.setObjectName("val_le")
-        self.horizontalLayout.addWidget(self.val_le)
-        self.val_slider = MSlider(in_item_Main)
-        self.val_slider.setMaximum(100)
+        font.setFamily("Consolas")
+        font.setBold(True)
+        font.setWeight(75)
+        self.base_lb.setFont(font)
+        self.base_lb.setObjectName("base_lb")
+        self.horizontalLayout.addWidget(self.base_lb)
+        self.val_dspin = MDoubleSpinBox()
+        self.val_dspin.setMinimumSize(QtCore.QSize(40, 0))
+        self.val_dspin.setButtonSymbols(QtWidgets.QAbstractSpinBox.NoButtons)
+        self.val_dspin.setDecimals(3)
+        self.val_dspin.setMaximum(1.0)
+        self.val_dspin.setSingleStep(0.001)
+        self.val_dspin.setObjectName("val_dspin")
+        self.horizontalLayout.addWidget(self.val_dspin)
+        self.val_slider = MSlider()
+        self.val_slider.setMaximum(1000)
         self.val_slider.setOrientation(QtCore.Qt.Horizontal)
         self.val_slider.setObjectName("val_slider")
         self.horizontalLayout.addWidget(self.val_slider)
-        self.set_btn = MPushButton(in_item_Main)
+        self.set_btn = MPushButton()
         font = QtGui.QFont()
         font.setFamily("Consolas")
         self.set_btn.setFont(font)
@@ -79,11 +70,11 @@ class Ui_in_item_Main(object):
     def retranslateUi(self, in_item_Main):
         _translate = QtCore.QCoreApplication.translate
         in_item_Main.setWindowTitle(_translate("in_item_Main", "Form"))
-        self.val_le.setText(_translate("in_item_Main", "0.00"))
-        self.set_btn.setText(_translate("in_item_Main", "Set"))
-from dayu_widgets.line_edit import MLineEdit
+        self.base_lb.setText(u"基础通道")
+        self.set_btn.setText(u"设置")
+        self.delete_btn.setToolTip(u"删除")
+from dayu_widgets.label import MLabel
 from dayu_widgets.push_button import MPushButton
 from dayu_widgets.slider import MSlider
+from dayu_widgets.spin_box import MDoubleSpinBox 
 from dayu_widgets.static import icon_rc
-
-

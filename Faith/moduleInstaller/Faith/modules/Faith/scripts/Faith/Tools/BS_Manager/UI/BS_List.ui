@@ -39,10 +39,10 @@
            </font>
           </property>
           <property name="toolTip">
-           <string>Load mesh</string>
+           <string>加载模型</string>
           </property>
           <property name="text">
-           <string>Load</string>
+           <string>加载</string>
           </property>
          </widget>
         </item>
@@ -54,7 +54,7 @@
            </font>
           </property>
           <property name="placeholderText">
-           <string>Load one mesh with BS</string>
+           <string>加载所选模型</string>
           </property>
          </widget>
         </item>
@@ -73,7 +73,7 @@
            </size>
           </property>
           <property name="toolTip">
-           <string>Settings</string>
+           <string>设置</string>
           </property>
           <property name="styleSheet">
            <string notr="true">QPushButton{
@@ -115,7 +115,7 @@ border-image: url(:/icon/SHAPES_preferences_150_light.png);
            </font>
           </property>
           <property name="text">
-           <string>BS Name</string>
+           <string>BS名称</string>
           </property>
          </widget>
         </item>
@@ -149,7 +149,7 @@ border-image: url(:/icon/SHAPES_preferences_150_light.png);
          <cursorShape>ArrowCursor</cursorShape>
         </property>
         <property name="text">
-         <string>BlendShape Target List </string>
+         <string>BlendShape目标体列表</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
@@ -185,7 +185,7 @@ border-image: url(:/icon/SHAPES_preferences_150_light.png);
          <widget class="MPushButton" name="edit_btn">
           <property name="maximumSize">
            <size>
-            <width>120</width>
+            <width>130</width>
             <height>20</height>
            </size>
           </property>
@@ -195,13 +195,13 @@ border-image: url(:/icon/SHAPES_preferences_150_light.png);
            </font>
           </property>
           <property name="toolTip">
-           <string>Crate new blendShape</string>
+           <string/>
           </property>
           <property name="styleSheet">
            <string notr="true"/>
           </property>
           <property name="text">
-           <string>Create Target</string>
+           <string>创建新目标体</string>
           </property>
          </widget>
         </item>
@@ -215,7 +215,7 @@ border-image: url(:/icon/SHAPES_preferences_150_light.png);
           </property>
           <property name="sizeHint" stdset="0">
            <size>
-            <width>80</width>
+            <width>60</width>
             <height>20</height>
            </size>
           </property>
@@ -236,7 +236,7 @@ border-image: url(:/icon/SHAPES_preferences_150_light.png);
            </size>
           </property>
           <property name="toolTip">
-           <string>Create Correct Shape</string>
+           <string>创建CCS</string>
           </property>
           <property name="styleSheet">
            <string notr="true">QPushButton{
@@ -269,7 +269,7 @@ border-image: url(:/icon/SHAPES_comboMembers_200_light.png);
            </size>
           </property>
           <property name="toolTip">
-           <string>Duplicate mesh</string>
+           <string>复制模型</string>
           </property>
           <property name="styleSheet">
            <string notr="true">QPushButton{
@@ -302,7 +302,7 @@ border-image: url(:/icon/SHAPES_weightPaste_200_light.png);
            </size>
           </property>
           <property name="toolTip">
-           <string>Extract target</string>
+           <string>提取目标体</string>
           </property>
           <property name="styleSheet">
            <string notr="true">QPushButton{
@@ -321,16 +321,6 @@ border-image: url(:/icon/SHAPES_weightExport_200_light.png);
          </widget>
         </item>
        </layout>
-      </item>
-      <item>
-       <widget class="QListWidget" name="inbetween_list">
-        <property name="maximumSize">
-         <size>
-          <width>16777215</width>
-          <height>60</height>
-         </size>
-        </property>
-       </widget>
       </item>
      </layout>
     </widget>

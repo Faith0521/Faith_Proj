@@ -25,7 +25,7 @@ class MSlider(QtWidgets.QSlider):
 
     def __init__(self, orientation=QtCore.Qt.Horizontal, parent=None):
         super(MSlider, self).__init__(orientation, parent=parent)
-        self._show_text_when_move = True
+        self._show_text_when_move = False
 
     def disable_show_text(self):
         self._show_text_when_move = False

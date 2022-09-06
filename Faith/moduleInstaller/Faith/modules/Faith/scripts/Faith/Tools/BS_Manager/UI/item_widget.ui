@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>322</width>
+    <width>363</width>
     <height>353</height>
    </rect>
   </property>
@@ -27,7 +27,7 @@
            </font>
           </property>
           <property name="text">
-           <string>Axis</string>
+           <string>方向</string>
           </property>
          </widget>
         </item>
@@ -82,7 +82,7 @@
            </font>
           </property>
           <property name="text">
-           <string>Name Of Copy</string>
+           <string>通道命名</string>
           </property>
          </widget>
         </item>
@@ -94,7 +94,7 @@
            </font>
           </property>
           <property name="placeholderText">
-           <string>Mirror Name Of Shape</string>
+           <string>镜像的通道名称</string>
           </property>
          </widget>
         </item>
@@ -110,7 +110,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Mirror Target</string>
+         <string>镜像目标体</string>
         </property>
        </widget>
       </item>
@@ -118,7 +118,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QWidget" name="drive_sidget" native="true">
+    <widget class="QWidget" name="drive_widget" native="true">
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
        <layout class="QHBoxLayout" name="driver_hb">
@@ -130,19 +130,19 @@
            </font>
           </property>
           <property name="text">
-           <string>Driver</string>
+           <string>驱动物体</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="driver_le">
+         <widget class="MLineEdit" name="driver_le">
           <property name="font">
            <font>
             <family>Consolas</family>
            </font>
           </property>
           <property name="placeholderText">
-           <string>Select one driver attribute.</string>
+           <string>选择一个驱动属性</string>
           </property>
          </widget>
         </item>
@@ -159,6 +159,9 @@
             <width>20</width>
             <height>20</height>
            </size>
+          </property>
+          <property name="toolTip">
+           <string>选择</string>
           </property>
           <property name="styleSheet">
            <string notr="true">QPushButton{
@@ -188,7 +191,7 @@ border-image: url(:/icon/SHAPES_select_150_light.png);
            </font>
           </property>
           <property name="text">
-           <string>Attribute</string>
+           <string>属性</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -221,7 +224,7 @@ border-image: url(:/icon/SHAPES_select_150_light.png);
            </font>
           </property>
           <property name="text">
-           <string>Start/End</string>
+           <string>开始/结束</string>
           </property>
          </widget>
         </item>
@@ -240,7 +243,7 @@ border-image: url(:/icon/SHAPES_select_150_light.png);
            </size>
           </property>
           <property name="toolTip">
-           <string>Set</string>
+           <string>设置</string>
           </property>
           <property name="styleSheet">
            <string notr="true">QPushButton{
@@ -288,7 +291,7 @@ border-image: url(:/icon/SHAPES_btn_locator_150_light.png);
            </size>
           </property>
           <property name="toolTip">
-           <string>Set</string>
+           <string>设置</string>
           </property>
           <property name="styleSheet">
            <string notr="true">QPushButton{
@@ -421,7 +424,7 @@ border-image: url(:/icon/SHAPES_btn_locator_150_light.png);
            </font>
           </property>
           <property name="text">
-           <string>Apply</string>
+           <string>创建</string>
           </property>
          </widget>
         </item>
@@ -435,7 +438,7 @@ border-image: url(:/icon/SHAPES_btn_locator_150_light.png);
            </font>
           </property>
           <property name="text">
-           <string>Mirror</string>
+           <string>镜像</string>
           </property>
          </widget>
         </item>

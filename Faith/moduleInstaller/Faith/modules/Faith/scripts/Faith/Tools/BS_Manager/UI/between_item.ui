@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>317</width>
+    <width>372</width>
     <height>43</height>
    </rect>
   </property>
@@ -15,74 +15,45 @@
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout">
    <item>
-    <widget class="MPushButton" name="edit_btn">
-     <property name="minimumSize">
-      <size>
-       <width>25</width>
-       <height>25</height>
-      </size>
-     </property>
-     <property name="maximumSize">
-      <size>
-       <width>25</width>
-       <height>25</height>
-      </size>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">QPushButton{
-border-image: url(:/icon/SHAPES_additionalActions.png);
-}
-QPushButton:hover{
-border-image: url(:/icon/SHAPES_additionalActions_light.png);
-}
-QPushButton:pressed{
-border-image: url(:/icon/SHAPES_additionalActions_light.png);
-}
-</string>
+    <widget class="MLabel" name="base_lb">
+     <property name="font">
+      <font>
+       <family>Consolas</family>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
      </property>
      <property name="text">
-      <string/>
+      <string>基础通道</string>
      </property>
     </widget>
    </item>
    <item>
-    <spacer name="horizontalSpacer">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="sizeType">
-      <enum>QSizePolicy::Minimum</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
+    <widget class="MDoubleSpinBox " name="val_dspin">
+     <property name="minimumSize">
       <size>
-       <width>4</width>
-       <height>21</height>
+       <width>40</width>
+       <height>0</height>
       </size>
      </property>
-    </spacer>
-   </item>
-   <item>
-    <widget class="MLineEdit" name="val_le">
-     <property name="maximumSize">
-      <size>
-       <width>35</width>
-       <height>16777215</height>
-      </size>
+     <property name="buttonSymbols">
+      <enum>QAbstractSpinBox::NoButtons</enum>
      </property>
-     <property name="font">
-      <font>
-       <family>Segoe UI</family>
-      </font>
+     <property name="decimals">
+      <number>3</number>
      </property>
-     <property name="text">
-      <string>0.00</string>
+     <property name="maximum">
+      <double>1.000000000000000</double>
+     </property>
+     <property name="singleStep">
+      <double>0.001000000000000</double>
      </property>
     </widget>
    </item>
    <item>
     <widget class="MSlider" name="val_slider">
      <property name="maximum">
-      <number>100</number>
+      <number>1000</number>
      </property>
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
@@ -97,7 +68,7 @@ border-image: url(:/icon/SHAPES_additionalActions_light.png);
       </font>
      </property>
      <property name="text">
-      <string>Set</string>
+      <string>设置</string>
      </property>
     </widget>
    </item>
@@ -119,6 +90,9 @@ border-image: url(:/icon/SHAPES_additionalActions_light.png);
       <font>
        <family>Arial</family>
       </font>
+     </property>
+     <property name="toolTip">
+      <string>删除</string>
      </property>
      <property name="styleSheet">
       <string notr="true">QPushButton{
@@ -146,9 +120,14 @@ border-image: url(:/icon/SHAPES_keyDeleteAll_light.png);
    <header>dayu_widgets.push_button</header>
   </customwidget>
   <customwidget>
-   <class>MLineEdit</class>
-   <extends>QLineEdit</extends>
-   <header>dayu_widgets.line_edit</header>
+   <class>MLabel</class>
+   <extends>QLabel</extends>
+   <header>dayu_widgets.label</header>
+  </customwidget>
+  <customwidget>
+   <class>MDoubleSpinBox </class>
+   <extends>QDoubleSpinBox</extends>
+   <header>dayu_widgets.spin_box</header>
   </customwidget>
   <customwidget>
    <class>MSlider</class>

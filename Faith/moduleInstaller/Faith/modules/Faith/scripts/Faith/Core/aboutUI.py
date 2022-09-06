@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
-# @Author: YinYuFei
-# @Date:   2022-05-27 21:08:00
-# @Last Modified by:   yinyufei
-# @Last Modified time: 2022-08-03 17:43:04
+# @Author: 46314
+# @Date:   2022-09-01 18:58:18
+# @Last Modified by:   46314
+# @Last Modified time: 2022-09-06 21:20:57
 """mgear qt functions"""
 import os,traceback
-import maya.OpenMayaUI as omui,pymel.core as pm
+import maya.OpenMayaUI as omui,pymel.core as pm,maya.cmds as cmds
 from dayu_widgets import dayu_theme
-
+from collections import OrderedDict
 from .Qt import QtCore, QtWidgets, QtGui, QtCompat, QtSvg
 from pymel import versions
 from .aboutPy import PY2
@@ -67,6 +67,20 @@ def showDialog(dialog, dInst=True, dockable=False, *args):
     except Exception:
         windw.deleteLater()
         traceback.print_exc()
+
+
+def convertMayaUIToQt(uiName):
+    """
+
+    :param uiName:
+    :return:
+    """
+    getcontrol = omui.MQtUtil.findControl(uiName)
+    if PY2:
+        getobjPyside = QtCompat.wrapInstance(long(getcontrol), QtWidgets.QWidget)
+    else:
+        getobjPyside = QtCompat.wrapInstance(int(getcontrol), QtWidgets.QWidget)
+    return getobjPyside
 
 
 class DragQListView(QtWidgets.QListView):
@@ -141,7 +155,7 @@ class CollapsibleHeader(QtWidgets.QWidget):
         self.set_expanded(False)
 
     def set_text(self, text):
-        self.text_label.setText("<b>{0}</b>".format(text))
+        self.text_label.setText(u"<b>{0}</b>".format(text))
 
     def set_background_color(self, color):
         if not color:
@@ -203,7 +217,31 @@ class CollapsibleWidget(QtWidgets.QWidget):
     def on_header_clicked(self):
         self.set_expanded(not self.header_wdg.is_expanded())
 
-def createCollapsibleWidget(addWidget, expanded=False, text=""):
+
+class RampPoint(object):
+    class InterpType(object):
+        None_ = 0
+        Linear = 1
+        Smooth = 2
+        Spline = 3
+
+        @classmethod
+        def asDict(cls):
+            return OrderedDict((("None", cls.None_),
+                                ("Linear", cls.Linear),
+                                ("Smooth", cls.Smooth),
+                                ("Spline", cls.Spline)))
+
+    def __init__(self, val, pos, interp):
+        self.pos = float(pos)
+        self.value = float(val)
+        self.interp = int(interp)
+
+    def asString(self):
+        return ",".join([str(each) for each in (self.value, self.pos, self.interp)])
+
+
+def createCollapsibleWidget(addWidget=None, expanded=False, text=""):
     """
 
     :param expanded:
@@ -211,5 +249,90 @@ def createCollapsibleWidget(addWidget, expanded=False, text=""):
     """
     collapsible_wdg = CollapsibleWidget(text)
     collapsible_wdg.set_expanded(expanded)
+    if not addWidget:
+        return collapsible_wdg
     collapsible_wdg.add_widget(addWidget)
     return collapsible_wdg
+
+
+def createMayaCurveEditer(interType = "Smooth",getValue=None):
+    """
+
+    :param interType:
+    :return:
+    """
+    if cmds.window('MyCrvEditorWindow', ex=True):
+        cmds.deleteUI('MyCrvEditor')
+        cmds.deleteUI('MyCrvEditorWindow')
+    cmds.window('MyCrvEditorWindow')
+    cmds.columnLayout()
+    cmds.gradientControlNoAttr('MyCrvEditor')
+
+    cmds.optionVar(rm='falloffCurveOptionVar')
+    cmds.optionVar(stringValueAppend=['falloffCurveOptionVar', '0,1,2'])
+    cmds.optionVar(stringValueAppend=['falloffCurveOptionVar', '1,0,2'])
+    cmds.gradientControlNoAttr('MyCrvEditor', e=True, optionVar='falloffCurveOptionVar')
+
+    rampPoints, strVals = createCrvEditerInterType(interType=interType)
+
+    cmds.gradientControlNoAttr('MyCrvEditor', e=True, asString=strVals)
+
+    if getValue:
+        value = cmds.gradientControlNoAttr('MyCrvEditor', q=True, valueAtPoint=getValue)
+        cmds.deleteUI('MyCrvEditor')
+        return value
+
+    getobjPyside = convertMayaUIToQt('MyCrvEditor')
+    return getobjPyside
+
+def createCrvEditerInterType(interType = "Smooth"):
+    """
+
+    :param interType:
+    :return:
+    """
+    if interType == "None":
+        rampPoints = (RampPoint(0, 0, RampPoint.InterpType.None_), RampPoint(1, 1, RampPoint.InterpType.None_))
+    if interType == "Linear":
+        rampPoints = (RampPoint(0, 0, RampPoint.InterpType.Linear), RampPoint(1, 1, RampPoint.InterpType.Linear))
+    if interType == "Smooth":
+        rampPoints = (RampPoint(0, 0, RampPoint.InterpType.Smooth), RampPoint(1, 1, RampPoint.InterpType.Smooth))
+    if interType == "Spline":
+        rampPoints = (RampPoint(0, 0, RampPoint.InterpType.Spline), RampPoint(1, 1, RampPoint.InterpType.Spline))
+
+    strVals = ",".join([each.asString() for each in rampPoints])
+    return [rampPoints, strVals]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

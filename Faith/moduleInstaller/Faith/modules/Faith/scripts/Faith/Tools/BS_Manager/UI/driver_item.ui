@@ -82,6 +82,9 @@
        <height>20</height>
       </size>
      </property>
+     <property name="toolTip">
+      <string>设置</string>
+     </property>
      <property name="styleSheet">
       <string notr="true">QPushButton{
 border-image: url(:/icon/SHAPES_btn_locator_150.png);
@@ -102,14 +105,14 @@ border-image: url(:/icon/SHAPES_btn_locator_150_light.png);
  </widget>
  <customwidgets>
   <customwidget>
-   <class>MLineEdit</class>
-   <extends>QLineEdit</extends>
-   <header>dayu_widgets.line_edit</header>
-  </customwidget>
-  <customwidget>
    <class>MLabel</class>
    <extends>QLabel</extends>
    <header>dayu_widgets.label</header>
+  </customwidget>
+  <customwidget>
+   <class>MLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>dayu_widgets.line_edit</header>
   </customwidget>
  </customwidgets>
  <resources>

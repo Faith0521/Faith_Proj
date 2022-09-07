@@ -24,7 +24,7 @@
         </font>
        </property>
        <property name="text">
-        <string>WD Node</string>
+        <string>WD 节点</string>
        </property>
       </widget>
      </item>
@@ -57,7 +57,7 @@
         </size>
        </property>
        <property name="toolTip">
-        <string>Select</string>
+        <string>选择</string>
        </property>
        <property name="styleSheet">
         <string notr="true">QPushButton{
@@ -90,7 +90,7 @@ border-image: url(:/icon/SHAPES_select_150_light.png);
         </size>
        </property>
        <property name="toolTip">
-        <string>Export</string>
+        <string>导出</string>
        </property>
        <property name="styleSheet">
         <string notr="true">QPushButton{
@@ -123,7 +123,7 @@ border-image: url(:/icon/save_fill_light.png);
         </size>
        </property>
        <property name="toolTip">
-        <string>Import</string>
+        <string>导入</string>
        </property>
        <property name="styleSheet">
         <string notr="true">QPushButton{
@@ -155,7 +155,7 @@ border-image: url(:/icon/SHAPES_addGroup_light.png);
           </font>
          </property>
          <property name="text">
-          <string>Driver Joint</string>
+          <string>驱动骨骼</string>
          </property>
         </widget>
        </item>
@@ -167,7 +167,7 @@ border-image: url(:/icon/SHAPES_addGroup_light.png);
           </font>
          </property>
          <property name="placeholderText">
-          <string>Select one driver joint.</string>
+          <string>请选择一个驱动骨骼.</string>
          </property>
         </widget>
        </item>
@@ -186,7 +186,7 @@ border-image: url(:/icon/SHAPES_addGroup_light.png);
           </size>
          </property>
          <property name="toolTip">
-          <string>Select</string>
+          <string>选择</string>
          </property>
          <property name="styleSheet">
           <string notr="true">QPushButton{
@@ -216,7 +216,7 @@ border-image: url(:/icon/SHAPES_select_150_light.png);
           </font>
          </property>
          <property name="text">
-          <string>Parent</string>
+          <string>父级</string>
          </property>
         </widget>
        </item>
@@ -244,7 +244,7 @@ border-image: url(:/icon/SHAPES_select_150_light.png);
           </size>
          </property>
          <property name="toolTip">
-          <string>Select</string>
+          <string>选择</string>
          </property>
          <property name="styleSheet">
           <string notr="true">QPushButton{
@@ -274,7 +274,7 @@ border-image: url(:/icon/SHAPES_select_150_light.png);
           </font>
          </property>
          <property name="text">
-          <string>Controller</string>
+          <string>控制物体</string>
          </property>
         </widget>
        </item>
@@ -302,7 +302,7 @@ border-image: url(:/icon/SHAPES_select_150_light.png);
           </size>
          </property>
          <property name="toolTip">
-          <string>Select</string>
+          <string>选择</string>
          </property>
          <property name="styleSheet">
           <string notr="true">QPushButton{
@@ -334,7 +334,7 @@ border-image: url(:/icon/SHAPES_select_150_light.png);
         </font>
        </property>
        <property name="text">
-        <string>Allow Negative</string>
+        <string>允许负值</string>
        </property>
        <property name="checked">
         <bool>true</bool>
@@ -349,7 +349,7 @@ border-image: url(:/icon/SHAPES_select_150_light.png);
         </font>
        </property>
        <property name="text">
-        <string>Show Icon</string>
+        <string>显示UI</string>
        </property>
        <property name="checked">
         <bool>true</bool>
@@ -368,7 +368,7 @@ border-image: url(:/icon/SHAPES_select_150_light.png);
         </font>
        </property>
        <property name="text">
-        <string>Twist Axis</string>
+        <string>Twist 轴向</string>
        </property>
       </widget>
      </item>
@@ -408,7 +408,7 @@ border-image: url(:/icon/SHAPES_select_150_light.png);
         </font>
        </property>
        <property name="text">
-        <string>Mode</string>
+        <string>模式</string>
        </property>
       </widget>
      </item>
@@ -449,7 +449,7 @@ border-image: url(:/icon/SHAPES_select_150_light.png);
       </font>
      </property>
      <property name="text">
-      <string>Create</string>
+      <string>创建</string>
      </property>
     </widget>
    </item>
@@ -464,12 +464,12 @@ border-image: url(:/icon/SHAPES_select_150_light.png);
         <font>
          <family>Consolas</family>
          <pointsize>11</pointsize>
-         <weight>75</weight>
-         <bold>true</bold>
+         <weight>50</weight>
+         <bold>false</bold>
         </font>
        </property>
        <property name="text">
-        <string>Apply</string>
+        <string>确认</string>
        </property>
       </widget>
      </item>
@@ -479,12 +479,12 @@ border-image: url(:/icon/SHAPES_select_150_light.png);
         <font>
          <family>Consolas</family>
          <pointsize>11</pointsize>
-         <weight>75</weight>
-         <bold>true</bold>
+         <weight>50</weight>
+         <bold>false</bold>
         </font>
        </property>
        <property name="text">
-        <string>Mirror</string>
+        <string>镜像</string>
        </property>
       </widget>
      </item>
@@ -499,14 +499,14 @@ border-image: url(:/icon/SHAPES_select_150_light.png);
    <header>dayu_widgets.push_button</header>
   </customwidget>
   <customwidget>
-   <class>MLineEdit</class>
-   <extends>QLineEdit</extends>
-   <header>dayu_widgets.line_edit</header>
-  </customwidget>
-  <customwidget>
    <class>MLabel</class>
    <extends>QLabel</extends>
    <header>dayu_widgets.label</header>
+  </customwidget>
+  <customwidget>
+   <class>MLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>dayu_widgets.line_edit</header>
   </customwidget>
   <customwidget>
    <class>MComboBox</class>

@@ -16,15 +16,21 @@
   <layout class="QHBoxLayout" name="horizontalLayout">
    <item>
     <widget class="MLabel" name="base_lb">
+     <property name="minimumSize">
+      <size>
+       <width>30</width>
+       <height>0</height>
+      </size>
+     </property>
      <property name="font">
       <font>
        <family>Consolas</family>
-       <weight>75</weight>
-       <bold>true</bold>
+       <weight>50</weight>
+       <bold>false</bold>
       </font>
      </property>
      <property name="text">
-      <string>基础通道</string>
+      <string>数值</string>
      </property>
     </widget>
    </item>

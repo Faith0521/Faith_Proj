@@ -31,21 +31,33 @@
    </property>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
-     <string>Edit</string>
+     <string>编辑</string>
     </property>
     <addaction name="actiontest"/>
+    <addaction name="action_BlendShape"/>
    </widget>
    <widget class="QMenu" name="menuSettings">
     <property name="title">
-     <string>Settings</string>
+     <string>设置</string>
     </property>
+    <addaction name="action"/>
    </widget>
    <addaction name="menuEdit"/>
    <addaction name="menuSettings"/>
   </widget>
   <action name="actiontest">
    <property name="text">
-    <string>test</string>
+    <string>导出BlendShape</string>
+   </property>
+  </action>
+  <action name="action">
+   <property name="text">
+    <string>镜像配置</string>
+   </property>
+  </action>
+  <action name="action_BlendShape">
+   <property name="text">
+    <string>导入BlendShape</string>
    </property>
   </action>
  </widget>

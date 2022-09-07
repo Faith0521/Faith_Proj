@@ -66,8 +66,8 @@ class Ui_Clone_Main(object):
         self.refresh_btn = MPushButton()
         font = QtGui.QFont()
         font.setFamily("Consolas")
-        font.setBold(True)
-        font.setWeight(75)
+        font.setBold(False)
+        font.setWeight(50)
         self.refresh_btn.setFont(font)
         self.refresh_btn.setObjectName("refresh_btn")
         self.verticalLayout_2.addWidget(self.refresh_btn)
@@ -92,8 +92,8 @@ class Ui_Clone_Main(object):
         font = QtGui.QFont()
         font.setFamily("Consolas")
         font.setPointSize(11)
-        font.setBold(True)
-        font.setWeight(75)
+        font.setBold(False)
+        font.setWeight(50)
         self.clone_btn.setFont(font)
         self.clone_btn.setObjectName("clone_btn")
         self.verticalLayout_3.addWidget(self.clone_btn)
@@ -105,13 +105,13 @@ class Ui_Clone_Main(object):
     def retranslateUi(self, Clone_Main):
         _translate = QtCore.QCoreApplication.translate
         Clone_Main.setWindowTitle(_translate("Clone_Main", "Form"))
-        self.source_btn.setText(_translate("Clone_Main", "Load Source"))
-        self.target_btn.setText(_translate("Clone_Main", "Load Target"))
-        self.bs_lb.setText(_translate("Clone_Main", "BS Name"))
+        self.source_btn.setText(u"加载拷贝模型")
+        self.target_btn.setText(u"加载目标模型")
+        self.bs_lb.setText(u"BS 名称")
         self.bs_combo.setItemText(0, _translate("Clone_Main", "None"))
-        self.refresh_btn.setText(_translate("Clone_Main", "Refresh List"))
+        self.refresh_btn.setText(u"刷新列表")
         self.item_list.setSortingEnabled(False)
-        self.clone_btn.setText(_translate("Clone_Main", "Clone"))
+        self.clone_btn.setText(u"拷贝")
 from dayu_widgets.combo_box import MComboBox
 from dayu_widgets.label import MLabel
 from dayu_widgets.line_edit import MLineEdit

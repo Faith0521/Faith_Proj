@@ -15,17 +15,19 @@ from Faith.Tools.BS_Manager.UI import BS_clone as cloneui
 from Faith.Tools.BS_Manager.UI import between_item as betweenui
 from Faith.Tools.BS_Manager.UI import MainWin as mainWin
 from Faith.Core import aboutUI
-reload(aboutUI)
-reload(listui)
-reload(co_widget)
-reload(betweenui)
-# widgets import
+
 from dayu_widgets.line_tab_widget import MLineTabWidget
 from dayu_widgets.message import MMessage
 from dayu_widgets.toast import MToast
 from dayu_widgets.collapse import MCollapse
 from dayu_widgets.qt import MIcon
 
+QSS = """
+QWidget{
+    font-size: 14px;
+    font-family: 楷体;
+} 
+"""
 
 class BS_ListUI(QtWidgets.QWidget, listui.Ui_BS_ListMain):
     def __init__(self, parent=None):
@@ -75,6 +77,9 @@ class BS_Manager(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.collapse_item = BS_CoItemUI()
         self.cloneUI = BS_CloneUI()
         self.betweenUI = BS_betweenUI()
+
+        self.widgetInfo = {}
+
         self.create_widgets()
         self.create_layouts()
         self.create_connections()
@@ -87,7 +92,7 @@ class BS_Manager(MayaQWidgetDockableMixin, QtWidgets.QDialog):
 
         self.listUI.load_btn.setIcon(MIcon("SHAPES_btn_mesh_200.png", self))
 
-        self.collapsible_wdg_a = aboutUI.createCollapsibleWidget(self.listUI.list_widget, True, u"BS编辑")
+        self.collapsible_wdg_a = aboutUI.createCollapsibleWidget(self.listUI.list_widget, True, u"BS列表")
         self.collapsible_wdg_b = aboutUI.createCollapsibleWidget(None, False,u"通道")
         self.collapsible_wdg_c = aboutUI.createCollapsibleWidget(self.collapse_item.mirror_widget, False, u"镜像目标体")
         self.collapsible_wdg_d = aboutUI.createCollapsibleWidget(self.collapse_item.drive_widget, False, u"驱动属性")
@@ -125,15 +130,10 @@ class BS_Manager(MayaQWidgetDockableMixin, QtWidgets.QDialog):
 
         tab_center = MLineTabWidget()
         tab_center.add_tab(self.body_scroll_area,
-                           {'text': u'BS Editer', 'svg': 'SHAPES_drivenSet_200.png'})
+                           {'text': u'BS 编辑', 'svg': 'SHAPES_drivenSet_200.png'})
         tab_center.add_tab(self.clone_scroll_area,
-                           {'text': u'BS Clone', 'svg': 'SHAPES_editAddNode_200.png'})
-        tab_center.setStyleSheet("""
-        QWidget{
-            font-size: 14px;
-            font-family: 楷体;
-        } 
-        """)
+                           {'text': u'BS 拷贝', 'svg': 'SHAPES_editAddNode_200.png'})
+        tab_center.setStyleSheet(QSS)
         self.mainUI.verticalLayout_2.addWidget(tab_center)
 
         main_layout.addWidget(self.mainUI)
@@ -141,20 +141,38 @@ class BS_Manager(MayaQWidgetDockableMixin, QtWidgets.QDialog):
     def create_connections(self):
         self.listUI.load_btn.clicked.connect(self.refresh)
         self.listUI.target_list.itemSelectionChanged.connect(self.refreshList)
-        self.listUI.target_list.itemClicked.connect(self.refreshChannels)
         self.listUI.target_list.itemDoubleClicked.connect(self.EnableLine)
         # self.listUI.edit_btn.clicked.connect(self.sculptMesh)
+
 
     def refreshChannels(self):
         """
 
         :return:
         """
-        current_widget = self.listUI.target_list.itemWidget(self.listUI.target_list.currentItem())
-        if not current_widget:
+        if "widgetInfo" not in self.widgetInfo:
             return False
         self.collapsible_wdg_b.add_widget(self.betweenUI)
-        
+        self.betweenUI.val_dspin.valueChanged.connect(self.SpinValueChange)
+        self.betweenUI.val_slider.valueChanged.connect(self.SliderValueChange)
+        self.betweenUI.set_btn.clicked.connect(self.setTarhetValue)
+        value = cmds.getAttr("%s.%s" % (self.BlendNode, self.widgetInfo["widgetInfo"][1]))
+        self.betweenUI.val_dspin.setValue(value)
+
+    def SpinValueChange(self):
+        """
+
+        @return:
+        """
+        self.betweenUI.val_slider.setValue(self.betweenUI.val_dspin.value() * 1000)
+        cmds.setAttr("%s.%s"%(self.BlendNode, self.widgetInfo["widgetInfo"][1]), self.betweenUI.val_dspin.value())
+
+    def SliderValueChange(self):
+        """
+
+        @return:
+        """
+        self.betweenUI.val_dspin.setValue(self.betweenUI.val_slider.value() / 1000.0)
 
     def EnableLine(self):
         """
@@ -162,7 +180,7 @@ class BS_Manager(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         @return:
         """
 
-        current_widget = self.listUI.target_list.itemWidget(self.listUI.target_list.currentItem())
+        current_widget = self.widgetInfo["widgetInfo"][0]
         current_widget.targtName_le.setEnabled(True)
         current_widget.targtName_le.returnPressed.connect(self.renameTarget)
 
@@ -178,21 +196,26 @@ class BS_Manager(MayaQWidgetDockableMixin, QtWidgets.QDialog):
                 if widget.targtName_le.text() != self.targetBlendShape[i]:
                     cmds.aliasAttr(widget.targtName_le.text(), self.BlendNode + '.' + self.targetBlendShape[i])
 
-    def sculptMesh(self):
+    def setTarhetValue(self):
         """
 
         @return:
         """
-        self.BlendNode = self.listUI.load_le.text()
+        if self.listUI.load_le.text() == "":
+            return False
         if not cmds.objExists(self.BlendNode):
             return False
         currentMode = cmds.getAttr(self.BlendNode + ".editMode")
+        btnText = self.betweenUI.set_btn.text()
+        if btnText == u"设置":
+            self.betweenUI.set_btn.setText(u"编辑")
         if currentMode == "Default":
             cmds.setAttr(self.BlendNode + ".editMode", "Edit", type="string")
-            self.listUI.edit_btn.setIcon(MIcon("SHAPES_regionColor1Paint_200.png", self))
+            self.betweenUI.set_btn.setStyleSheet("background-color:red;")
+            cmds.setAttr("%s.%s"%(self.BlendNode, self.widgetInfo["widgetInfo"][1]), 1.0)
         if currentMode == "Edit":
             cmds.setAttr(self.BlendNode + ".editMode", "Default", type="string")
-            self.listUI.edit_btn.setIcon(MIcon("SHAPES_regionColor4Paint_150.png", self))
+            self.betweenUI.set_btn.setStyleSheet("")
 
     def refreshList(self):
         """
@@ -203,19 +226,19 @@ class BS_Manager(MayaQWidgetDockableMixin, QtWidgets.QDialog):
             self.renameTarget()
         except:
             RuntimeError()
-
+        widgetInfoList = []
         current_widget = self.listUI.target_list.itemWidget(self.listUI.target_list.currentItem())
-        for i in range(self.listUI.target_list.count()):
-            widget = self.listUI.target_list.itemWidget(self.listUI.target_list.item(i))
-            if widget.targtName_le.text() != current_widget.targtName_le.text():
-                widget.targtName_le.setEnabled(False)
+        if current_widget:
+            widgetInfoList.append(current_widget)
+            for i in range(self.listUI.target_list.count()):
+                widget = self.listUI.target_list.itemWidget(self.listUI.target_list.item(i))
+                if widget.targtName_le.text() != current_widget.targtName_le.text():
+                    widget.targtName_le.setEnabled(False)
 
-        targetName = current_widget.targtName_le.text()
-        if not cmds.objExists(self.BlendNode + ".CurrentItemName"):
-            cmds.addAttr(self.BlendNode, ln="CurrentItemName", dt="string")
-            cmds.setAttr(self.BlendNode + ".CurrentItemName", targetName, type="string")
-        else:
-            cmds.setAttr(self.BlendNode + ".CurrentItemName", targetName, type="string")
+            targetName = current_widget.targtName_le.text()
+            widgetInfoList.append(targetName)
+            self.widgetInfo.update({"widgetInfo": widgetInfoList})
+            self.refreshChannels()
 
 
     def refresh(self):
@@ -312,28 +335,3 @@ class BS_Manager(MayaQWidgetDockableMixin, QtWidgets.QDialog):
 def show(*args):
     # BS_Manager().show()
     aboutUI.showDialog(BS_Manager, dockable=True)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

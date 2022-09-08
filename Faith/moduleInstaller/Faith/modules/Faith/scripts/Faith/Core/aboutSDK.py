@@ -22,8 +22,7 @@ SDK_ANIMCURVES_TYPE = ("animCurveUA", "animCurveUL", "animCurveUU")
 
 
 def _importData(filePath):
-    """Return the contents of a json file. Expecting, but not limited to,
-    a dictionary.
+    """导入给定路径的sdk的json文件
 
     Args:
         filePath (string): path to file
@@ -40,7 +39,7 @@ def _importData(filePath):
 
 
 def _exportData(data, filePath):
-    """export data, dict, to filepath provided
+    """导出字典里的sdk数据到给定路径
 
     Args:
         data (dict): expected dict, not limited to
@@ -77,7 +76,7 @@ def getPynodes(nodes):
 
 def getSDKInfoFromNode(node, expType="after"):
     """
-    export sdk information of type 'after'
+    获取给定物体的前（后）的sdk节点
     :param node: node to export
     :return:
     """
@@ -160,9 +159,22 @@ def createSDKFromDict(sdkInfo_dict, name):
     driverNode = sdkInfo_dict['driverNode']
     driverAttr = sdkInfo_dict['driverAttr']
 
-    drivenNodes = sdkInfo_dict['drivenNodes']
-    drivenAttrs = sdkInfo_dict['drivenAttrs']
-    sdkNodes = []
+    drivenNodesList = sdkInfo_dict['drivenNodes']
+    drivenAttrsList = sdkInfo_dict['drivenAttrs']
+
+    drivenNodes = []
+    drivenAttrs = []
+
+    if not pm.objExists("%s.%s"%(driverNode, driverAttr)):
+        print("%s.%s is not exists."%(driverNode, driverAttr))
+        pass
+
+    for j in range(len(drivenNodesList)):
+        if pm.objExists(drivenNodesList[j]):
+            drivenNodes.append(drivenNodesList[j])
+        if pm.objExists("%s.%s"%(drivenNodesList[j], drivenAttrsList[j])):
+            drivenAttrs.append(drivenAttrsList[j])
+
     for j in range(len(drivenNodes)):
         for index in range(0, len(animKeys)):
             frameValue = animKeys[index]
@@ -186,7 +198,6 @@ def createSDKFromDict(sdkInfo_dict, name):
 
                 animCurrentCrv[0].preInfinity.set(sdkInfo_dict['preInfinity'])
                 animCurrentCrv[0].postInfinity.set(sdkInfo_dict['postInfinity'])
-
 
 
 def getBlendNodes(attrPlug):

@@ -3,7 +3,7 @@
 # @Date:   2022-07-19 20:11:59
 # @Last Modified by:   YinYuFei
 # @Last Modified time: 2022-07-19 20:14:06
-import maya.cmds as cmds
+import maya.cmds as cmds,pymel.core as pm
 import maya.OpenMaya as OpenMaya
 import math
 
@@ -187,6 +187,65 @@ def set_matrix_cell(matrix, value, row, column):
     @param[in] column Column number.
     """
     OpenMaya.MScriptUtil.setDoubleArray(matrix[row], column, value)
+
+def rebuildTarget(attr):
+    """
+    输入一个bs目标体属性名类似 bsName.weightName后,会重建这个目标体
+    :param attr:
+    :return:
+    """
+    targetIndex = pm.PyNode(attr).index()
+    bsName, attrName = attr.split('.')
+    bsNode = pm.PyNode(bsName)
+    geometryNode = bsNode.getBaseObjects()[0].getParent()
+    orgShape = bsNode.getInputGeometry()[0].name()
+    # createTarget
+    newMeshShape = cmds.createNode('mesh', n='%sShape' % attrName)
+    newTarget = cmds.listRelatives(newMeshShape, p=True)
+    cmds.hide(newTarget)
+    cmds.connectAttr('%s.worldMesh[0]' % orgShape, '%s.inMesh' % newMeshShape)
+    cmds.refresh(f=True)
+    cmds.disconnectAttr('%s.worldMesh[0]' % orgShape, '%s.inMesh' % newMeshShape)
+    # move vtx
+    ictValue = cmds.getAttr('%s.it[0].itg[%s].iti[6000].ict' % (bsName, targetIndex))
+    if ictValue:
+        vtxList = cmds.ls(['%s.%s' % (newTarget[0], vtxE) for vtxE in ictValue], fl=True)
+        vtxRelativeTranslateList = cmds.getAttr('%s.it[0].itg[%s].iti[6000].ipt' % (bsName, targetIndex))
+        for i in range(len(vtxList)):
+            currentMoveValue = vtxRelativeTranslateList[i][:-1]
+            cmds.move(currentMoveValue[0], currentMoveValue[1], currentMoveValue[2], vtxList[i], r=True, ws=True)
+    # connect to blendShape
+    cmds.connectAttr('%s.worldMesh[0]' % newMeshShape, '%s.it[0].itg[%s].iti[6000].igt' % (bsName, targetIndex))
+    return newTarget
+
+def correctivePose(mesh, bsName, editTargetName):
+    """
+
+    :param mesh:
+    :param bsName:
+    :param editTargetName:
+    :return:
+    """
+    tempGeo = pm.duplicate(mesh, n='tempGeometry')
+    targetIndex = bsName.attr(editTargetName).index()
+    inputTarget = bsName.it[0].itg[targetIndex].iti[6000].igt.listConnections(d=False)
+    if inputTarget:
+        orgGeo = bsName.getInputGeometry()
+        orgGeo[0].outMesh >> pm.PyNode(inputTarget[0]).inMesh
+    else:
+        # rebuild target
+        inputTarget = rebuildTarget('%s.%s' % (bsName.name(), editTargetName))
+        inputTarget = [pm.PyNode(inputTarget[0])]
+    # beZero
+    orgGeo = bsName.getInputGeometry()
+    orgGeo[0].outMesh >> pm.PyNode(inputTarget[0]).inMesh
+    pm.refresh(f=True)
+    orgGeo[0].outMesh // pm.PyNode(inputTarget[0]).inMesh
+    # CCS
+    pm.select(mesh)
+    ccsReturn = invert()
+
+
 
 
 

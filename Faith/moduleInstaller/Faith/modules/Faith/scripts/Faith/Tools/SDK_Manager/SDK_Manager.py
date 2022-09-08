@@ -86,6 +86,7 @@ class DockableMainUI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         :return:
         """
         self.mainUI.load_btn.clicked.connect(self.loadObj)
+        self.mainUI.refresh_btn.clicked.connect(self.refreshList)
         self.mainUI.node_le.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.mainUI.node_le.customContextMenuRequested.connect(self.le_menu)
         self.mainUI.driven_list.clicked.connect(self._refreshDriver)

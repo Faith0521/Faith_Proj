@@ -155,7 +155,7 @@ class BS_Manager(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.collapsible_wdg_b.add_widget(self.betweenUI)
         self.betweenUI.val_dspin.valueChanged.connect(self.SpinValueChange)
         self.betweenUI.val_slider.valueChanged.connect(self.SliderValueChange)
-        self.betweenUI.set_btn.clicked.connect(self.setTarhetValue)
+        self.betweenUI.set_btn.clicked.connect(self.setTargetValue)
         value = cmds.getAttr("%s.%s" % (self.BlendNode, self.widgetInfo["widgetInfo"][1]))
         self.betweenUI.val_dspin.setValue(value)
 
@@ -196,7 +196,7 @@ class BS_Manager(MayaQWidgetDockableMixin, QtWidgets.QDialog):
                 if widget.targtName_le.text() != self.targetBlendShape[i]:
                     cmds.aliasAttr(widget.targtName_le.text(), self.BlendNode + '.' + self.targetBlendShape[i])
 
-    def setTarhetValue(self):
+    def setTargetValue(self):
         """
 
         @return:
@@ -205,17 +205,22 @@ class BS_Manager(MayaQWidgetDockableMixin, QtWidgets.QDialog):
             return False
         if not cmds.objExists(self.BlendNode):
             return False
-        currentMode = cmds.getAttr(self.BlendNode + ".editMode")
         btnText = self.betweenUI.set_btn.text()
         if btnText == u"设置":
             self.betweenUI.set_btn.setText(u"编辑")
-        if currentMode == "Default":
-            cmds.setAttr(self.BlendNode + ".editMode", "Edit", type="string")
+        if btnText == u"编辑":
             self.betweenUI.set_btn.setStyleSheet("background-color:red;")
-            cmds.setAttr("%s.%s"%(self.BlendNode, self.widgetInfo["widgetInfo"][1]), 1.0)
-        if currentMode == "Edit":
-            cmds.setAttr(self.BlendNode + ".editMode", "Default", type="string")
+            self.betweenUI.set_btn.setText(u"退出")
+        if btnText == u"编辑":
             self.betweenUI.set_btn.setStyleSheet("")
+            self.betweenUI.set_btn.setText(u"设置")
+        # if currentMode == "Default":
+        #     cmds.setAttr(self.BlendNode + ".editMode", "Edit", type="string")
+        #     self.betweenUI.set_btn.setStyleSheet("background-color:red;")
+        #     cmds.setAttr("%s.%s"%(self.BlendNode, self.widgetInfo["widgetInfo"][1]), 1.0)
+        # if currentMode == "Edit":
+        #     cmds.setAttr(self.BlendNode + ".editMode", "Default", type="string")
+        #     self.betweenUI.set_btn.setStyleSheet("")
 
     def refreshList(self):
         """

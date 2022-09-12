@@ -1,4 +1,4 @@
-import sys
+import sys,time
 from functools import partial
 
 import pymel.core as pm,maya.mel as mel
@@ -11,6 +11,7 @@ from Faith.Core import aboutUI,aboutSDK
 from dayu_widgets.message import MMessage
 from dayu_widgets.toast import MToast
 from dayu_widgets.qt import MIcon
+from dayu_widgets.progress_bar import MProgressBar
 
 PY2 = sys.version_info[0] == 2
 
@@ -295,7 +296,7 @@ class DockableMainUI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
             attr = i.data()
             isAttr = pm.objExists(node + '.' + attr)
             if isAttr:
-                aboutSDK.mirrorSDKs([node], attributes=[attr], invertDriver=False, invertDriven=False)
+                aboutSDK.mirrorSDKs([node], attributes=[attr])
             else:
                 MMessage.warning("Selected item {0}.{1} is not exists.".format(node, attr), parent = self)
 
@@ -306,7 +307,7 @@ class DockableMainUI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
             attr = i.data()
             isAttr = pm.objExists(node + '.' + attr)
             if isAttr:
-                aboutSDK.mirrorSDKs([node], attributes=[attr], invertDriver=False, invertDriven=False)
+                aboutSDK.mirrorSDKs([node], attributes=[attr])
             else:
                 MMessage.warning("Selected item {0}.{1} is not exists.".format(node, attr), parent = self)
 
@@ -321,43 +322,44 @@ class DockableMainUI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
             mel.eval('hyperShadePanelMenuCommand("hyperShadePanel1", "deleteUnusedNodes")')
         except:
             pass
+        removeType = ["animCurve", "blendWeighted"]
+        ani = pm.ls(type=removeType)
 
-        ani = pm.ls(type="animCurve")
-        bw = pm.ls(type="blendWeighted")
-        ani.extend(bw)
         if len(ani) == 0:
             pass
         else:
             pointsNum = len(ani) - 1
-            gMainProgressBar = mel.eval('$tmp = $gMainProgressBar');
-            pm.progressBar(gMainProgressBar,
-                           edit=True,
-                           beginProgress=True,
-                           isInterruptable=True,
-                           status='delete useless nodes ......',
-                           maxValue=pointsNum)
-            for x in ani:
-                if pm.progressBar(gMainProgressBar, query=True, isCancelled=True):
+            progress_dialog = QtWidgets.QProgressDialog(
+                "Waiting to process...", "Cancel", 0, 8, self
+            )
+            progress_dialog.setWindowTitle("Delete Useless Nodes")
+            progress_dialog.setValue(0)
+            progress_dialog.setWindowModality(QtCore.Qt.WindowModal)
+            progress_dialog.show()
+
+            QtCore.QCoreApplication.processEvents()
+            removeNodes = []
+            for i,x in enumerate(ani):
+                if progress_dialog.wasCanceled():
                     break
                 if pm.objExists(x):
                     hasInput = pm.listConnections(x, s=True, d=False, scn=True)
                     hasOutput = pm.listConnections(x, s=False, d=True, scn=True)
                     if 'hyperLayout' in str(hasOutput) and len(hasOutput) == 1:
                         hasOutput = None
-
                     isLocked = pm.lockNode(x, q=1, l=1)[0]
                     if isLocked == True:
                         pm.lockNode(x, l=False)
-                    if hasInput == None or hasOutput == None:
-                        pm.delete(x)
-                        print ("Delete useless node %s." % (x))
-                pm.progressBar(gMainProgressBar, edit=True, step=1)
-            pm.progressBar(gMainProgressBar, edit=True, endProgress=True)
+                    if not hasInput or not hasOutput:
+                        removeNodes.append(x)
+            for i in range(0, len(removeNodes)):
+                progress_dialog.setLabelText("Delete useless node %s." % (removeNodes[i]))
+                progress_dialog.setValue(i)
+                pm.delete(removeNodes[i])
+                time.sleep(0.5)
+                QtCore.QCoreApplication.processEvents()
+            progress_dialog.close()
+            MToast.success("Clear Success.", self)
 
 def show_guide_component_manager(*args):
     aboutUI.showDialog(DockableMainUI, dockable=True)
-
-
-if __name__ == "__main__":
-
-    show_guide_component_manager()

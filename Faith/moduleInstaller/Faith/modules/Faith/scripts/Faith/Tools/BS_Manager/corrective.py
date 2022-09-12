@@ -3,32 +3,38 @@
 # @Date:   2022-07-19 20:11:59
 # @Last Modified by:   YinYuFei
 # @Last Modified time: 2022-07-19 20:14:06
-import maya.cmds as cmds,pymel.core as pm
+import maya.cmds as cmds,pymel.core as pm,maya.mel as mel
 import maya.OpenMaya as OpenMaya
 import math
 
-def invert(base=None, corrective=None, name=None):
+def invert(base=None, name=None, targetName=None,invert=None):
     """Inverts a shape through the deformation chain.
     @param[in] base Deformed base mesh.
     @param[in] corrective Sculpted corrective mesh.
     @param[in] name Name of the generated inverted shape.
     @return The name of the inverted shape.
     """
-    if not base or not corrective:
+    if not base:
         sel = cmds.ls(sl=True)
-        if not sel or len(sel) != 2:
-            raise RuntimeError('Select base then corrective')
-        base, corrective = sel
-
+        if not sel or len(sel) != 1:
+            raise RuntimeError('Must select a mesh.')
+        base = sel
+    if targetName:
+        corrective = cmds.duplicate(base, rr=True, n="%s_%s_Sculpt"%(base, targetName))[0]
+    else:
+        corrective = cmds.duplicate(base, rr=True, n="%s_Sculpt" % base)[0]
     # Get points on base mesh
     base_points = get_points(base)
     point_count = base_points.length()
 
     # Get points on corrective mesh
     corrective_points = get_points(corrective)
-
+    if not invert:
+        invertShape = duplicateOrigMesh(base)
+    else:
+        invertShape = invert
     # Get the intermediate mesh
-    orig_mesh = get_shape(base, intermediate=True)
+    orig_mesh = cmds.listRelatives(invertShape, shapes=True)[0]
 
     # Get the component offset axes
     orig_points = get_points(orig_mesh)
@@ -51,9 +57,12 @@ def invert(base=None, corrective=None, name=None):
 
     # Create the mesh to get the inversion deformer
     if not name:
-        name = '%s_inverted' % corrective
+        name = corrective.replace('Sculpt', 'Target')
 
-    inverted_shapes = cmds.duplicate(base, name=name)[0]
+    if not invertShape:
+        inverted_shapes = cmds.duplicate(base, name=name)[0]
+    else:
+        inverted_shapes = invertShape
     # Delete the unnessary shapes
     shapes = cmds.listRelatives(inverted_shapes, children=True, shapes=True, path=True)
     for s in shapes:
@@ -91,10 +100,57 @@ def invert(base=None, corrective=None, name=None):
     plug_deformed_points.setMObject(point_data_mobj)
 
     cmds.connectAttr('%s.outMesh' % get_shape(corrective), '%s.correctiveMesh' % deformer)
-
+    targetGrp = cmds.createNode("transform", n = base + "_bsTarget_Grp")
+    cmds.parent(inverted_shapes, targetGrp)
+    cmds.setAttr(inverted_shapes + ".v", 0)
+    cmds.setAttr(base + ".v", 0)
     cmds.undoInfo(closeChunk=True)
-    return inverted_shapes
 
+    return [corrective, inverted_shapes, targetGrp]
+
+def findBlendShapeInHistory(mesh):
+    """
+
+    @param mesh:
+    @return:
+    """
+    history = cmds.listHistory(mesh)
+    for h in history:
+        if cmds.nodeType(h) == "blendShape":
+            return h
+    return None
+
+def findSkinClusterInHistory(mesh):
+    """
+
+    @param mesh:
+    @return:
+    """
+    history = cmds.listHistory(mesh)
+    for h in history:
+        if cmds.nodeType(h) == "skinCluster":
+            return h
+    return None
+
+def duplicateOrigMesh(mesh):
+    """
+
+    @param mesh:
+    @return:
+    """
+    bs = findBlendShapeInHistory(mesh)
+    skin = findSkinClusterInHistory(mesh)
+    if bs:
+        cmds.setAttr("%s.envelope"%bs, 0)
+    if skin:
+        cmds.setAttr("%s.envelope"%skin, 0)
+    origMesh = cmds.duplicate(mesh, rr=True, n=mesh + '_Target')[0]
+    if bs:
+        cmds.setAttr("%s.envelope"%bs, 1)
+    if skin:
+        cmds.setAttr("%s.envelope"%skin, 1)
+
+    return origMesh
 
 def get_shape(node, intermediate=False):
     """Returns a shape node from a given transform or shape.
@@ -148,7 +204,7 @@ def get_points(path, space=OpenMaya.MSpace.kObject):
     @param[in] space Space to get the points.
     @return The MPointArray of points.
     """
-    if isinstance(path, str):
+    if isinstance(path, str) or isinstance(path, unicode):
         path = get_dag_path(get_shape(path))
     it_geo = OpenMaya.MItGeometry(path)
     points = OpenMaya.MPointArray()
@@ -162,7 +218,7 @@ def set_points(path, points, space=OpenMaya.MSpace.kObject):
     @param[in] points MPointArray of points.
     @param[in] space Space to get the points.
     """
-    if isinstance(path, str):
+    if isinstance(path, str) or isinstance(path, unicode):
         path = get_dag_path(get_shape(path))
     it_geo = OpenMaya.MItGeometry(path)
     it_geo.setAllPositions(points, space)
@@ -218,36 +274,132 @@ def rebuildTarget(attr):
     cmds.connectAttr('%s.worldMesh[0]' % newMeshShape, '%s.it[0].itg[%s].iti[6000].igt' % (bsName, targetIndex))
     return newTarget
 
-def correctivePose(mesh, bsName, editTargetName):
+def MirrorShapes(originalObj, shapeToCopy, xyz, shapePosition, newName, shapeOffset):
     """
 
-    :param mesh:
-    :param bsName:
-    :param editTargetName:
+    :param originalObj:
+    :param shapeToCopy:
+    :param xyz:
+    :param shapePosition:
+    :param newName:
+    :param shapeOffset:
     :return:
     """
-    tempGeo = pm.duplicate(mesh, n='tempGeometry')
-    targetIndex = bsName.attr(editTargetName).index()
-    inputTarget = bsName.it[0].itg[targetIndex].iti[6000].igt.listConnections(d=False)
-    if inputTarget:
-        orgGeo = bsName.getInputGeometry()
-        orgGeo[0].outMesh >> pm.PyNode(inputTarget[0]).inMesh
-    else:
-        # rebuild target
-        inputTarget = rebuildTarget('%s.%s' % (bsName.name(), editTargetName))
-        inputTarget = [pm.PyNode(inputTarget[0])]
-    # beZero
-    orgGeo = bsName.getInputGeometry()
-    orgGeo[0].outMesh >> pm.PyNode(inputTarget[0]).inMesh
-    pm.refresh(f=True)
-    orgGeo[0].outMesh // pm.PyNode(inputTarget[0]).inMesh
-    # CCS
-    pm.select(mesh)
-    ccsReturn = invert()
+    attributes = ["translate", "rotate", "scale"]
+    axies = ["X", "Y", "Z"]
+    [cmds.setAttr("%s.%s%s"%(originalObj, attr, axis), lock=0) for attr in attributes for axis in axies]
 
+    mirrorObj = shapeToCopy + "suffTemp"
+    cmds.duplicate(originalObj, rr=True, n="scaleObj")
+    cmds.duplicate(originalObj, rr=1, n='tempName')
+    cmds.rename('tempName', mirrorObj)
 
+    posScaleAttr = 0
+    negScaleAttr = 0
 
+    if xyz == 1:
+        posScaleAttr = float(cmds.getAttr('scaleObj.scaleX'))
+        negScaleAttr = -1 * posScaleAttr
+        cmds.setAttr('scaleObj.scaleX', negScaleAttr)
+    if xyz == 2:
+        posScaleAttr = float(cmds.getAttr('scaleObj.scaleY'))
+        negScaleAttr = -1 * posScaleAttr
+        cmds.setAttr('scaleObj.scaleY', negScaleAttr)
+    if xyz == 3:
+        posScaleAttr = float(cmds.getAttr('scaleObj.scaleZ'))
+        negScaleAttr = -1 * posScaleAttr
+        cmds.setAttr('scaleObj.scaleZ', negScaleAttr)
 
+    cmds.blendShape(shapeToCopy, 'scaleObj', frontOfChain=1, n='blendShapeToWarp')
+    cmds.select(mirrorObj, 'scaleObj', r=1)
+    wrap = mel.eval('doWrapArgList "6" { "1","0","1", "2", "1", "1", "0" };')
+    cmds.rename(wrap[0], 'wrapToMirror')
+    cmds.setAttr('wrapToMirror.exclusiveBind', 1)
+    blendShapeAttr = 'blendShapeToWarp.' + shapeToCopy
+    cmds.setAttr(blendShapeAttr, 1)
+    cmds.select(mirrorObj, r=1)
+    cmds.DeleteHistory()
+    cmds.delete(ch=1)
+    cmds.delete('scaleObjBase', 'scaleObj')
+    offsetX = shapeOffset[0]
+    offsetY = shapeOffset[1]
+    offsetZ = shapeOffset[2]
+    if shapePosition == 1:
+        shapeTCAttrX = shapeToCopy + '.tx'
+        shapeTCAttrY = shapeToCopy + '.ty'
+        shapeTCAttrZ = shapeToCopy + '.tz'
+        shapeTCPositionX = float(cmds.getAttr(shapeTCAttrX)) + offsetX
+        shapeTCPositionY = float(cmds.getAttr(shapeTCAttrY)) + offsetY
+        shapeTCPositionZ = float(cmds.getAttr(shapeTCAttrZ)) + offsetZ
+        mirrorObjPositionX = mirrorObj + '.tx'
+        mirrorObjPositionY = mirrorObj + '.ty'
+        mirrorObjPositionZ = mirrorObj + '.tz'
+        cmds.setAttr(mirrorObjPositionX, shapeTCPositionX)
+        cmds.setAttr(mirrorObjPositionY, shapeTCPositionY)
+        cmds.setAttr(mirrorObjPositionZ, shapeTCPositionZ)
+    cmds.select(mirrorObj, r=1)
+    cmds.rename(mirrorObj, newName)
 
+def meshOrig(meshNode):
+    MeshOrigList = []
+    Mesh_Orig = cmds.listHistory(meshNode)
+    for i in range(len(Mesh_Orig)):
+        if cmds.nodeType(Mesh_Orig[i]) == 'mesh':
+            if 'Orig' in Mesh_Orig[i]:
+                if Mesh_Orig[i] != None:
+                    if cmds.listConnections(Mesh_Orig[i] + '.worldMesh[0]', source=True):
+                        MeshOrigList.append(Mesh_Orig[i])
 
+    return MeshOrigList
 
+def getWeightIndex(blendShapeName, target):
+    """
+
+    :param blendShapeName:
+    :param target:
+    :return:
+    """
+    aliases = cmds.aliasAttr(blendShapeName, q=True)
+    a = aliases.index(target)
+    weight = aliases[(a + 1)]
+    index = weight.split('[')[(-1)][:-1]
+    return int(index)
+
+def getInbetweenWeight(blendShapeName, target):
+    """
+
+    :param blendShapeName:
+    :param target:
+    :return:
+    """
+    tragetIndexItem = getWeightIndex(blendShapeName, target)
+    inputTargetItem = cmds.getAttr(
+        "%s.inputTarget[0].inputTargetGroup[%d].inputTargetItem" % (blendShapeName, tragetIndexItem), mi=True
+    )
+    weightList = []
+    for i in inputTargetItem:
+        indexInt = (int(i) - 5000) / 1000.0
+        weightList.append(indexInt)
+
+    return weightList
+
+def removeTarget(blendShapeName, target):
+    count = cmds.getAttr('%s.inputTarget[0].inputTargetGroup'%blendShapeName, mi=True)[(-1)] + 1
+    tragetIndexItem = getWeightIndex(blendShapeName, target)
+
+def creativeTarget(blendShape, target=[], prefix=None):
+    """
+
+    :param blendShape:
+    :param target:
+    :param prefix:
+    :return:
+    """
+    listConnect = []
+    listConnect_target = []
+    listLock_target = []
+    listValue_target = []
+    listConnect_Name = []
+    MeshOrigList = []
+    listTargetBlendShape = cmds.listAttr(blendShape + '.weight', multi=True)
+    

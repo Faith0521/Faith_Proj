@@ -11,7 +11,7 @@ if aboutPy.PY2:
 else:
     import _pickle
 import pprint,re
-import pymel.core as pm,maya.mel as mel
+import pymel.core as pm,maya.mel as mel,maya.cmds as cmds
 
 SDK_UTILITY_TYPE = ("blendWeighted",)
 SDK_ANIMCURVES_TYPE = ("animCurveUA", "animCurveUL", "animCurveUU")
@@ -390,17 +390,17 @@ def mirrorSDKs(nodes, attributes=[], invertDriver=True, invertDriven=True):
                     testConnections = pm.listConnections("%s.%s"%(node, eachAttr),
                                                          plugs = True)
                     if testConnections:
-                        mirrorKeys("%s.%s"%(node, eachAttr), invertDriver=invertDriver, invertDriven=invertDriven)
+                        mirrorKeys("%s.%s"%(node, eachAttr))
         else:
             for eachAttr in attributes:
                 if pm.objExists("%s.%s"%(node, eachAttr)):
                     testConnections = pm.listConnections("%s.%s"%(node, eachAttr),
                                                          plugs = True)
                     if testConnections:
-                        mirrorKeys("%s.%s"%(node, eachAttr), invertDriver=invertDriver, invertDriven=invertDriven)
+                        mirrorKeys("%s.%s"%(node, eachAttr))
 
 
-def mirrorKeys(attr, invertDriver=True, invertDriven=True):
+def mirrorKeys(attr):
     """
 
     :param node:
@@ -415,15 +415,11 @@ def mirrorKeys(attr, invertDriver=True, invertDriven=True):
     for source, dest in sourceSDKInfo:
         info = {}
         info[source.nodeName()] = getSDKInfo(source.node())
-        invertKeyValues(info,
-                        invertDriver=invertDriver,
-                        invertDriven=invertDriven)
+        invertKeyValues(info)
 
 
-def invertKeyValues(sdkInfo, invertDriver=True, invertDriven=True):
+def invertKeyValues(sdkInfo):
 
-    LeftKey = ['L_','l_','lf_','Lf_','_L','_l','_lf','_Lf']
-    RightKey = ['R_','r_','rt_','Rt_','_R','_r','_rt','_Rt']
     for animNode,infoDict in sdkInfo.items():
         animKeys = infoDict["keys"]
         driverNode = infoDict['driverNode']
@@ -432,40 +428,30 @@ def invertKeyValues(sdkInfo, invertDriver=True, invertDriven=True):
         drivenNodes = infoDict['drivenNodes']
         drivenAttrs = infoDict['drivenAttrs']
 
-        for i in range(len(LeftKey)):
-            if re.search('^'+ LeftKey[i], driverNode) or re.search(LeftKey[i]+'$', driverNode):
-                driverNode = driverNode.replace(LeftKey[i],RightKey[i])
-            if re.search('^'+ LeftKey[i], driverAttr) or re.search(LeftKey[i]+'$', driverAttr):
-                driverAttr = driverAttr.replace(LeftKey[i],RightKey[i])
-            for j in range(len(drivenNodes)):
-                if re.search('^'+ LeftKey[i], drivenNodes[j]) or re.search(LeftKey[i]+'$', drivenNodes[j]):
-                    drivenNodes[j] = drivenNodes[j].replace(LeftKey[i],RightKey[i])
-                if re.search('^' + LeftKey[i], drivenAttrs[j]) or re.search(LeftKey[i] + '$', drivenAttrs[j]):
-                    drivenAttrs[j] = drivenAttrs[j].replace(LeftKey[i], RightKey[i])
-
+        driver_attr = driverNode + "." + driverAttr
         for j in range(len(drivenNodes)):
+            driven_attr = drivenNodes[j] + "." + drivenAttrs[j]
+            checkResult = checkSymAttrIfMirror(driver_attr, driven_attr)
             for index in range(0, len(animKeys)):
                 frameValue = animKeys[index]
-                if invertDriver and invertDriven:
-                    timeValue = frameValue[0] * -1
-                    value = frameValue[1] * -1
-                if invertDriver and not invertDriven:
-                    timeValue = frameValue[0]
-                    value = frameValue[1] * -1
-                if not invertDriver and invertDriven:
-                    timeValue = frameValue[0]
-                    value = frameValue[1] * -1
-                else:
-                    timeValue = frameValue[0]
-                    value = frameValue[1]
 
                 connectionObj = pm.connectionInfo(drivenNodes[j] + '.' + drivenAttrs[j], sfd=1)
-                
+
                 if connectionObj != '' and 'animCurve' in pm.nodeType(connectionObj):
                     pass
 
-                pm.setDrivenKeyframe(drivenNodes[j], at=drivenAttrs[j], cd=driverNode+'.'+driverAttr, dv=timeValue,
-                                     value=value)
+                if '-' in checkResult[0] and '-' not in checkResult[1]:
+                    cmds.setDrivenKeyframe(checkResult[1].split('.')[0], at=checkResult[1].split('.')[1], cd=checkResult[0][:-1],
+                                         dv=float(frameValue[0]) * -1, v=float(frameValue[1]))
+                elif '-' not in checkResult[0] and '-' in checkResult[1]:
+                    cmds.setDrivenKeyframe(checkResult[1].split('.')[0], at=checkResult[1].split('.')[1][:-1], cd=checkResult[0],
+                                         dv=float(frameValue[0]), v=float(frameValue[1]) * (-1))
+                elif '-' in checkResult[0] and '-' in checkResult[1]:
+                    cmds.setDrivenKeyframe(checkResult[1].split('.')[0], at=checkResult[1].split('.')[1][:-1],
+                                         cd=checkResult[0][:-1], dv=float(frameValue[0]) * -1, v=float(frameValue[1]) * (-1))
+                elif '-' not in checkResult[0] and '-' not in checkResult[1]:
+                    cmds.setDrivenKeyframe(checkResult[1].split('.')[0], at=checkResult[1].split('.')[1], cd=checkResult[0],
+                                         dv=float(frameValue[0]), v=float(frameValue[1]))
 
             for index in range(0, len(animKeys)):
                 frameValue = animKeys[index]
@@ -481,6 +467,7 @@ def invertKeyValues(sdkInfo, invertDriver=True, invertDriven=True):
 
                     animCurrentCrv[0].preInfinity.set(infoDict['preInfinity'])
                     animCurrentCrv[0].postInfinity.set(infoDict['postInfinity'])
+
 
 def getAnimCurve(driverAttr, setdrivenAttr=None):
     """
@@ -543,6 +530,377 @@ def stripKeys(animNode):
     numKeys = len(pm.listAttr(animNode + ".ktv", multi=True)) / 3
     for x in range(0, numKeys):
         animNode.remove(0)
+
+def checkSymObj(orgObj=[], searchFor='L_', replaceWith='R_'):
+    """
+    Check the symmetry of objects and attributes.
+    :param orgObj:
+    :param searchFor:
+    :param replaceWith:
+    :return:
+    """
+    symObj = []
+    keyword = [searchFor]
+    # ------------------------------
+    if orgObj == []:
+        selobjs = cmds.ls(sl=1)
+    else:
+        selobjs = orgObj
+
+    for x in selobjs:
+        for n in keyword:
+            if n not in x:
+                symObj.append(x)
+            else:
+                theOtherSideobj = x.replace(searchFor, replaceWith)
+                if cmds.objExists(theOtherSideobj):
+                    symObj.append(theOtherSideobj)
+                else:
+                    cmds.warning('can not find the sysmmetry : %s' % (theOtherSideobj))
+                    continue
+
+        symObj = sorted(set(symObj), key=symObj.index)
+
+    if len(symObj) == 1:
+        return symObj[0]
+    else:
+        return symObj
+
+def checkSymAttrIfMirror(baseDriverAttr, baseDrivenAttr):
+    """
+    Check the symmetry of objects and attributes, set used value.
+    :param baseDriverAttr:
+    :param baseDrivenAttr:
+    :return:
+    """
+    LeftKey = [
+        'L_', 'lf_', '_L','facial_L_','left_', 'Left_'
+    ]
+    RightKey = [
+        'R_', 'rt_', '_R','facial_R_','right_', 'Right_'
+    ]
+    keyNum = len(LeftKey)
+    symAttr = []
+
+    driverAttr = ""
+    drivenAttr = ""
+
+    i = 0
+    while i < keyNum:
+        if LeftKey[i] in baseDriverAttr:
+            driverAttr = (checkSymObj(orgObj=[baseDriverAttr], searchFor=LeftKey[i],
+                                           replaceWith=RightKey[i]))
+
+            if len(driverAttr) == 0:
+                driverAttr = baseDriverAttr
+                break
+
+            elif len(driverAttr) != 0:
+                symDriver = driverAttr.split('.')[0]
+                if 'translate' in baseDriverAttr or 'rotate' in baseDriverAttr and 'order' not in baseDriverAttr and 'Order' not in baseDriverAttr:
+                    mirrorAxis = checkSymAxis(baseDriverAttr.split('.')[0], symDriver)
+                    driverAttr = mirrorAxis[baseDriverAttr]
+            break
+        else:
+            i = i + 1
+            if i == keyNum:
+                driverAttr = baseDriverAttr
+                break
+
+    j = 0
+    while j < keyNum:
+        if LeftKey[j] in baseDrivenAttr:
+            drivenAttr = (checkSymObj(orgObj=[baseDrivenAttr], searchFor=LeftKey[j],
+                                           replaceWith=RightKey[j]))
+
+            if len(drivenAttr) == 0:
+                drivenAttr = baseDrivenAttr
+                driverAttr = baseDriverAttr
+                break
+
+            elif len(drivenAttr) != 0:
+                symDriven = drivenAttr.split('.')[0]
+                if 'translate' in baseDrivenAttr or 'rotate' in baseDrivenAttr and 'order' not in baseDrivenAttr and 'Order' not in baseDrivenAttr:
+                    mirrorAxis = checkSymAxis(baseDrivenAttr.split('.')[0], symDriven)
+                    print(mirrorAxis)
+                    drivenAttr = mirrorAxis[baseDrivenAttr]
+
+            break
+        else:
+            j = j + 1
+            if j == keyNum:
+                if 'translate' in baseDrivenAttr or 'rotate' in baseDrivenAttr and 'order' not in baseDrivenAttr and 'Order' not in baseDrivenAttr:
+                    mirrorAxis = checkSymAxis(baseDrivenAttr.split('.')[0], baseDrivenAttr.split('.')[0])
+                    drivenAttr = mirrorAxis[baseDrivenAttr]
+                else:
+                    drivenAttr = baseDrivenAttr
+                break
+
+    symAttr.append(driverAttr)
+    symAttr.append(drivenAttr)
+    return symAttr
+
+def makeObjZero(type, suffix, rotation, *obj):
+    """
+    This Function can make object zero
+    :param self:
+    :param type:
+    :param suffix:
+    :param rotation:
+    :param obj:
+    :return:
+    """
+    if len(obj) == 0:
+
+        cmds.error(
+            '------------------------->>>You must select one or more object !<<<----------------------------')
+
+    else:
+
+        # this type is joint .
+
+        if type == 'joint':
+
+            objNum = len(obj)
+
+            for i in range(0, objNum, 1):
+
+                if rotation == 'On':
+                    cmds.makeIdentity(obj[i], apply=True, t=1, r=1, s=1, n=0)
+                    cmds.duplicate(obj[i], name='%s_%s' % (obj[i], suffix))
+                    childObj = cmds.listRelatives('%s_%s' % (obj[i], suffix))
+
+                    if childObj == None:
+                        cmds.parent(obj[i], '%s_%s' % (obj[i], suffix))
+                    else:
+                        childNum = len(childObj)
+                        cmds.delete('%s_%s|%s' %
+                                  (obj[i], suffix, childObj[0]))
+                        cmds.parent(obj[i], '%s_%s' % (obj[i], suffix))
+
+                elif rotation == 'Off':
+
+                    cmds.makeIdentity(obj[i], apply=True, t=1, r=1, s=1, n=0)
+                    cmds.duplicate(obj[i], name='%s_%s' % (obj[i], suffix))
+                    cmds.makeIdentity(obj[i], apply=True, t=1, r=1, s=1, n=0)
+                    cmds.setAttr('%s_%s.rotateX' % (obj[i], suffix), 0)
+                    cmds.setAttr('%s_%s.rotateY' % (obj[i], suffix), 0)
+                    cmds.setAttr('%s_%s.rotateZ' % (obj[i], suffix), 0)
+                    childObj = cmds.listRelatives('%s_%s' % (obj[i], suffix))
+
+                    if childObj == None:
+                        cmds.parent(obj[i], '%s_%s' % (obj[i], suffix))
+                    else:
+                        childNum = len(childObj)
+                        cmds.delete('%s_%s|%s' %
+                                  (obj[i], suffix, childObj[0]))
+                        cmds.parent(obj[i], '%s_%s' % (obj[i], suffix))
+
+        # type is group ,it is have flag rotateOn / rotateOff ,you can use
+        # it for ik controls  con sdk zero and so on.
+
+        elif type == 'group':
+
+            objNum = len(obj)
+
+            for i in range(0, objNum, 1):
+
+                grp = cmds.createNode(
+                    'transform', name='%s_%s' % (obj[i], suffix))
+                parentObj = cmds.listRelatives(obj[i], p=True)
+
+                if rotation == 'On':
+                    cmds.delete(cmds.pointConstraint(obj[i], grp, mo=False))
+                    cmds.delete(cmds.orientConstraint(obj[i], grp, mo=False))
+
+                    if parentObj == None:
+                        cmds.parent(obj[i], grp)
+                    else:
+                        cmds.parent(grp, parentObj[0])
+                        cmds.parent(obj[i], grp)
+
+                    cmds.select(grp)
+                    return grp
+
+                elif rotation == 'Off':
+
+                    cmds.pointConstraint(obj[i], grp, mo=False)
+                    cmds.delete('%s_pointConstraint1' % (grp))
+
+                    if parentObj == None:
+                        cmds.parent(obj[i], grp)
+                    else:
+
+                        cmds.parent(grp, parentObj[0])
+                        cmds.parent(obj[i], grp)
+
+                    cmds.select(grp)
+                    return grp
+
+def checkSymAxis(orgobj, symobj):
+    # ------------------------------------------------------------
+    # Check the symmetry axis of objects and attributes.
+    # ------------------------------------------------------------
+
+    symAxis = []
+
+    orghelploc = cmds.spaceLocator(
+        p=(0, 0, 0), name=str(orgobj) + '_help_loc')[0]
+    symhelploc = cmds.spaceLocator(
+        p=(0, 0, 0), name=str(symobj) + '_help_loc')[0]
+
+    # self.fromAtoB(orghelploc , orgobj , 1)
+    # self.fromAtoB(symhelploc , symobj , 1)
+
+    orghelplocGrp = makeObjZero('group', 'zero', 'On', orghelploc)
+    symhelplocGrp = makeObjZero('group', 'zero', 'On', symhelploc)
+
+    # update date 2017/03/16 >>
+    # set zero value in object space
+    cmds.parent(orghelplocGrp, orgobj)
+    cmds.parent(symhelplocGrp, symobj)
+
+    defaultAttr = ['.tx', '.ty', '.tz', '.rx',
+                   '.ry', '.rz', '.sx', '.sy', '.sz']
+    for attr in defaultAttr:
+        if 's' in attr:
+            cmds.setAttr(orghelplocGrp + attr, 1)
+            cmds.setAttr(symhelplocGrp + attr, 1)
+        else:
+            cmds.setAttr(orghelplocGrp + attr, 0)
+            cmds.setAttr(symhelplocGrp + attr, 0)
+
+    # set zero value in world space
+    cmds.parent(orghelplocGrp, w=1)
+    cmds.parent(symhelplocGrp, w=1)
+
+    zeroValue = ['.tx', '.ty', '.tz']
+    for x in zeroValue:
+        cmds.setAttr(orghelplocGrp + x, 0)
+        cmds.setAttr(symhelplocGrp + x, 0)
+
+    orgaxisValue = [(1, 0, 0), (0, 1, 0), (0, 0, 1)]
+    axisKey = ['X', 'Y', 'Z', 'X-', 'Y-', 'Z-']
+    symaxisValue = [(1, 0, 0), (0, 1, 0), (0, 0, 1),
+                    (-1, 0, 0), (0, -1, 0), (0, 0, -1)]
+
+    i = 0
+    while i < len(orgaxisValue):
+        j = 0
+
+        cmds.setAttr(orghelploc + '.tx', orgaxisValue[i][0])
+        cmds.setAttr(orghelploc + '.ty', orgaxisValue[i][1])
+        cmds.setAttr(orghelploc + '.tz', orgaxisValue[i][2])
+
+        orgcurrentPos = cmds.xform(orghelploc, q=1, t=1, ws=1)
+
+        orgcurrentPos[0] = round(orgcurrentPos[0], 1)
+        orgcurrentPos[1] = round(orgcurrentPos[1], 1)
+        orgcurrentPos[2] = round(orgcurrentPos[2], 1)
+
+        cmds.setAttr(orghelploc + '.tx', 0)
+        cmds.setAttr(orghelploc + '.ty', 0)
+        cmds.setAttr(orghelploc + '.tz', 0)
+
+        while j < len(symaxisValue):
+
+            cmds.setAttr(symhelploc + '.tx', symaxisValue[j][0])
+            cmds.setAttr(symhelploc + '.ty', symaxisValue[j][1])
+            cmds.setAttr(symhelploc + '.tz', symaxisValue[j][2])
+
+            symcurrentPos = cmds.xform(symhelploc, q=1, t=1, ws=1)
+
+            symcurrentPos[0] = round(symcurrentPos[0], 1)
+            symcurrentPos[1] = round(symcurrentPos[1], 1)
+            symcurrentPos[2] = round(symcurrentPos[2], 1)
+
+            cmds.setAttr(symhelploc + '.tx', 0)
+            cmds.setAttr(symhelploc + '.ty', 0)
+            cmds.setAttr(symhelploc + '.tz', 0)
+
+            if symcurrentPos[0] * -1 == orgcurrentPos[0] and symcurrentPos[1] == orgcurrentPos[1] and symcurrentPos[
+                    2] == orgcurrentPos[2]:
+
+                symAxis.append(orgobj + '.translate' + axisKey[i])
+                symAxis.append(symobj + '.translate' + axisKey[j])
+
+                # check rotate
+                # create rotate help locator
+                orgRollLoc = cmds.spaceLocator(
+                    p=(0, 0, 0), name=str(orgobj) + '_roll_loc')[0]
+                symRollLoc = cmds.spaceLocator(
+                    p=(0, 0, 0), name=str(symobj) + '_roll_loc')[0]
+
+                # sym help loc
+                cmds.setAttr(orgRollLoc + '.tx', 1)
+                cmds.setAttr(symRollLoc + '.tx', -1)
+                cmds.setAttr(orgRollLoc + '.ty', 1)
+                cmds.setAttr(symRollLoc + '.ty', 1)
+
+                cmds.parentConstraint(orghelploc, orgRollLoc, mo=True)
+                cmds.parentConstraint(symhelploc, symRollLoc, mo=True)
+
+                # give help loc rotate
+                cmds.setAttr(orghelploc + '.rotate' + axisKey[i], 10)
+
+                # check rotate at two type
+                if '-' in axisKey[j]:
+                    cmds.setAttr(symhelploc + '.rotate' +
+                               axisKey[j][:-1], -10)
+                    orgRollLocPos = cmds.xform(orgRollLoc, q=1, t=1, ws=1)
+                    symRollLocPos = cmds.xform(symRollLoc, q=1, t=1, ws=1)
+
+                    orgRollLocPos[0] = round(orgRollLocPos[0], 1)
+                    orgRollLocPos[1] = round(orgRollLocPos[1], 1)
+                    orgRollLocPos[2] = round(orgRollLocPos[2], 1)
+
+                    symRollLocPos[0] = round(symRollLocPos[0], 1)
+                    symRollLocPos[1] = round(symRollLocPos[1], 1)
+                    symRollLocPos[2] = round(symRollLocPos[2], 1)
+
+                    if symRollLocPos[0] * -1 == orgRollLocPos[0] and symRollLocPos[1] == orgRollLocPos[1] and \
+                            symRollLocPos[2] == orgRollLocPos[2]:
+                        symAxis.append(orgobj + '.rotate' + axisKey[i])
+                        symAxis.append(symobj + '.rotate' + axisKey[j])
+                    else:
+                        # print 'test'
+                        symAxis.append(orgobj + '.rotate' + axisKey[i])
+                        symAxis.append(
+                            symobj + '.rotate' + axisKey[j][:-1])
+
+                elif '-' not in axisKey[j]:
+                    cmds.setAttr(symhelploc + '.rotate' + axisKey[j], 10)
+                    orgRollLocPos = cmds.xform(orgRollLoc, q=1, t=1, ws=1)
+                    symRollLocPos = cmds.xform(symRollLoc, q=1, t=1, ws=1)
+
+                    orgRollLocPos[0] = round(orgRollLocPos[0], 1)
+                    orgRollLocPos[1] = round(orgRollLocPos[1], 1)
+                    orgRollLocPos[2] = round(orgRollLocPos[2], 1)
+
+                    symRollLocPos[0] = round(symRollLocPos[0], 1)
+                    symRollLocPos[1] = round(symRollLocPos[1], 1)
+                    symRollLocPos[2] = round(symRollLocPos[2], 1)
+
+                    if symRollLocPos[0] * -1 == orgRollLocPos[0] and symRollLocPos[1] == orgRollLocPos[1] and \
+                            symRollLocPos[2] == orgRollLocPos[2]:
+                        symAxis.append(orgobj + '.rotate' + axisKey[i])
+                        symAxis.append(symobj + '.rotate' + axisKey[j])
+                    else:
+                        symAxis.append(orgobj + '.rotate' + axisKey[i])
+                        symAxis.append(
+                            symobj + '.rotate' + axisKey[j] + '-')
+
+                # clean
+                cmds.delete(orgRollLoc)
+                cmds.delete(symRollLoc)
+            j += 1
+        i += 1
+
+    cmds.delete(orghelplocGrp, symhelplocGrp)
+    axisNote = {}
+    for i in range(0, len(symAxis), 2):
+        axisNote[symAxis[i]] = symAxis[i + 1]
+    return axisNote
 
 def exportSDKs(nodes, filePath, expType="front"):
     """exports the sdk information based on the provided nodes to a json file

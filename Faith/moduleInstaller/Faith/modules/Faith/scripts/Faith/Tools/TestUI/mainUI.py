@@ -1,94 +1,37 @@
-from PySide2 import QtWidgets,QtCore,QtGui
-from maya import cmds
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import pyqtSlot
 
 
-class CollapsibleHeader(QtWidgets.QWidget):
+class WinForm(QWidget):
+    # button_clicked_signal = pyqtSignal(str, int)	# 信号需要传入指定类型的两个参数
+    # button_clicked_signal02 = pyqtSignal(str, int)
 
-    def __init__(self, text="", parent=None):
-        super(CollapsibleHeader, self).__init__(parent)
+    def __init__(self):
+        super().__init__()
+        self.resize(500, 400)
+        self.btn_colse = QPushButton('close', self)
+        self.btn_colse.clicked.connect(self.btn_clicked)
+        self.line_edit = QLineEdit(self)
+        self.line_edit.move(200, 200)
 
-        self.text_lb = QtWidgets.QLabel()
+    @pyqtSlot()
+    def btn_clicked(self):
+        if self.btn_colse.text() == "close":
+            self.show_edit('btn clicked', 1)
+        elif self.btn_colse.text() == "open":
+            self.show_edit02('btn clicked', 1)
 
-        self.main_layout = QtWidgets.QHBoxLayout(self)
-        self.main_layout.setContentsMargins(4, 4, 4, 4)
-        self.main_layout.addWidget(self.text_lb)
+    def show_edit(self, msg, tag):
+        self.line_edit.setText('msg %s, tag: %s' % (msg, tag))
+        self.btn_colse.setText("open")
 
-        self.set_text(text)
+    def show_edit02(self, msg, tag):
+        self.line_edit.setText('msg %s, tag: %s.....' % (msg, tag))
+        self.btn_colse.setText("close")
 
-    def set_text(self, text):
-        self.text_lb.setText(text)
+if __name__ == '__main__':
 
-
-class CollapsibleWidget(QtWidgets.QWidget):
-
-    def __init__(self, text="", parent=None):
-        super(CollapsibleWidget, self).__init__(parent)
-
-        self.header_wdg = CollapsibleHeader(text)
-
-        self.main_layout = QtWidgets.QVBoxLayout(self)
-        self.main_layout.setContentsMargins(0, 0, 0, 0)
-        self.main_layout.addWidget(self.header_wdg)
-
-
-class TestDialog(QtWidgets.QWidget):
-
-    WINDOW_TITLE = "Test Dialog"
-
-    def __init__(self, parent=None):
-        super(TestDialog, self).__init__(parent)
-
-        self.setWindowTitle(self.WINDOW_TITLE)
-        if cmds.about(ntOS=True):
-            self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
-        elif cmds.about(macos=True):
-            self.setWindowFlags(QtCore.Qt.Tool)
-
-        self.setMinimumSize(250,200)
-
-        self.create_widgets()
-        self.create_layouts()
-
-    def create_widgets(self):
-        self.collasible_wdg_a = CollapsibleWidget("SectionA")
-        self.collasible_wdg_b = CollapsibleWidget("SectionA")
-
-    def create_layouts(self):
-        self.body_wdg = QtWidgets.QWidget()
-
-        self.body_layout = QtWidgets.QVBoxLayout(self.body_wdg)
-        self.body_layout.setContentsMargins(4,2,4,2)
-        self.body_layout.setSpacing(3)
-        self.body_layout.setAlignment(QtCore.Qt.AlignTop)
-
-        self.body_layout.addWidget(self.collasible_wdg_a)
-        self.body_layout.addWidget(self.collasible_wdg_b)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    app = QApplication([])
+    main = WinForm()
+    main.show()
+    app.exec()

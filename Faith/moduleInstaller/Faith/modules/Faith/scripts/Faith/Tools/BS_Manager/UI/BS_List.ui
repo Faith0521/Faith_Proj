@@ -58,39 +58,6 @@
           </property>
          </widget>
         </item>
-        <item>
-         <widget class="QPushButton" name="setting_btn">
-          <property name="minimumSize">
-           <size>
-            <width>20</width>
-            <height>20</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>20</width>
-            <height>20</height>
-           </size>
-          </property>
-          <property name="toolTip">
-           <string>设置</string>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">QPushButton{
-border-image: url(:/icon/SHAPES_preferences_150.png);
-}
-QPushButton:hover{
-border-image: url(:/icon/SHAPES_preferences_150_light.png);
-}
-QPushButton:pressed{
-border-image: url(:/icon/SHAPES_preferences_150_light.png);
-}</string>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-         </widget>
-        </item>
        </layout>
       </item>
       <item>
@@ -182,11 +149,18 @@ border-image: url(:/icon/SHAPES_preferences_150_light.png);
          <number>2</number>
         </property>
         <item>
+         <widget class="QPushButton" name="add_btn">
+          <property name="text">
+           <string>创建</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="MPushButton" name="edit_btn">
           <property name="maximumSize">
            <size>
-            <width>130</width>
-            <height>20</height>
+            <width>16777215</width>
+            <height>16777215</height>
            </size>
           </property>
           <property name="font">
@@ -201,7 +175,7 @@ border-image: url(:/icon/SHAPES_preferences_150_light.png);
            <string notr="true"/>
           </property>
           <property name="text">
-           <string>创建新目标体</string>
+           <string>编辑</string>
           </property>
          </widget>
         </item>
@@ -334,14 +308,14 @@ border-image: url(:/icon/SHAPES_weightExport_200_light.png);
    <header>dayu_widgets.push_button</header>
   </customwidget>
   <customwidget>
-   <class>MLineEdit</class>
-   <extends>QLineEdit</extends>
-   <header>dayu_widgets.line_edit</header>
-  </customwidget>
-  <customwidget>
    <class>MLabel</class>
    <extends>QLabel</extends>
    <header>dayu_widgets.label</header>
+  </customwidget>
+  <customwidget>
+   <class>MLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>dayu_widgets.line_edit</header>
   </customwidget>
   <customwidget>
    <class>MComboBox</class>

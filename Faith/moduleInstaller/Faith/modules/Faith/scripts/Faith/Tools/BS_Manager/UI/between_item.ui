@@ -67,18 +67,6 @@
     </widget>
    </item>
    <item>
-    <widget class="MPushButton" name="set_btn">
-     <property name="font">
-      <font>
-       <family>Consolas</family>
-      </font>
-     </property>
-     <property name="text">
-      <string>设置</string>
-     </property>
-    </widget>
-   </item>
-   <item>
     <widget class="QPushButton" name="delete_btn">
      <property name="minimumSize">
       <size>
@@ -120,11 +108,6 @@ border-image: url(:/icon/SHAPES_keyDeleteAll_light.png);
   </layout>
  </widget>
  <customwidgets>
-  <customwidget>
-   <class>MPushButton</class>
-   <extends>QPushButton</extends>
-   <header>dayu_widgets.push_button</header>
-  </customwidget>
   <customwidget>
    <class>MLabel</class>
    <extends>QLabel</extends>

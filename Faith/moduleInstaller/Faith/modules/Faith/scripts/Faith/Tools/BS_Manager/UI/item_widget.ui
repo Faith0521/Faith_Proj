@@ -447,6 +447,48 @@ border-image: url(:/icon/SHAPES_btn_locator_150_light.png);
      </layout>
     </widget>
    </item>
+   <item>
+    <widget class="QWidget" name="side_setting_widget" native="true">
+     <layout class="QVBoxLayout" name="verticalLayout_4">
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <widget class="QLabel" name="label">
+          <property name="text">
+           <string>左侧</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="lineEdit">
+          <property name="text">
+           <string>left_, _left, Left_, _Left, lt_, _lt, Lt_, _Lt, lft_, _lft, Lft_, _Lft, Lf_, _Lf, lf_, _lf, l_, _l, L_, _L</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <item>
+         <widget class="QLabel" name="label_2">
+          <property name="text">
+           <string>右侧</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="lineEdit_2">
+          <property name="text">
+           <string>right_, _right, Right_, _Right, rt_, _rt, Rt_, _Rt, rgt_, _rgt, Rgt_, _Rgt, Rg_, _Rg, rg_, _rg, r_, _r, R_, _R</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
   </layout>
  </widget>
  <customwidgets>
@@ -456,14 +498,14 @@ border-image: url(:/icon/SHAPES_btn_locator_150_light.png);
    <header>dayu_widgets.push_button</header>
   </customwidget>
   <customwidget>
-   <class>MLineEdit</class>
-   <extends>QLineEdit</extends>
-   <header>dayu_widgets.line_edit</header>
-  </customwidget>
-  <customwidget>
    <class>MLabel</class>
    <extends>QLabel</extends>
    <header>dayu_widgets.label</header>
+  </customwidget>
+  <customwidget>
+   <class>MLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>dayu_widgets.line_edit</header>
   </customwidget>
   <customwidget>
    <class>MComboBox</class>

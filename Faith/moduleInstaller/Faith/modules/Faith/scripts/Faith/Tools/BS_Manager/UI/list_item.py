@@ -14,17 +14,9 @@ from PySide2 import QtCore, QtGui, QtWidgets
 class Ui_listItem_Main(object):
     def setupUi(self, listItem_Main):
         listItem_Main.setObjectName("listItem_Main")
-        listItem_Main.resize(438, 38)
+        listItem_Main.resize(438, 43)
         self.horizontalLayout = QtWidgets.QHBoxLayout(listItem_Main)
         self.horizontalLayout.setObjectName("horizontalLayout")
-        self.val_lb = MLabel().strong()
-        self.val_lb.setMinimumSize(QtCore.QSize(40, 0))
-        self.val_lb.setMaximumSize(QtCore.QSize(16777215, 25))
-        font = QtGui.QFont()
-        font.setFamily("Consolas")
-        self.val_lb.setFont(font)
-        self.val_lb.setObjectName("val_lb")
-        self.horizontalLayout.addWidget(self.val_lb)
         self.connect_btn = MPushButton().small()
         self.connect_btn.setMinimumSize(QtCore.QSize(25, 25))
         self.connect_btn.setMaximumSize(QtCore.QSize(25, 25))
@@ -53,7 +45,5 @@ class Ui_listItem_Main(object):
     def retranslateUi(self, listItem_Main):
         _translate = QtCore.QCoreApplication.translate
         listItem_Main.setWindowTitle(_translate("listItem_Main", "Form"))
-        self.val_lb.setText(_translate("listItem_Main", "0.00"))
-from dayu_widgets.label import MLabel
 from dayu_widgets.line_edit import MLineEdit
 from dayu_widgets.push_button import MPushButton

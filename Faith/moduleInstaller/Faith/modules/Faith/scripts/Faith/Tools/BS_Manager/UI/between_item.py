@@ -39,12 +39,6 @@ class Ui_in_item_Main(object):
         self.val_slider.setOrientation(QtCore.Qt.Horizontal)
         self.val_slider.setObjectName("val_slider")
         self.horizontalLayout.addWidget(self.val_slider)
-        self.set_btn = MPushButton().small()
-        font = QtGui.QFont()
-        font.setFamily("Consolas")
-        self.set_btn.setFont(font)
-        self.set_btn.setObjectName("set_btn")
-        self.horizontalLayout.addWidget(self.set_btn)
         self.delete_btn = QtWidgets.QPushButton(in_item_Main)
         self.delete_btn.setMinimumSize(QtCore.QSize(25, 25))
         self.delete_btn.setMaximumSize(QtCore.QSize(25, 25))
@@ -72,10 +66,8 @@ class Ui_in_item_Main(object):
         _translate = QtCore.QCoreApplication.translate
         in_item_Main.setWindowTitle(_translate("in_item_Main", "Form"))
         self.base_lb.setText(u"数值")
-        self.set_btn.setText(u"设置")
         self.delete_btn.setToolTip(u"删除")
 from dayu_widgets.label import MLabel
-from dayu_widgets.push_button import MPushButton
 from dayu_widgets.slider import MSlider
 from dayu_widgets.spin_box import MDoubleSpinBox 
 from dayu_widgets.static import icon_rc

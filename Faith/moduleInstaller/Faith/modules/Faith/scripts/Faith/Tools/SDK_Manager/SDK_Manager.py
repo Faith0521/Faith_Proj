@@ -87,7 +87,8 @@ class DockableMainUI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         :return:
         """
         self.mainUI.load_btn.clicked.connect(self.loadObj)
-        self.mainUI.refresh_btn.clicked.connect(self.refreshList)
+        self.mainUI.refresh_btn.clicked.connect(lambda : self.refreshList(self.mainUI.node_le.text()))
+        self.mainUI.mirror_btn.clicked.connect(self.mirrorNode)
         self.mainUI.node_le.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.mainUI.node_le.customContextMenuRequested.connect(self.le_menu)
         self.mainUI.driven_list.clicked.connect(self._refreshDriver)
@@ -310,6 +311,18 @@ class DockableMainUI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
                 aboutSDK.mirrorSDKs([node], attributes=[attr])
             else:
                 MMessage.warning("Selected item {0}.{1} is not exists.".format(node, attr), parent = self)
+
+    def mirrorNode(self):
+        """
+
+        :return:
+        """
+        node = self.mainUI.node_le.text()
+        try:
+            aboutSDK.mirrorSDKs([node], attributes=[])
+        except RuntimeError as msg:
+            print(msg)
+            return False
 
     def delUselessNode(self):
 

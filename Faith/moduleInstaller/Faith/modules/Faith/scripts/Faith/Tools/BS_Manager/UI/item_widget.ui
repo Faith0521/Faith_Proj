@@ -229,6 +229,24 @@ border-image: url(:/icon/SHAPES_select_150_light.png);
          </widget>
         </item>
         <item>
+         <widget class="MDoubleSpinBox " name="start_spin">
+          <property name="font">
+           <font>
+            <family>Consolas</family>
+           </font>
+          </property>
+          <property name="buttonSymbols">
+           <enum>QAbstractSpinBox::NoButtons</enum>
+          </property>
+          <property name="maximum">
+           <double>9999999.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.001000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QPushButton" name="startAdd_btn">
           <property name="minimumSize">
            <size>
@@ -262,11 +280,14 @@ border-image: url(:/icon/SHAPES_btn_locator_150_light.png);
          </widget>
         </item>
         <item>
-         <widget class="MDoubleSpinBox " name="start_spin">
+         <widget class="MDoubleSpinBox " name="end_spin">
           <property name="font">
            <font>
             <family>Consolas</family>
            </font>
+          </property>
+          <property name="buttonSymbols">
+           <enum>QAbstractSpinBox::NoButtons</enum>
           </property>
           <property name="maximum">
            <double>9999999.000000000000000</double>
@@ -306,21 +327,6 @@ border-image: url(:/icon/SHAPES_btn_locator_150_light.png);
           </property>
           <property name="text">
            <string/>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="MDoubleSpinBox " name="end_spin">
-          <property name="font">
-           <font>
-            <family>Consolas</family>
-           </font>
-          </property>
-          <property name="maximum">
-           <double>9999999.000000000000000</double>
-          </property>
-          <property name="singleStep">
-           <double>0.001000000000000</double>
           </property>
          </widget>
         </item>

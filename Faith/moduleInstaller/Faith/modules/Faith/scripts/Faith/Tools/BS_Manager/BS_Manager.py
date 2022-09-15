@@ -172,8 +172,16 @@ class BS_Manager(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.collapsible_wdg_b.add_widget(self.betweenUI)
         self.betweenUI.val_dspin.valueChanged.connect(self.SpinValueChange)
         self.betweenUI.val_slider.valueChanged.connect(self.SliderValueChange)
+        self.betweenUI.delete_btn.clicked.connect(self.deleteTarget)
         value = cmds.getAttr("%s.%s" % (self.BlendNode, self.widgetInfo["widgetInfo"][1]))
         self.betweenUI.val_dspin.setValue(value)
+
+    def deleteTarget(self):
+        """
+
+        :return:
+        """
+        return
 
     def SpinValueChange(self):
         """
@@ -394,7 +402,7 @@ class BS_Manager(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         # CCS
         pm.select(mesh)
         ccsReturn = corrective.invert(base=mesh, name=None, targetName=editTargetName, invert=inputTarget[0].name())
-        ccsShape = cmds.listHistory(ccsReturn[1], pdo=True)
+        # ccsShape = cmds.listHistory(ccsReturn[1], pdo=True)
 
         cmds.select(ccsReturn[0])
         self.deleteGrp.append(ccsReturn[0])

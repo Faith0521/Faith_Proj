@@ -227,7 +227,7 @@ class Ui_Form(object):
         self.create_hb = QtWidgets.QHBoxLayout()
         self.create_hb.setObjectName("create_hb")
         self.verticalLayout_2.addLayout(self.create_hb)
-        self.create_btn = MPushButton(Form)
+        self.create_btn = MPushButton()
         font = QtGui.QFont()
         font.setFamily("Consolas")
         self.create_btn.setFont(font)

@@ -218,6 +218,12 @@ border-image: url(:/icon/SHAPES_select_150_light.png);
        <layout class="QHBoxLayout" name="time_hb">
         <item>
          <widget class="MLabel" name="time_lb">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
           <property name="font">
            <font>
             <family>Consolas</family>
@@ -229,7 +235,7 @@ border-image: url(:/icon/SHAPES_select_150_light.png);
          </widget>
         </item>
         <item>
-         <widget class="MDoubleSpinBox " name="start_spin">
+         <widget class="QDoubleSpinBox" name="start_spin">
           <property name="font">
            <font>
             <family>Consolas</family>
@@ -247,40 +253,7 @@ border-image: url(:/icon/SHAPES_select_150_light.png);
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="startAdd_btn">
-          <property name="minimumSize">
-           <size>
-            <width>20</width>
-            <height>20</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>20</width>
-            <height>20</height>
-           </size>
-          </property>
-          <property name="toolTip">
-           <string>设置</string>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">QPushButton{
-border-image: url(:/icon/SHAPES_btn_locator_150.png);
-}
-QPushButton:hover{
-border-image: url(:/icon/SHAPES_btn_locator_150_light.png);
-}
-QPushButton:pressed{
-border-image: url(:/icon/SHAPES_btn_locator_150_light.png);
-}</string>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="MDoubleSpinBox " name="end_spin">
+         <widget class="QDoubleSpinBox" name="end_spin">
           <property name="font">
            <font>
             <family>Consolas</family>
@@ -294,39 +267,6 @@ border-image: url(:/icon/SHAPES_btn_locator_150_light.png);
           </property>
           <property name="singleStep">
            <double>0.001000000000000</double>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="endAdd_btn">
-          <property name="minimumSize">
-           <size>
-            <width>20</width>
-            <height>20</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>20</width>
-            <height>20</height>
-           </size>
-          </property>
-          <property name="toolTip">
-           <string>设置</string>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">QPushButton{
-border-image: url(:/icon/SHAPES_btn_locator_150.png);
-}
-QPushButton:hover{
-border-image: url(:/icon/SHAPES_btn_locator_150_light.png);
-}
-QPushButton:pressed{
-border-image: url(:/icon/SHAPES_btn_locator_150_light.png);
-}</string>
-          </property>
-          <property name="text">
-           <string/>
           </property>
          </widget>
         </item>
@@ -459,14 +399,14 @@ border-image: url(:/icon/SHAPES_btn_locator_150_light.png);
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_2">
         <item>
-         <widget class="QLabel" name="label">
+         <widget class="MLabel" name="label">
           <property name="text">
            <string>左侧</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="lineEdit">
+         <widget class="MLineEdit" name="lineEdit">
           <property name="text">
            <string>left_, _left, Left_, _Left, lt_, _lt, Lt_, _Lt, lft_, _lft, Lft_, _Lft, Lf_, _Lf, lf_, _lf, l_, _l, L_, _L</string>
           </property>
@@ -477,14 +417,14 @@ border-image: url(:/icon/SHAPES_btn_locator_150_light.png);
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_3">
         <item>
-         <widget class="QLabel" name="label_2">
+         <widget class="MLabel" name="label_2">
           <property name="text">
            <string>右侧</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="lineEdit_2">
+         <widget class="MLineEdit" name="lineEdit_2">
           <property name="text">
            <string>right_, _right, Right_, _Right, rt_, _rt, Rt_, _Rt, rgt_, _rgt, Rgt_, _Rgt, Rg_, _Rg, rg_, _rg, r_, _r, R_, _R</string>
           </property>
@@ -522,11 +462,6 @@ border-image: url(:/icon/SHAPES_btn_locator_150_light.png);
    <class>MRadioButton</class>
    <extends>QRadioButton</extends>
    <header>dayu_widgets.radio_button</header>
-  </customwidget>
-  <customwidget>
-   <class>MDoubleSpinBox </class>
-   <extends>QDoubleSpinBox</extends>
-   <header>dayu_widgets.spin_box</header>
   </customwidget>
  </customwidgets>
  <resources>

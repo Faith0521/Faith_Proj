@@ -449,5 +449,50 @@ public:
 	static	MObject			aOutputScale;
 };
 
+class resetData
+{
+public:
+	resetData();
+
+public:
+	MPlug					plugBindPre;
+	MMatrix					matBindPreOrig;
+	MPlug					plugBindPose;
+	MMatrix					matBindOrig;
+	resetData*				next;
+};
+
+class resetSkinJoint : public MPxCommand
+{
+public:
+	resetSkinJoint();
+	virtual					~resetSkinJoint();
+
+	MStatus					doIt(const MArgList&);
+	MStatus					redoIt();
+	MStatus					undoIt();
+	bool					isUndoable() const;
+
+	static	void*			creator();
+	static  MSyntax			newSyntax();
+
+private:
+	MStatus					parseArgs(const MArgList& argList);
+	void					showUsage(void);
+
+
+private:
+	unsigned uJnts;			 // How many objs/joints passed in?
+	MSelectionList sListComp;	 // What is selected/passed in obj.comp wise?
+	resetData* ptrResetData;	 // Ptr to alloc of start of linked list of data needed for undo.
+
+	MString strSkinCl;			// Name of specific skinCluster to reset if we only want to reset that one.
+
+
+	void freeData(void);		 // delete any linked list
+
+};
+
+
 #endif // !IKNODE_H
 

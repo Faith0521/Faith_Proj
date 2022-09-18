@@ -6,6 +6,12 @@
 import maya.cmds as cmds,pymel.core as pm,maya.mel as mel
 import maya.OpenMaya as OpenMaya
 import math
+from Faith.Core.aboutPy import PY2
+
+if PY2:
+    UNICODETYPE = unicode
+else:
+    UNICODETYPE = str
 
 def invert(base=None, name=None, targetName=None,invert=None):
     """Inverts a shape through the deformation chain.
@@ -204,7 +210,7 @@ def get_points(path, space=OpenMaya.MSpace.kObject):
     @param[in] space Space to get the points.
     @return The MPointArray of points.
     """
-    if isinstance(path, str) or isinstance(path, unicode):
+    if isinstance(path, UNICODETYPE):
         path = get_dag_path(get_shape(path))
     it_geo = OpenMaya.MItGeometry(path)
     points = OpenMaya.MPointArray()
@@ -218,7 +224,7 @@ def set_points(path, points, space=OpenMaya.MSpace.kObject):
     @param[in] points MPointArray of points.
     @param[in] space Space to get the points.
     """
-    if isinstance(path, str) or isinstance(path, unicode):
+    if isinstance(path, UNICODETYPE):
         path = get_dag_path(get_shape(path))
     it_geo = OpenMaya.MItGeometry(path)
     it_geo.setAllPositions(points, space)
@@ -274,71 +280,99 @@ def rebuildTarget(attr):
     cmds.connectAttr('%s.worldMesh[0]' % newMeshShape, '%s.it[0].itg[%s].iti[6000].igt' % (bsName, targetIndex))
     return newTarget
 
-def MirrorShapes(originalObj, shapeToCopy, xyz, shapePosition, newName, shapeOffset):
+def mirrorTarget(attrStr='bsName.weightName',searchStr = 'lf_',searchToStr = 'rt_'):
     """
-
-    :param originalObj:
-    :param shapeToCopy:
-    :param xyz:
-    :param shapePosition:
-    :param newName:
-    :param shapeOffset:
+    镜像指定名称的bs目标体
+    :param attrStr:
+    :param searchStr:
+    :param searchToStr:
     :return:
     """
-    attributes = ["translate", "rotate", "scale"]
-    axies = ["X", "Y", "Z"]
-    [cmds.setAttr("%s.%s%s"%(originalObj, attr, axis), lock=0) for attr in attributes for axis in axies]
+    bsName,attrName = attrStr.split('.')
+    bsNode = pm.PyNode(bsName)
+    geometryNode = bsNode.getBaseObjects()[0].getParent()
+    orgShape = bsNode.getInputGeometry()[0].name()
+    toAttrName = attrName.replace(searchStr, searchToStr)
+    bsWeightList = pm.listAttr(bsNode.w, m=True)
+    targetIndex = pm.PyNode(attrStr).index()
 
-    mirrorObj = shapeToCopy + "suffTemp"
-    cmds.duplicate(originalObj, rr=True, n="scaleObj")
-    cmds.duplicate(originalObj, rr=1, n='tempName')
-    cmds.rename('tempName', mirrorObj)
+    if not searchStr in attrName:
+        return False
+    inputTarget = cmds.listConnections('%s.it[0].itg[%s].iti[6000].igt'%(bsName,targetIndex),d=False)
+    if not inputTarget:
+        inputTarget = rebuildTarget(attrStr)
 
-    posScaleAttr = 0
-    negScaleAttr = 0
+    if toAttrName in bsWeightList:
+        toAttr_targetIndex = pm.PyNode('%s.%s' % (bsName, toAttrName)).index()
+        toAttr_inputTarget = cmds.listConnections('%s.it[0].itg[%s].iti[6000].igt' % (bsName, toAttr_targetIndex),
+                                                  d=False)
+        if not toAttr_inputTarget:
+            toAttr_inputTarget = rebuildTarget('%s.%s' % (bsName, toAttrName))
+    else:
+        # toTarget not exists   so   create new one
+        newMeshShape = cmds.createNode('mesh', n='%sShape' % toAttrName)
+        newTarget = cmds.listRelatives(newMeshShape, p=True)
+        cmds.hide(newTarget)
+        cmds.connectAttr('%s.worldMesh[0]' % orgShape, '%s.inMesh' % newMeshShape)
+        cmds.refresh(f=True)
+        cmds.disconnectAttr('%s.worldMesh[0]' % orgShape, '%s.inMesh' % newMeshShape)
+        addBlendShape(targetList=newTarget, toObj=geometryNode.name())
+        toAttr_inputTarget = newTarget
 
-    if xyz == 1:
-        posScaleAttr = float(cmds.getAttr('scaleObj.scaleX'))
-        negScaleAttr = -1 * posScaleAttr
-        cmds.setAttr('scaleObj.scaleX', negScaleAttr)
-    if xyz == 2:
-        posScaleAttr = float(cmds.getAttr('scaleObj.scaleY'))
-        negScaleAttr = -1 * posScaleAttr
-        cmds.setAttr('scaleObj.scaleY', negScaleAttr)
-    if xyz == 3:
-        posScaleAttr = float(cmds.getAttr('scaleObj.scaleZ'))
-        negScaleAttr = -1 * posScaleAttr
-        cmds.setAttr('scaleObj.scaleZ', negScaleAttr)
+        # reverse WRAP
+        # ---createORG
+    newMeshShape = cmds.createNode('mesh', n='%sShape' % 'TEMP_ORG')
+    newTarget = cmds.listRelatives(newMeshShape, p=True)
+    cmds.hide(newTarget)
+    cmds.connectAttr('%s.worldMesh[0]' % orgShape, '%s.inMesh' % newMeshShape)
+    cmds.refresh(f=True)
+    cmds.disconnectAttr('%s.worldMesh[0]' % orgShape, '%s.inMesh' % newMeshShape)
+    toWrapGeo = reverseWrap([inputTarget[0], newTarget[0]], False)
+    # wrapMesh connect toTargetMesh
+    cmds.connectAttr('%s.worldMesh[0]' % toWrapGeo[0], '%s.inMesh' % toAttr_inputTarget[0])
+    cmds.refresh(f=True)
+    cmds.disconnectAttr('%s.worldMesh[0]' % toWrapGeo[0], '%s.inMesh' % toAttr_inputTarget[0])
+    # setZero
+    vtxAttrList = cmds.ls('%s.pnts[*]' % toAttr_inputTarget[0], fl=True)
+    setDataList = len(vtxAttrList) * [0, 0, 0]
+    cmds.setAttr('%s.pnts[*]' % toAttr_inputTarget[0], *setDataList)
+    # clean
+    cmds.delete(toWrapGeo, newTarget, inputTarget, toAttr_inputTarget)
 
-    cmds.blendShape(shapeToCopy, 'scaleObj', frontOfChain=1, n='blendShapeToWarp')
-    cmds.select(mirrorObj, 'scaleObj', r=1)
-    wrap = mel.eval('doWrapArgList "6" { "1","0","1", "2", "1", "1", "0" };')
-    cmds.rename(wrap[0], 'wrapToMirror')
-    cmds.setAttr('wrapToMirror.exclusiveBind', 1)
-    blendShapeAttr = 'blendShapeToWarp.' + shapeToCopy
-    cmds.setAttr(blendShapeAttr, 1)
-    cmds.select(mirrorObj, r=1)
-    cmds.DeleteHistory()
-    cmds.delete(ch=1)
-    cmds.delete('scaleObjBase', 'scaleObj')
-    offsetX = shapeOffset[0]
-    offsetY = shapeOffset[1]
-    offsetZ = shapeOffset[2]
-    if shapePosition == 1:
-        shapeTCAttrX = shapeToCopy + '.tx'
-        shapeTCAttrY = shapeToCopy + '.ty'
-        shapeTCAttrZ = shapeToCopy + '.tz'
-        shapeTCPositionX = float(cmds.getAttr(shapeTCAttrX)) + offsetX
-        shapeTCPositionY = float(cmds.getAttr(shapeTCAttrY)) + offsetY
-        shapeTCPositionZ = float(cmds.getAttr(shapeTCAttrZ)) + offsetZ
-        mirrorObjPositionX = mirrorObj + '.tx'
-        mirrorObjPositionY = mirrorObj + '.ty'
-        mirrorObjPositionZ = mirrorObj + '.tz'
-        cmds.setAttr(mirrorObjPositionX, shapeTCPositionX)
-        cmds.setAttr(mirrorObjPositionY, shapeTCPositionY)
-        cmds.setAttr(mirrorObjPositionZ, shapeTCPositionZ)
-    cmds.select(mirrorObj, r=1)
-    cmds.rename(mirrorObj, newName)
+def addBlendShape(targetList=[],toObj = ''):
+    #2list
+    if type(targetList) != list:
+        targetList = [targetList]
+    #top
+    returnList = []
+    bsNode = pm.listHistory(toObj,pdo=True,type='blendShape')
+    if not bsNode:
+        bsNode = pm.blendShape(toObj,foc=True,n='%s_correctiveBs'%toObj)
+    for targetE in targetList:
+        #no exists
+        if not cmds.objExists(targetE):
+            #create new target
+            pm_toObj = pm.PyNode(toObj)
+            orgShape = pm_toObj.getShapes()[-1].name()
+            newMeshShape = cmds.createNode('mesh',n='%sShape'%targetE)
+            newTarget = cmds.listRelatives(newMeshShape,p=True)
+            cmds.hide(newTarget)
+            cmds.connectAttr('%s.worldMesh[0]'%orgShape,'%s.inMesh'%newMeshShape)
+            cmds.refresh(f=True)
+            cmds.disconnectAttr('%s.worldMesh[0]'%orgShape,'%s.inMesh'%newMeshShape)
+        #targetExists
+        targetAttr = '%s.%s'%(bsNode[0],targetE)
+        if cmds.objExists(targetAttr):
+            continue
+        #get Max+1 index
+        wiList = bsNode[0].weightIndexList()
+        if wiList:
+            newIndex = wiList[-1]+1
+        else:
+            newIndex = 0
+        pm.blendShape(bsNode[0],e=True,t=(toObj,newIndex,targetE,1))
+        returnList.append(targetAttr)
+    return returnList
 
 def meshOrig(meshNode):
     MeshOrigList = []
@@ -387,19 +421,39 @@ def removeTarget(blendShapeName, target):
     count = cmds.getAttr('%s.inputTarget[0].inputTargetGroup'%blendShapeName, mi=True)[(-1)] + 1
     tragetIndexItem = getWeightIndex(blendShapeName, target)
 
-def creativeTarget(blendShape, target=[], prefix=None):
+def InputTargetGroup(blendShapeNode, target):
+    tragetIndexItem = getWeightIndex(blendShapeNode, target)
+    return tragetIndexItem
+
+def reverseWrap(objList=[],deleteWrapGroup=True):
     """
 
-    :param blendShape:
-    :param target:
-    :param prefix:
+    :param objList:
+    :param deleteWrapGroup:
     :return:
     """
-    listConnect = []
-    listConnect_target = []
-    listLock_target = []
-    listValue_target = []
-    listConnect_Name = []
-    MeshOrigList = []
-    listTargetBlendShape = cmds.listAttr(blendShape + '.weight', multi=True)
-    
+    if not cmds.objExists('reverseWrap_delete') and objList:  # create wrapGroup
+        deleteGroup = cmds.group(em=True, n='reverseWrap_delete')
+        wrapGeo = cmds.duplicate(objList[1], rr=True, name=('reverseWrap_outputGeometry'))
+        newBaseGeo = cmds.duplicate(objList[1], n='reverseWrap_bsGeometry')
+        cmds.parent(newBaseGeo, wrapGeo, deleteGroup)
+        cmds.setAttr(newBaseGeo[0] + '.sx', -1)
+        cmds.select(wrapGeo, newBaseGeo[0])
+        mel.eval('doWrapArgList "7" { "1","0","1", "2", "1", "1", "1", "0" };')
+
+    else:
+        deleteGroup = ['reverseWrap_delete']
+        wrapGeo = ['reverseWrap_outputGeometry']
+        newBaseGeo = ['reverseWrap_bsGeometry']
+    reverseGeo = []
+    if objList:  # output
+        bsNodeName = cmds.blendShape(objList[0], newBaseGeo[0], w=(0, 1))
+        cmds.refresh(f=True)
+        reverseGeo = cmds.duplicate(wrapGeo[0], n=objList[0] + '_reverseWrap')
+        cmds.parent(reverseGeo, w=True)
+        cmds.delete(bsNodeName)
+    if deleteWrapGroup:  # delete useless
+        cmds.delete(wrapGeo[0], ch=True)
+        cmds.delete(deleteGroup)
+    return reverseGeo
+

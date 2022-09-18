@@ -38,7 +38,7 @@
    </widget>
    <widget class="QMenu" name="menuSettings">
     <property name="title">
-     <string>设置</string>
+     <string>工具</string>
     </property>
     <addaction name="action"/>
    </widget>

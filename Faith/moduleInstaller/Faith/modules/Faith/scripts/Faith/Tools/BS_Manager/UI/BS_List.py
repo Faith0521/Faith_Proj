@@ -30,27 +30,12 @@ class Ui_BS_ListMain(object):
         self.load_btn.setFont(font)
         self.load_btn.setObjectName("load_btn")
         self.load_hb.addWidget(self.load_btn)
-        self.load_le = MLineEdit().small()
+        self.load_le = MLineEdit()
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         self.load_le.setFont(font)
         self.load_le.setObjectName("load_le")
         self.load_hb.addWidget(self.load_le)
-        self.setting_btn = QtWidgets.QPushButton(self.list_widget)
-        self.setting_btn.setMinimumSize(QtCore.QSize(20, 20))
-        self.setting_btn.setMaximumSize(QtCore.QSize(20, 20))
-        self.setting_btn.setStyleSheet("QPushButton{\n"
-"border-image: url(:/icon/SHAPES_preferences_150.png);\n"
-"}\n"
-"QPushButton:hover{\n"
-"border-image: url(:/icon/SHAPES_preferences_150_light.png);\n"
-"}\n"
-"QPushButton:pressed{\n"
-"border-image: url(:/icon/SHAPES_preferences_150_light.png);\n"
-"}")
-        self.setting_btn.setText("")
-        self.setting_btn.setObjectName("setting_btn")
-        self.load_hb.addWidget(self.setting_btn)
         self.verticalLayout_2.addLayout(self.load_hb)
         self.bs_hb = QtWidgets.QHBoxLayout()
         self.bs_hb.setObjectName("bs_hb")
@@ -62,7 +47,7 @@ class Ui_BS_ListMain(object):
         self.bs_lb.setFont(font)
         self.bs_lb.setObjectName("bs_lb")
         self.bs_hb.addWidget(self.bs_lb)
-        self.bs_cb = MComboBox().small()
+        self.bs_cb = MComboBox()
         font = QtGui.QFont()
         font.setFamily("Consolas")
         self.bs_cb.setFont(font)
@@ -81,7 +66,7 @@ class Ui_BS_ListMain(object):
         self.target_lb.setAlignment(QtCore.Qt.AlignCenter)
         self.target_lb.setObjectName("target_lb")
         self.verticalLayout_2.addWidget(self.target_lb)
-        self.search_le = MLineEdit(self.list_widget)
+        self.search_le = MLineEdit()
         self.search_le.setMaximumSize(QtCore.QSize(16777215, 20))
         self.search_le.setObjectName("search_le")
         self.verticalLayout_2.addWidget(self.search_le)
@@ -163,7 +148,6 @@ class Ui_BS_ListMain(object):
         self.load_btn.setToolTip(u"加载模型")
         self.load_btn.setText(u"加载")
         self.load_le.setPlaceholderText(u"加载所选模型")
-        self.setting_btn.setToolTip(u"设置")
         self.bs_lb.setText(u"BS名称")
         self.bs_cb.setItemText(0, _translate("BS_ListMain", "None"))
         self.target_lb.setText(u"BlendShape目标体列表")

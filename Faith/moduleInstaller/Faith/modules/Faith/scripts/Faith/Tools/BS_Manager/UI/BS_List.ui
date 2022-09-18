@@ -149,7 +149,7 @@
          <number>2</number>
         </property>
         <item>
-         <widget class="QPushButton" name="add_btn">
+         <widget class="MPushButton" name="add_btn">
           <property name="text">
            <string>创建</string>
           </property>

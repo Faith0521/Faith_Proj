@@ -1,0 +1,104 @@
+<html>
+<head>
+<title>resetSkinJoint</title>
+</head>
+<body bgcolor="#505050" text="#d0d0d0" link="#5070ff"
+vlink="#201070" alink="#FFFF00">
+
+
+<h2>resetSkinJoint</h2>
+<p>
+<pre>
+resetSkinJoint - Skin Reset Maya Plugin by Michael B. Comet
+Copyright ©2004 Michael B. Comet
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+    For information on poseDeformer contact:
+        Michael B. Comet - comet@comet-cartoons.com
+        or visit http://www.comet-cartooons.com/toons/
+</pre>
+<p>
+
+<u><b>DESCRIPTION:</b></u>
+<p>
+This plugin provides a simple way to easily "reset" any joint used in a Maya 
+skinCluster, so that it's current transform (position, rotation, scale) 
+becomes the bind transform, as if it was just bound.  
+<p>
+This allows easily adjustment the rest pose of the joint after skinning, without having 
+to unskin, and then reskin and reload weights.  This also resets the bindPose
+data so any bindPose nodes are also corrected.
+<p>
+
+<u><b>REQUIREMENTS:</b></u>
+<p>
+This recompiled plugin requires a Windows version of Maya 6.0.
+<p>
+
+<u><b>INSTALL:</b></u>
+<p>
+<ol>
+<li>Quit Maya if it is running.
+<p>
+<li>Unzip the contents of the ZIP file.
+<p>
+<li>Copy the <b>resetSkinJoint.mll</b> to the Maya binary plugin path where you installed
+Maya.  This is typically:<br>
+&nbsp; &nbsp; &nbsp; &nbsp;  <b>C:\Program Files\Alias\Maya6.0\bin\plug-ins\</b>
+<p>
+<li>Restart Maya.
+<p>
+<li>Open to the menu for Window | Setting/Preferences | Plug-in Manager...
+<p>
+<li>Look for the "resetSkinJoint.mll" entry in the window.  Choose "loaded" to load
+the plugin.  You can also check the "auto load" box so that the plugin is loaded 
+automatically every time you start Maya.
+<p>
+<li>Close the dialog.
+<p>
+<li>Choose File | Save Preferences to make sure your prefs are saved.
+<p>
+<li>The plugin is now loaded and installed, you can now use the new MEL command
+called "resetSkinJoint".
+<p>
+</ol>
+<p>
+
+<u><b>USAGE:</b></u>	
+<ol>
+<li>Make some joints and skin them to a mesh.
+<p>
+<li>Move one or more of the joints to some other location other then where they were bound.
+<p>
+<li>Select the same joints you moved (and any of their children) and type 
+	in "resetSkinJoint" without quotes into the script editor or command line and enter it.  
+<p>
+<li>The joints will now work as if this is where you originally skinned them.  You can
+undo if desired.
+<p>
+<b>IMPORTANT: If you have a hierarchy of joints, you should select ALL the children
+that are skinned in addition to the one you want to reset, otherwise you will have 
+only reset the parent joint and not the joints below, so the mesh may not look or 
+function as expected.
+</b>
+</ol>
+
+
+
+<hr>
+<a href="http://www.comet-cartoons.com/toons/">Comet Cartoons - http://www.comet-cartoons.com/</a> - Michael B. Comet
+</body>
+</html>

@@ -41,13 +41,11 @@ def install_skin():
 
 str_show_sdk = """
 import Faith.Tools.SDK_Manager.SDK_Manager as sdk
-reload(sdk)
 sdk.show_guide_component_manager()
 """
 
 str_bs_show = """
 from Faith.Tools.BS_Manager import BS_Manager as bs
-reload(bs)
 bs.show()
 """
 str_ccs = """

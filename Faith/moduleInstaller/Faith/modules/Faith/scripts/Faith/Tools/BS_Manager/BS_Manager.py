@@ -15,6 +15,7 @@ from Faith.Tools.BS_Manager.UI import between_item as betweenui
 from Faith.Tools.BS_Manager.UI import driver as drvui
 from Faith.Tools.BS_Manager.UI import MainWin as mainWin
 from Faith.Tools.BS_Manager import corrective
+from Faith.maya_utils import blendShape_utils
 from Faith.Core import aboutUI
 
 from dayu_widgets.line_tab_widget import MLineTabWidget
@@ -87,7 +88,7 @@ class BS_Manager(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.drvUI = BS_drvUI()
 
         self.widgetInfo = {}
-        self.deleteGrp = []
+        self.deleteGrp = ()
 
         self.create_widgets()
         self.create_layouts()
@@ -240,10 +241,8 @@ class BS_Manager(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         """
         self.listUI.edit_btn.setText(u"编辑")
         if self.deleteGrp:
-            try:
-                pm.delete(self.deleteGrp)
-            except Exception as msg:
-                RuntimeError(msg)
+            cmds.delete(self.deleteGrp[0],ch=1)
+            cmds.delete(self.deleteGrp)
         cmds.setAttr(self.listUI.load_le.text() + ".v", 1)
         self.listUI.edit_btn.setStyleSheet("")
 
@@ -364,10 +363,12 @@ class BS_Manager(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         except TypeError:
             pass
 
+
     def loadMesh(self, sel):
         if len(sel) > 0 and self.meshExists(sel):
             self.listUI.load_le.setText(sel)
             self.listUI.load_le.setEnabled(False)
+
 
     def correctivePose(self, mesh, bsName, editTargetName):
         """
@@ -380,7 +381,7 @@ class BS_Manager(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.betweenUI.val_dspin.setValue(1.0)
         self.listUI.edit_btn.setText(u"退出")
         self.listUI.edit_btn.setStyleSheet("background-color:red;")
-        if isinstance(bsName, unicode) or isinstance(bsName, str):
+        if isinstance(bsName, str):
             bsName = pm.PyNode(bsName)
         targetIndex = bsName.attr(editTargetName).index()
         inputTarget = bsName.it[0].itg[targetIndex].iti[6000].igt.listConnections(d=False)
@@ -389,7 +390,7 @@ class BS_Manager(MayaQWidgetDockableMixin, QtWidgets.QDialog):
             orgGeo[0].outMesh >> pm.PyNode(inputTarget[0]).inMesh
         else:
             # rebuild target
-            inputTarget = corrective.rebuildTarget('%s.%s' % (bsName.name(), editTargetName))
+            inputTarget = blendShape_utils.rebuildTarget('%s.%s' % (bsName.name(), editTargetName))
             inputTarget = [pm.PyNode(inputTarget[0])]
         # beZero
         orgGeo = bsName.getInputGeometry()
@@ -401,8 +402,9 @@ class BS_Manager(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         ccsReturn = corrective.invert(base=mesh, name=None, targetName=editTargetName, invert=inputTarget[0].name())
 
         cmds.select(ccsReturn[0])
-        self.deleteGrp.append(ccsReturn[0])
-        self.deleteGrp.append(ccsReturn[2])
+        cmds.refresh()
+        self.deleteGrp += (inputTarget[0].name(), ccsReturn[0], ccsReturn[-1],)
+
 
     def mirrorBlendShape(self):
         xyz = 1
@@ -413,44 +415,12 @@ class BS_Manager(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         elif self.collapse_item.z_rb.isChecked():
             xyz = 3
 
-        self.sourceField = self.collapse_item.name_le.text()
-        targetBlendShapeWeight = cmds.listAttr(self.BlendNode + '.weight', multi=True)
-
-        if cmds.objExists(self.sourceField):
-            standerd = len(cmds.ls('*%s*' % self.sourceField))
-            nMirror = self.sourceField + '_' + str(standerd)
-        else:
-            nMirror = self.sourceField
-
-        nameMirror = nMirror
-        if targetBlendShapeWeight.__contains__(nameMirror):
-            MToast.warning(u'属性:%s可能已经存在.'%nameMirror, self)
-            return
-
-        targetIndex = -1
-        shapeToMirror = self.targetBlendShapeText
-        baseMesh = cmds.createNode("mesh", name="baseIn_%s"%self.MeshNode)
-        cmds.sets(baseMesh, edit=True, forceElement='initialShadingGroup')
-        listMeshShape_Orig = corrective.meshOrig(self.MeshNode)
-        cmds.connectAttr(listMeshShape_Orig[0] + '.outMesh', baseMesh + '.inMesh')
-        base = cmds.listRelatives(baseMesh, p=True, f=1)[0]
-
-        count = self.count
-        corrective.duplicateMesh(self.MeshNode, nameMirror)
-        cmds.blendShape(self.BlendNode, edit=True, target=(self.MeshNode, int(count), nameMirror, 1.0))
-        cmds.delete(nameMirror)
-
-        sel = corrective.creativeTarget(self.BlendNode, [shapeToMirror], prefix=1)
-        traget_BlendShape = shapeToMirror
-
-        for i in range(len(sel)):
-            targetN = str(sel[i].replace())
-
 
     @property
     def count(self):
         count = cmds.getAttr(self.BlendNode + '.inputTarget[0].inputTargetGroup', mi=True)[(-1)] + 1
         return count
+
 
     @property
     def targetBlendShapeText(self):
@@ -462,6 +432,7 @@ class BS_Manager(MayaQWidgetDockableMixin, QtWidgets.QDialog):
             return "None"
         targetText = self.widgetInfo["widgetInfo"][1]
         return targetText
+
 
     def refreshMirrorText(self):
         """

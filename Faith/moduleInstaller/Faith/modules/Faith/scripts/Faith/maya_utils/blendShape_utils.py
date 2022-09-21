@@ -2,11 +2,11 @@
 # @Author: 46314
 # @Date:   2022-09-19 20:25:58
 # @Last Modified by:   46314
-# @Last Modified time: 2022-09-19 20:26:05
+# @Last Modified time: 2022-09-20 19:07:29
 
 # import standard modules
-from maya import cmds
-
+from maya import cmds,mel
+from pymel import core as pm
 # import maya modules
 from maya import OpenMayaAnim
 from maya import OpenMaya
@@ -148,7 +148,7 @@ def add_target(targets_array, blend_name="", weight=1.0, index=0):
     blend_fn = get_deformer_fn(blend_name)
     base_obj = get_base_object(blend_name)[0]
     if isinstance(targets_array, (STR, UNICODE)):
-        targets_array = targets_array,
+        targets_array = targets_array
     targets_array = object_utils.get_m_shape_obj_array(targets_array)
     length = targets_array.length()
     if not index:
@@ -188,6 +188,97 @@ def removeTarget(blendShape, target, baseGeometry):
 
     # Delete duplicate geometry
     cmds.delete(dup)
+
+
+def renameTarget(blendShape, target, newName):
+    """
+    Rename the specified blendShape target
+    :param blendShape:
+    :param target:
+    :param newName:
+    :return:
+    """
+    # Check blendShape
+    if not is_blendshape(blendShape):
+        raise Exception('Object "' + blendShape + '" is not a valid blendShape node!')
+
+    # Check target
+    if not hasTarget(blendShape, target):
+        raise Exception('BlendShape "' + blendShape + '" has no target "' + target + '"!')
+
+    # Rename target attribute
+    cmds.aliasAttr(newName, blendShape + '.' + target)
+
+    # Return Result
+    return newName
+
+
+def removeUnconnectedTargets(blendShape, base):
+    """
+
+    :param blendShape:
+    :param base:
+    :return:
+    """
+    # Check blendShape
+    if not is_blendshape(blendShape):
+        raise Exception('Object "' + blendShape + '" is not a valid blendShape deformer!!')
+
+    # Get blendShape target list
+    targetList = getTargetList(blendShape)
+
+    # Check blendShape target connections
+    deletedTargetList = []
+    for target in targetList:
+        targetConn = cmds.listConnections(blendShape + '.' + target, s=True, d=False)
+
+        # If no incoming connnections, delete target
+        if not targetConn:
+            try:
+                removeTarget(blendShape, target, base)
+            except:
+                print('Unable to delete blendShape target "' + target + '"!')
+            else:
+                print('Target "' + target + '" deleted!')
+                deletedTargetList.append(target)
+
+    # Return result
+    return deletedTargetList
+
+
+def hasTarget(blendShape, target):
+    """
+    Specify if the a named target exists on a blendShape node
+    :param blendShape:
+    :param target:
+    :return:
+    """
+    if not is_blendshape(blendShape):
+        raise Exception('Object "' + blendShape + '" is not a valid blendShape node!')
+
+        # Check target
+    if target in getTargetList(blendShape): return True
+
+    # Return Result
+    return False
+
+
+def getTargetList(blendShape):
+    """
+    Return the target list for the input blendShape
+    :param blendShape:
+    :return:
+    """
+    # Check blendShape
+    if not is_blendshape(blendShape):
+        raise Exception('Object "' + blendShape + '" is not a valid blendShape node!')
+
+    # Get attribute alias
+    targetList = cmds.listAttr(blendShape + '.w', m=True)
+    if not targetList: targetList = []
+
+    # Return result
+    return targetList
 
 
 def connectToTarget(blendShape, geometry, target, baseGeometry, weight=1.0, force=False):
@@ -326,5 +417,145 @@ def get_base_objects(blend_name=""):
     return object_utils.convert_obj_array_to_string_array(m_obj_array)
 
 
+def getInbetweenWeight(blendShapeName, target):
+    """
+
+    :param blendShapeName:
+    :param target:
+    :return:
+    """
+    tragetIndexItem = getTargetIndex(blendShapeName, target)
+    inputTargetItem = cmds.getAttr(
+        "%s.inputTarget[0].inputTargetGroup[%d].inputTargetItem" % (blendShapeName, tragetIndexItem), mi=True
+    )
+    weightList = []
+    for i in inputTargetItem:
+        indexInt = (int(i) - 5000) / 1000.0
+        weightList.append(indexInt)
+
+    return weightList
 
 
+def reverseWrap(objList=[],deleteWrapGroup=True):
+    """
+
+    :param objList:
+    :param deleteWrapGroup:
+    :return:
+    """
+    if not cmds.objExists('reverseWrap_delete') and objList:  # create wrapGroup
+        deleteGroup = cmds.group(em=True, n='reverseWrap_delete')
+        wrapGeo = cmds.duplicate(objList[1], rr=True, name=('reverseWrap_outputGeometry'))
+        newBaseGeo = cmds.duplicate(objList[1], n='reverseWrap_bsGeometry')
+        cmds.parent(newBaseGeo, wrapGeo, deleteGroup)
+        cmds.setAttr(newBaseGeo[0] + '.sx', -1)
+        cmds.select(wrapGeo, newBaseGeo[0])
+        mel.eval('doWrapArgList "7" { "1","0","1", "2", "1", "1", "1", "0" };')
+
+    else:
+        deleteGroup = ['reverseWrap_delete']
+        wrapGeo = ['reverseWrap_outputGeometry']
+        newBaseGeo = ['reverseWrap_bsGeometry']
+    reverseGeo = []
+    if objList:  # output
+        bsNodeName = cmds.blendShape(objList[0], newBaseGeo[0], w=(0, 1))
+        cmds.refresh(f=True)
+        reverseGeo = cmds.duplicate(wrapGeo[0], n=objList[0] + '_reverseWrap')
+        cmds.parent(reverseGeo, w=True)
+        cmds.delete(bsNodeName)
+    if deleteWrapGroup:  # delete useless
+        cmds.delete(wrapGeo[0], ch=True)
+        cmds.delete(deleteGroup)
+    return reverseGeo
+
+
+def rebuildTarget(attr):
+    """
+    输入一个bs目标体属性名类似 bsName.weightName后,会重建这个目标体
+    :param attr:
+    :return:
+    """
+    targetIndex = pm.PyNode(attr).index()
+    bsName, attrName = attr.split('.')
+    bsNode = pm.PyNode(bsName)
+    geometryNode = bsNode.getBaseObjects()[0].getParent()
+    orgShape = bsNode.getInputGeometry()[0].name()
+    # createTarget
+    newMeshShape = cmds.createNode('mesh', n='%sShape' % attrName)
+    newTarget = cmds.listRelatives(newMeshShape, p=True)
+    cmds.hide(newTarget)
+    cmds.connectAttr('%s.worldMesh[0]' % orgShape, '%s.inMesh' % newMeshShape)
+    cmds.refresh(f=True)
+    cmds.disconnectAttr('%s.worldMesh[0]' % orgShape, '%s.inMesh' % newMeshShape)
+    # move vtx
+    ictValue = cmds.getAttr('%s.it[0].itg[%s].iti[6000].ict' % (bsName, targetIndex))
+    if ictValue:
+        vtxList = cmds.ls(['%s.%s' % (newTarget[0], vtxE) for vtxE in ictValue], fl=True)
+        vtxRelativeTranslateList = cmds.getAttr('%s.it[0].itg[%s].iti[6000].ipt' % (bsName, targetIndex))
+        for i in range(len(vtxList)):
+            currentMoveValue = vtxRelativeTranslateList[i][:-1]
+            cmds.move(currentMoveValue[0], currentMoveValue[1], currentMoveValue[2], vtxList[i], r=True, ws=True)
+    # connect to blendShape
+    cmds.connectAttr('%s.worldMesh[0]' % newMeshShape, '%s.it[0].itg[%s].iti[6000].igt' % (bsName, targetIndex))
+    return newTarget
+
+
+def mirrorTarget(attrStr='bsName.weightName',searchStr = 'lf_',searchToStr = 'rt_'):
+    """
+    镜像指定名称的bs目标体
+    :param attrStr:
+    :param searchStr:
+    :param searchToStr:
+    :return:
+    """
+    bsName,attrName = attrStr.split('.')
+    bsNode = pm.PyNode(bsName)
+    geometryNode = bsNode.getBaseObjects()[0].getParent()
+    orgShape = bsNode.getInputGeometry()[0].name()
+    toAttrName = attrName.replace(searchStr, searchToStr)
+    bsWeightList = pm.listAttr(bsNode.w, m=True)
+    targetIndex = pm.PyNode(attrStr).index()
+
+    if not searchStr in attrName:
+        return False
+    inputTarget = cmds.listConnections('%s.it[0].itg[%s].iti[6000].igt'%(bsName,targetIndex),d=False)
+    if not inputTarget:
+        inputTarget = rebuildTarget(attrStr)
+
+    if toAttrName in bsWeightList:
+        toAttr_targetIndex = pm.PyNode('%s.%s' % (bsName, toAttrName)).index()
+        toAttr_inputTarget = cmds.listConnections('%s.it[0].itg[%s].iti[6000].igt' % (bsName, toAttr_targetIndex),
+                                                  d=False)
+        if not toAttr_inputTarget:
+            toAttr_inputTarget = rebuildTarget('%s.%s' % (bsName, toAttrName))
+    else:
+        # toTarget not exists   so   create new one
+        newMeshShape = cmds.createNode('mesh', n='%sShape' % toAttrName)
+        newTarget = cmds.listRelatives(newMeshShape, p=True)
+        cmds.hide(newTarget)
+        cmds.connectAttr('%s.worldMesh[0]' % orgShape, '%s.inMesh' % newMeshShape)
+        cmds.refresh(f=True)
+        cmds.disconnectAttr('%s.worldMesh[0]' % orgShape, '%s.inMesh' % newMeshShape)
+        add_target([geometryNode.name()], blend_name=bsName, weight=1.0)
+        # addBlendShape(targetList=newTarget, toObj=geometryNode.name())
+        toAttr_inputTarget = newTarget
+
+        # reverse WRAP
+        # ---createORG
+    newMeshShape = cmds.createNode('mesh', n='%sShape' % 'TEMP_ORG')
+    newTarget = cmds.listRelatives(newMeshShape, p=True)
+    cmds.hide(newTarget)
+    cmds.connectAttr('%s.worldMesh[0]' % orgShape, '%s.inMesh' % newMeshShape)
+    cmds.refresh(f=True)
+    cmds.disconnectAttr('%s.worldMesh[0]' % orgShape, '%s.inMesh' % newMeshShape)
+    toWrapGeo = reverseWrap([inputTarget[0], newTarget[0]], False)
+    # wrapMesh connect toTargetMesh
+    cmds.connectAttr('%s.worldMesh[0]' % toWrapGeo[0], '%s.inMesh' % toAttr_inputTarget[0])
+    cmds.refresh(f=True)
+    cmds.disconnectAttr('%s.worldMesh[0]' % toWrapGeo[0], '%s.inMesh' % toAttr_inputTarget[0])
+    # setZero
+    vtxAttrList = cmds.ls('%s.pnts[*]' % toAttr_inputTarget[0], fl=True)
+    setDataList = len(vtxAttrList) * [0, 0, 0]
+    cmds.setAttr('%s.pnts[*]' % toAttr_inputTarget[0], *setDataList)
+    # clean
+    cmds.delete(toWrapGeo, newTarget, inputTarget, toAttr_inputTarget)

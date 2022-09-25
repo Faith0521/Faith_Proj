@@ -92,7 +92,7 @@ vector<WeightsInfo> pointOnCurveWeights(cvTypeName cvs, double t, double degree)
 			segment = i + order;
 		}
 	}
-
+	// 创建一个存放矩阵列表序号的vector容器
 	vector<int> cvs_;
 	for (i = 0; i < degree + 1; i++)
 	{
@@ -154,6 +154,42 @@ vector<WeightsInfo> pointOnCurveWeights(cvTypeName cvs, double t, double degree)
 	}
 	return weightsArray;
 }
+
+// 查询一个简单的属性
+/*
+此示例仅从场景中的所有变换节点查询 x 平移属性 (tx)。
+
+当试图访问一个属性时，我们可以使用 MFnDependencyNode 函数集的 findPlug 方法。这将简单地将 MPlug 返回到请求的属性。取回插件后，我们可以使用 getValue() 方法来查询包含的数据。
+
+正如您将看到的，这个过程比使用专门的函数集更费力。然而，这确实意味着您可以随时 访问您需要的任何属性。
+*/
+#include<maya/MItDag.h>
+#include<maya/MPlug.h>
+#include<maya/MFnDependencyNode.h>
+
+void querySimpleAttr()
+{
+	// 创建一个迭代器来遍历所有的变换
+	MItDag it(MItDag::kDepthFirst, MFn::kTransform);
+
+	while (!it.isDone())
+	{
+
+		// 附加一个函数集到变换
+		MFnDependencyNode fn(it.item());
+
+		// 获取 tx 属性
+		MPlug plug = fn.findPlug("tx");
+
+		// 获取数值
+		float tx;
+		plug.getValue(tx);
+
+		// 移动到下一个节点
+		it.next();
+	}
+}
+
 
 
 

@@ -1,30 +1,14 @@
-//
-// Copyright (C) YinYuFei
-// 
-// File: pluginMain.cpp
-//
-// Author: Maya Plug-in Wizard 2.0
-//
-
 #include "MatrixSplineNode.h"
 
 #include <maya/MFnPlugin.h>
 
 MStatus initializePlugin( MObject obj )
-//
-//	Description:
-//		this method is called when the plug-in is loaded into Maya.  It 
-//		registers all of the services that this plug-in provides with 
-//		Maya.
-//
-//	Arguments:
-//		obj - a handle to the plug-in object (use MFnPlugin to access it)
-//
+
 { 
 	MStatus   status;
 	MFnPlugin plugin( obj, "YinYuFei", "2018", "Any");
 
-	status = plugin.registerNode( "MatrixSpline", MatrixSpline::id, MatrixSpline::creator,
+	status = plugin.registerNode( "MatrixSpline", MatrixSpline::NodeID, MatrixSpline::creator,
 								  MatrixSpline::initialize );
 	if (!status) {
 		status.perror("registerNode");
@@ -35,19 +19,12 @@ MStatus initializePlugin( MObject obj )
 }
 
 MStatus uninitializePlugin( MObject obj)
-//
-//	Description:
-//		this method is called when the plug-in is unloaded from Maya. It 
-//		deregisters all of the services that it was providing.
-//
-//	Arguments:
-//		obj - a handle to the plug-in object (use MFnPlugin to access it)
-//
+
 {
 	MStatus   status;
 	MFnPlugin plugin( obj );
 
-	status = plugin.deregisterNode( MatrixSpline::id );
+	status = plugin.deregisterNode( MatrixSpline::NodeID );
 	if (!status) {
 		status.perror("deregisterNode");
 		return status;

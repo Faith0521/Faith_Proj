@@ -30,12 +30,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -104,7 +104,7 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <AdditionalOptions>%(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>C:\Qt\Qt5.12.5\5.12.5\msvc2017_64\include;C:\Program Files\Autodesk\Maya2018\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Qt\Qt5.12.5\5.12.5\msvc2017_64\include;E:\Program Files %28x86%29\Maya2018\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeaderOutputFile>$(Configuration)\MatrixSpline.pch</PrecompiledHeaderOutputFile>
     </ClCompile>
     <Link>
@@ -115,7 +115,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>Foundation.lib;OpenMaya.lib;OpenMayaAnim.lib;Qt5Core.lib;Qt5Gui.lib;Qt5Widgets.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\Program Files\Autodesk\Maya2018\lib;C:\Qt\Qt5.12.5\5.12.5\msvc2017_64\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>E:\Program Files %28x86%29\Maya2018\lib;C:\Qt\Qt5.12.5\5.12.5\msvc2017_64\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <OutputFile>$(Configuration)\MatrixSpline.mll</OutputFile>
       <ImportLibrary>$(Configuration)\MatrixSpline.lib</ImportLibrary>
       <ProgramDatabaseFile>$(Configuration)\MatrixSpline.pdb</ProgramDatabaseFile>

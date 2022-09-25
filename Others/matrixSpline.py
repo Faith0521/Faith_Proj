@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: YinYuFei
 # @Date:   2022-06-07 21:17:39
-# @Last Modified by:   yinyufei
-# @Last Modified time: 2022-09-22 10:45:05
+# @Last Modified by:   尹宇飞
+# @Last Modified time: 2022-09-24 10:36:48
 """
 Functions for generating spline weights.
 Usage:
@@ -76,11 +76,13 @@ def pointOnCurveWeights(cvs, t, degree, knots=None):
 
     # Filter out cvs we won't be using
     cvs = [cvs[j + segment - degree] for j in range(0, degree + 1)]
+    print(cvs)
 
     # Run a modified version of de Boors algorithm
     cvWeights = [{cv: 1.0} for cv in cvs]
     for r in range(1, degree + 1):
         for j in range(degree, r - 1, -1):
+            print(j)
             right = j + 1 + segment - r
             left = j + segment - degree
             alpha = (t - knots[left]) / (knots[right] - knots[left])

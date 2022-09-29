@@ -5,7 +5,8 @@ MString BlendMatrix::NodeName = "FAITH_BlendMatrix";
 MTypeId BlendMatrix::NodeID = MTypeId(0x0016);
 
 MObject BlendMatrix::aOutputMatrix;
-MObject BlendMatrix::aOutputDriverOffsetMatrix;
+//MObject BlendMatrix::aOutputDriverOffsetMatrix;
+MObject BlendMatrix::aMode;
 MObject BlendMatrix::aOffsetMatrix;
 MObject BlendMatrix::aRestMatrix;
 MObject BlendMatrix::aParentInverseMatrix;
@@ -21,9 +22,9 @@ MObject BlendMatrix::aBlendScaleWeight;
 MObject BlendMatrix::aBlendShearWeight;
 MObject BlendMatrix::aBlendMatrix;
 
-BlendMatrix::BlendMatrix(){}
+BlendMatrix::BlendMatrix() {}
 
-BlendMatrix::~BlendMatrix(){}
+BlendMatrix::~BlendMatrix() {}
 
 MStatus BlendMatrix::initialize() {
 	MStatus status;
@@ -32,22 +33,31 @@ MStatus BlendMatrix::initialize() {
 	MFnMatrixAttribute mAttr;
 	MFnNumericAttribute nAttr;
 	MFnUnitAttribute uAttr;
+	MFnEnumAttribute eAttr;
 
 	aOutputMatrix = mAttr.create("outputMatrix", "outputMatrix");
 	mAttr.setWritable(false);
 	mAttr.setStorable(false);
 	addAttribute(aOutputMatrix);
 
-	aOutputDriverOffsetMatrix = mAttr.create("outputDriverOffsetMatrix", "outputDriverOffsetMatrix", MFnMatrixAttribute::kDouble);
-	mAttr.setKeyable(false);
-	mAttr.setWritable(false);
-	mAttr.setStorable(false);
-	addAttribute(aOutputDriverOffsetMatrix);
+	//aOutputDriverOffsetMatrix = mAttr.create("outputDriverOffsetMatrix", "outputDriverOffsetMatrix", MFnMatrixAttribute::kDouble);
+	//mAttr.setKeyable(false);
+	//mAttr.setWritable(false);
+	//mAttr.setStorable(false);
+	//addAttribute(aOutputDriverOffsetMatrix);
+
+	aMode = eAttr.create("Mode", "Mode");
+	eAttr.addField("local", 0);
+	eAttr.addField("parent", 1);
+	eAttr.setKeyable(true);
+	addAttribute(aMode);
+	attributeAffects(aMode, aOutputMatrix);
 
 	aOffsetMatrix = mAttr.create("offsetMatrix", "offsetMatrix");
 	mAttr.setWritable(true);
 	mAttr.setStorable(true);
 	mAttr.setReadable(true);
+	mAttr.setKeyable(true);
 	addAttribute(aOffsetMatrix);
 	attributeAffects(aOffsetMatrix, aOutputMatrix);
 
@@ -55,14 +65,15 @@ MStatus BlendMatrix::initialize() {
 	mAttr.setWritable(true);
 	mAttr.setStorable(true);
 	mAttr.setReadable(true);
+	mAttr.setKeyable(true);
 	addAttribute(aRestMatrix);
 	attributeAffects(aRestMatrix, aOutputMatrix);
-	attributeAffects(aRestMatrix, aOutputDriverOffsetMatrix);
 
 	aParentInverseMatrix = mAttr.create("ParentInverseMatrix", "ParentInverseMatrix");
 	mAttr.setWritable(true);
 	mAttr.setStorable(true);
 	mAttr.setReadable(false);
+	mAttr.setKeyable(true);
 	addAttribute(aParentInverseMatrix);
 	attributeAffects(aParentInverseMatrix, aOutputMatrix);
 
@@ -99,7 +110,6 @@ MStatus BlendMatrix::initialize() {
 	nAttr.setDefault(0.0, 0.0, 0.0);
 	addAttribute(aDriverRotationOffset);
 	attributeAffects(aDriverRotationOffset, aOutputMatrix);
-	attributeAffects(aDriverRotationOffset, aOutputDriverOffsetMatrix);
 
 	aBlendTranslateWeight = nAttr.create("blendTranslateWeight", "blendTranslateWeight", MFnNumericData::kFloat, 1);
 	nAttr.setKeyable(true);
@@ -128,11 +138,9 @@ MStatus BlendMatrix::initialize() {
 	cAttr.addChild(aBlendShearWeight);
 	addAttribute(aBlendMatrix);
 	attributeAffects(aBlendMatrix, aOutputMatrix);
-	attributeAffects(aBlendMatrix, aOutputDriverOffsetMatrix);
 
 	return MS::kSuccess;
 }
-
 
 void* BlendMatrix::creator() {
 	return new BlendMatrix();
@@ -144,6 +152,11 @@ MStatus BlendMatrix::compute(const MPlug& plug, MDataBlock& data) {
 	if (plug != aOutputMatrix) {
 		return MS::kUnknownParameter;
 	}
+
+	MObject thisNode = this->thisMObject();
+	MPlug modePlug(thisNode, aMode);
+
+	int modeVal = modePlug.asShort();
 
 	double scale[3];
 	double shear[3];
@@ -168,7 +181,15 @@ MStatus BlendMatrix::compute(const MPlug& plug, MDataBlock& data) {
 		MMatrix inputBlendMatrix = hBlendMatrixElement.child(aBlendInputMatrix).asMatrix();
 		MMatrix offsetBlendMatrix = hBlendMatrixElement.child(aBlendOffsetMatrix).asMatrix();
 
-		MatrixComponents components = splitMatrix(offsetBlendMatrix * inputBlendMatrix);
+		MatrixComponents components;
+		if (modeVal == 0)
+		{
+			components = splitMatrix(inputBlendMatrix * offsetBlendMatrix);
+		}
+		else if (modeVal == 1)
+		{
+			components = splitMatrix(offsetBlendMatrix * inputBlendMatrix);
+		}
 
 		// populate component matrices
 		translateMatrix.row(i) = components.translate;
@@ -201,9 +222,9 @@ MStatus BlendMatrix::compute(const MPlug& plug, MDataBlock& data) {
 	MMatrix parentInverse = data.inputValue(aParentInverseMatrix).asMatrix();
 
 	MDataHandle hOut = data.outputValue(aOutputMatrix);
-	
+
 	MMatrix driver_matrix = offsetMatrix * outputMatrix;
-	
+
 	double in_driver_rotation_offset_x = data.inputValue(aDriverRotationOffsetX, &status).asDouble();
 	double in_driver_rotation_offset_y = data.inputValue(aDriverRotationOffsetY, &status).asDouble();
 	double in_driver_rotation_offset_z = data.inputValue(aDriverRotationOffsetZ, &status).asDouble();
@@ -238,15 +259,10 @@ MStatus BlendMatrix::compute(const MPlug& plug, MDataBlock& data) {
 	hOut.setMMatrix(result.asMatrix());
 	data.setClean(aOutputMatrix);
 
-	MDataHandle matrix_driver_off_handle = data.outputValue(aOutputDriverOffsetMatrix, &status);
-	matrix_driver_off_handle.setMMatrix(driver_matrix_off.asMatrix());
-	data.setClean(aOutputDriverOffsetMatrix);
-
 	data.setClean(plug);
 
 	return MS::kSuccess;
 }
-
 
 Vector3d BlendMatrix::calculateComponent(
 	const MatrixXd& matrix,
@@ -302,7 +318,6 @@ MatrixComponents BlendMatrix::splitMatrix(const MMatrix& matrix) {
 
 	return MatrixComponents{ translate, rotate, scale, shear };
 }
-
 
 MMatrix BlendMatrix::constructMatrix(
 	const Vector3d& translate,

@@ -6,42 +6,41 @@
 #include <maya/MMatrix.h>
 #include <QtCore/QString>
 #include <maya/MDoubleArray.h>
+#include <maya/MFnSkinCluster.h>
+#include <maya/MIntArray.h>
+#include <maya/MVector.h>
+#include <maya/MQuaternion.h>
+#include <maya/MPxTransformationMatrix.h>
+#include <maya/MDagPath.h>
+#include <maya/MGlobal.h>
 #include <QtCore/QList>
 #include <QtCore/QJsonArray>
 #include <QtCore/QJsonObject>
 #include <QtCore/QJsonValue>
+#include <QtCore/QVariant>
 #include <maya/MIntArray.h>
 #include <maya/MMatrixArray.h>
 #include <math.h>
 #include <vector>
 #include <map>
+#include <unordered_map>
+#include <any>
 using namespace std;
 
-struct WeightsInfo
+#define pi 3.1415926535897932384626433832795
+
+struct WeightInfo
 {
-	MMatrix mat;
-	double weight;
+	MMatrix		mat;
+	double		weight;
 };
 
-double bezier_v(vector<double> p, double t)
+struct weightInfo2
 {
-	return p[0]*pow(1-t, 3.0) + 3*p[1]*t*pow(1-t,2.0) + 3*p[2]*pow(t,2.0)*(1-t) + p[3]*pow(t,3.0);
+	int			num;
+	double		weight;
+};
 
-}
-
-//double bezier_t(QList<double> p, double v)
-//{
-//	double min_t = 0.0;
-//	double max_t = 1.0;
-//	while (true)
-//	{
-//		double t = (min_t + max_t) / 2.0;
-//		double error_range = bezier_v(p, t) - v;
-//		if (error_range > 0.0001)
-//		{
-//		}
-//	}
-//}
 MDoubleArray defaultKnots(int count, int degree)
 {
 	unsigned i, j, k;
@@ -63,11 +62,11 @@ MDoubleArray defaultKnots(int count, int degree)
 	return knots;
 }
 
-template<typename cvTypeName>
-vector<WeightsInfo> pointOnCurveWeights(cvTypeName cvs, double t, double degree)
+template<typename Ttype, typename cvTypeName>
+vector<Ttype> pointOnCurveWeights(cvTypeName cvs, double t, double degree)
 {
 	unsigned i, j, k, w;
-	vector<WeightsInfo> weightsArray;
+	vector<Ttype> weightsArray;
 	int order = degree + 1;
 	MDoubleArray knots = defaultKnots(cvs.length(), degree);
 
@@ -146,7 +145,7 @@ vector<WeightsInfo> pointOnCurveWeights(cvTypeName cvs, double t, double degree)
 	{
 		double weight = cvWeights[degree][i];
 
-		WeightsInfo arr;
+		Ttype arr;
 		arr.mat = cvs[i];
 		arr.weight = weight;
 
@@ -155,42 +154,202 @@ vector<WeightsInfo> pointOnCurveWeights(cvTypeName cvs, double t, double degree)
 	return weightsArray;
 }
 
-// 查询一个简单的属性
-/*
-此示例仅从场景中的所有变换节点查询 x 平移属性 (tx)。
-
-当试图访问一个属性时，我们可以使用 MFnDependencyNode 函数集的 findPlug 方法。这将简单地将 MPlug 返回到请求的属性。取回插件后，我们可以使用 getValue() 方法来查询包含的数据。
-
-正如您将看到的，这个过程比使用专门的函数集更费力。然而，这确实意味着您可以随时 访问您需要的任何属性。
-*/
-#include<maya/MItDag.h>
-#include<maya/MPlug.h>
-#include<maya/MFnDependencyNode.h>
-
-void querySimpleAttr()
+template<typename Ttype, typename cvTypeName>
+vector<Ttype> tangentOnCurveWeights(cvTypeName cvs, double t, int degree)
 {
-	// 创建一个迭代器来遍历所有的变换
-	MItDag it(MItDag::kDepthFirst, MFn::kTransform);
+	unsigned i, j, k, r;
+	vector<Ttype> tangentWeights;
 
-	while (!it.isDone())
+	int order = degree + 1;
+
+	MDoubleArray knots = defaultKnots(cvs.length(), degree);
+
+	double min = knots[order] - 1.0;
+	double max = knots[knots.length() - 1 - order] + 1.0;
+	double t_ = (t * (max - min)) + min;
+
+	// Determine which segment the t lies in
+	int segment = degree;
+	for (i = order; i < knots.length() - order; i++)
 	{
-
-		// 附加一个函数集到变换
-		MFnDependencyNode fn(it.item());
-
-		// 获取 tx 属性
-		MPlug plug = fn.findPlug("tx");
-
-		// 获取数值
-		float tx;
-		plug.getValue(tx);
-
-		// 移动到下一个节点
-		it.next();
+		if (knots[i] <= t_)
+		{
+			segment = i + order;
+		}
 	}
+
+	vector<int> cvs_;
+	for (i = 0; i < cvs.length(); i++)
+	{
+		cvs_.push_back(i);
+	}
+
+	int degree_ = degree - 1;
+	vector<map<int, double>> qWeights;
+	for (i = 0; i < degree_ + 1; i++)
+	{
+		map<int, double> cvObject;
+		cvObject.insert(map<int, double>::value_type(i, 1.0));
+		qWeights.push_back(cvObject);
+	}
+
+	// Get the DeBoor weights for this lower degree curve
+	for (r = 1; r < degree_ + 1; r++)
+	{
+		for (j = degree_; j > r - 1; j--)
+		{
+			int right = j + 1 + segment - r;
+			int left = j + segment - degree_;
+			double alpha = (t_ - knots[left]) / (knots[right] - knots[left]);
+
+			map<int, double> weights;
+			for (i = 0; i < qWeights[j].size(); i++)
+			{
+				double weight = qWeights[j][i];
+				weights.insert(map<int, double>::value_type(i, weight * alpha));
+			}
+			for (i = 0; i < qWeights[j - 1].size(); i++)
+			{
+				double weight = qWeights[j - 1][i];
+
+				if (weights.count(i) > 0)
+				{
+					double r_weight = weights[i];
+					weights[i] = r_weight + weight * (1 - alpha);
+				}
+				else
+				{
+					weights.insert(map<int, double>::value_type(i, weight * (1 - alpha)));
+				}
+			}
+			qWeights[j] = weights;
+		}
+	}
+	map<int, double> weights_ = qWeights[degree_];
+
+	// Take the lower order weights and match them to our actual cvs
+	vector<weightInfo2> cvWeights;
+	for (j = 0; j < degree_ + 1; j++)
+	{
+		double weight = weights_[j];
+		int cv0 = j + segment - degree_;
+		int cv1 = j + segment - degree_ - 1;
+		double alpha = weight * (degree_ + 1) / (knots[j + segment + 1] - knots[j + segment - degree_]);
+
+		weightInfo2 info1;
+		info1.num = cvs_[cv0];
+		info1.weight = alpha;
+
+		weightInfo2 info2;
+		info2.num = cvs_[cv1];
+		info2.weight = -alpha;
+
+		cvWeights.push_back(info1);
+		cvWeights.push_back(info2);
+	}
+
+	for (i = 0; i < cvWeights.size(); i++)
+	{
+		double weight = cvWeights[i].weight;
+		int num = cvWeights[i].num;
+		Ttype weightInfos;
+		MMatrix matrix = cvs[num];
+		weightInfos.mat = matrix;
+		weightInfos.weight = weight;
+		tangentWeights.push_back(weightInfos);
+	}
+
+	return tangentWeights;
 }
 
+MMatrixArray calculateMatrix(int count, int pCount, int degree,
+	MMatrixArray cvMatricies, MVector aimAxis,
+	MVector upAxis)
+{
+	MMatrixArray result;
+	unsigned i, j;
 
+	for (i = 0; i < pCount; i++)
+	{
+		double t = double(i) / double(pCount - 1);
+		vector<WeightInfo> pointMatrixWeights = pointOnCurveWeights<WeightInfo, MMatrixArray>(cvMatricies, t, degree);
+		vector<WeightInfo> tangentMatrixWeights = tangentOnCurveWeights<WeightInfo, MMatrixArray>(cvMatricies, t, degree);
+
+		// pointMatrix
+		MMatrixArray pointSumArray;
+		for (j = 0; j < pointMatrixWeights.size(); j++)
+		{
+			MMatrix matrix = pointMatrixWeights[j].mat;
+			double weight = pointMatrixWeights[j].weight;
+			MMatrix multMat = weight * matrix;
+			pointSumArray.append(multMat);
+		}
+
+		// do Something like wtAddMatrix node
+		MMatrix pointMat = pointSumArray[0];
+		if (cvMatricies.length() == 1)
+		{
+			pointMat = pointSumArray[0];
+		}
+		else
+		{
+			for (j = 1; j < pointSumArray.length(); j++)
+			{
+				pointMat += pointSumArray[j];
+			}
+		}
+
+		// tangentMatrix
+		MMatrixArray tangentSumArray;
+		for (j = 0; j < tangentMatrixWeights.size(); j++)
+		{
+			MMatrix matrix = tangentMatrixWeights[j].mat;
+			double weight = tangentMatrixWeights[j].weight;
+			MMatrix multMat = weight * matrix;
+			tangentSumArray.append(multMat);
+		}
+
+		// do Something like wtAddMatrix node
+		MMatrix aimMat = tangentSumArray[0];
+		if (cvMatricies.length() == 1)
+		{
+			aimMat = tangentSumArray[0];
+		}
+		else
+		{
+			for (j = 1; j < tangentSumArray.length(); j++)
+			{
+				aimMat += tangentSumArray[j];
+			}
+		}
+
+		// aimMatrix
+		MVector aimVect = MPxTransformationMatrix(aimMat).translation();
+		MVector U = aimVect.normal();
+		MVector V = MGlobal::upAxis();
+		MVector W = (U ^ V).normal();
+		V = W ^ U;
+		MQuaternion quat;
+		MQuaternion quat_U = MQuaternion(aimAxis, U);
+		quat = quat_U;
+		MVector upRotated = upAxis.rotateBy(quat);
+		double angle = acos(upRotated * V);
+		MQuaternion quat_V = MQuaternion(angle, U);
+		if (!V.isEquivalent(upRotated.rotateBy(quat_V), 1.0e-5))
+		{
+			angle = (2 * pi) - angle;
+			quat_V = MQuaternion(angle, U);
+		}
+		quat *= quat_V;
+		MPxTransformationMatrix translate_trMat = MPxTransformationMatrix(pointMat);
+		MTransformationMatrix tr_mat;
+		tr_mat.setTranslation(translate_trMat.translation(), MSpace::kWorld);
+		tr_mat.setRotationQuaternion(quat.x, quat.y, quat.z, quat.w);
+		result.append(tr_mat.asMatrix());
+	}
+
+	return result;
+}
 
 
 

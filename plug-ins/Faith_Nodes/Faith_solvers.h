@@ -54,6 +54,7 @@
 #include <maya/MDagPath.h>
 #include <maya/MFnSkinCluster.h>
 #include <maya/MFnTransform.h>
+#include <maya/MPxTransformationMatrix.h>
 #include <maya/MItGeometry.h>
 #include <maya/MTypes.h>
 #include <maya/MCurveAttribute.h>
@@ -256,8 +257,10 @@ public:
 	static  MTypeId			NodeID;
 
 	static  MObject			aOutputMatrix;
-	static  MObject			aOutputDriverOffsetMatrix;
+	//static  MObject			aOutputDriverOffsetMatrix;
+	static  MObject			aMode;
 	static  MObject			aOffsetMatrix;
+	static  MObject			aConstraintType;
 	static  MObject			aRestMatrix;
 	static  MObject			aParentInverseMatrix;
 	static  MObject			aBlendInputMatrix;

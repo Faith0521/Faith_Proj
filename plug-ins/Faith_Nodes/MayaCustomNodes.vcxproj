@@ -123,7 +123,7 @@
       <ExceptionHandling>Sync</ExceptionHandling>
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <AdditionalOptions>%(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>C:\Program Files\Autodesk\Maya2018\include;E:\bd\eigen-3.3.9;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>E:\Program Files %28x86%29\Maya2018\include;E:\bd\eigen-3.3.9;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeaderOutputFile>$(Configuration)\MayaCustomNodes.pch</PrecompiledHeaderOutputFile>
     </ClCompile>
     <Link>
@@ -134,7 +134,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>Foundation.lib;OpenMaya.lib;OpenMayaUI.lib;OpenMayaAnim.lib;OpenMayaFX.lib;OpenMayaRender.lib;Image.lib;libMocap.lib;OpenGL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\Program Files\Autodesk\Maya2018\lib;E:\bd\eigen-3.3.9;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>E:\Program Files %28x86%29\Maya2018\lib;E:\bd\eigen-3.3.9;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <OutputFile>$(Configuration)\FaithNodes.mll</OutputFile>
       <ImportLibrary>$(Configuration)\MayaCustomNodes.lib</ImportLibrary>
       <ProgramDatabaseFile>$(Configuration)\MayaCustomNodes.pdb</ProgramDatabaseFile>

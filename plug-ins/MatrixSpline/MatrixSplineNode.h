@@ -12,6 +12,7 @@
 #include <maya/MPxTransformationMatrix.h>
 #include <maya/MFnMatrixAttribute.h>
 #include <maya/MFnCompoundAttribute.h>
+#include <maya/MFnTypedAttribute.h>
 #include <maya/MArrayDataHandle.h>
 #include <maya/MIntArray.h>
 #include <maya/MTypeId.h> 
@@ -25,43 +26,37 @@
 using namespace std;
 #define pi 3.1415926535897932384626433832795
 
+template<class T>
 struct WeightInfo
 {
-	MMatrix		mat;
-	double		weight;
+	T  mat_num;
+	double  weight;
 };
 
-struct weightInfo2
-{
-	int			num;
-	double		weight;
-};
 
 class MatrixSpline : public MPxNode
 {
 public:
 	MatrixSpline();
-	virtual						~MatrixSpline();
+	virtual      ~MatrixSpline();
 
-	virtual MStatus				compute(const MPlug& plug, MDataBlock& data);
+	virtual MStatus    compute(const MPlug& plug, MDataBlock& data);
 
 	static  void* creator();
-	static  MStatus				initialize();
+	static  MStatus    initialize();
 
-	MMatrixArray		calculateMatrix(int count, int pCount, int degree, 
-												MMatrixArray cvMatricies, MVector aimAxis,
-												MVector upAxis);
+	MMatrixArray  calculateMatrix(int count, int pCount, int degree,
+		MMatrixArray cvMatricies, MVector aimAxis,
+		MVector upAxis);
 
 public:
 
-	static  MObject		amatrixIn;
-	static	MObject		aprimaryAxis;
-	static	MObject		asecondaryAxis;
-	static	MObject		amatrixOut;
-	static	MObject		test;
+	static  MObject  amatrixIn;
+	static MObject  aAxis;
+	static MObject  amatrixOut;
 
-	static	MString		NodeName;
-	static	MTypeId		NodeID;
+	static MString  NodeName;
+	static MTypeId  NodeID;
 };
 
 #endif

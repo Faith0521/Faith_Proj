@@ -5,9 +5,7 @@ MTypeId     MatrixSpline::NodeID(0x00a21);
 
 
 MObject     MatrixSpline::amatrixIn;
-MObject     MatrixSpline::test;
-MObject     MatrixSpline::aprimaryAxis;
-MObject     MatrixSpline::asecondaryAxis;
+MObject     MatrixSpline::aAxis;
 MObject     MatrixSpline::amatrixOut;
 
 MatrixSpline::MatrixSpline() {}
@@ -17,10 +15,47 @@ MStatus MatrixSpline::compute(const MPlug& plug, MDataBlock& data)
 
 {
 	MStatus status;
-	unsigned i,j;
+	unsigned i, j;
 
-	MVector aimVec = data.inputValue(aprimaryAxis).asVector();
-	MVector upVec = data.inputValue(asecondaryAxis).asVector();
+	MString axis_str = data.inputValue(aAxis).asString();
+	//MVector aimVec = data.inputValue(aprimaryAxis).asFloatVector();
+	//MVector upVec = data.inputValue(asecondaryAxis).asFloatVector();
+	MStringArray str_array;
+	axis_str.split(',', str_array);
+	MVector aimVec;
+	MVector upVec;
+
+	map<string, MVector> axis_map;
+
+	axis_map["+x"] = MVector::xAxis;
+	axis_map["+y"] = MVector::yAxis;
+	axis_map["+z"] = MVector::zAxis;
+
+	axis_map["-x"] = -(MVector::xAxis);
+	axis_map["-y"] = -(MVector::yAxis);
+	axis_map["-z"] = -(MVector::zAxis);
+
+	if (str_array.length() == 2)
+	{
+		if (axis_map.count(string(str_array[0].asChar())) > 0)
+		{
+			aimVec = axis_map[string(str_array[0].asChar())];
+		}
+		if (axis_map.count(string(str_array[1].asChar())) > 0)
+		{
+			upVec = axis_map[string(str_array[1].asChar())];
+		}
+		else
+		{
+			aimVec = MVector::xAxis;
+			upVec = MVector::yAxis;
+		}
+	}
+	else
+	{
+		aimVec = MVector::xAxis;
+		upVec = MVector::yAxis;
+	}
 
 	MArrayDataHandle inMatrixArrayHandle = data.inputArrayValue(amatrixIn);
 	MArrayDataHandle outMatrixArrayHandle = data.outputArrayValue(amatrixOut);
@@ -29,7 +64,7 @@ MStatus MatrixSpline::compute(const MPlug& plug, MDataBlock& data)
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 
 	MMatrixArray cvMatricies;
-	for (i=0; i<in_count; i++)
+	for (i = 0; i < in_count; i++)
 	{
 		inMatrixArrayHandle.jumpToElement(i);
 		MMatrix matrix_in(inMatrixArrayHandle.inputValue(&status).asMatrix());
@@ -39,16 +74,18 @@ MStatus MatrixSpline::compute(const MPlug& plug, MDataBlock& data)
 	int out_count = outMatrixArrayHandle.elementCount(&status);
 	CHECK_MSTATUS_AND_RETURN_IT(status);
 	MMatrixArray outMatrixArray = calculateMatrix(in_count, out_count, 3, cvMatricies, aimVec, upVec);
+	outMatrixArray[0] = cvMatricies[0];
+	if (out_count >= 2)
+	{
+		outMatrixArray[outMatrixArray.length() - 1] = cvMatricies[cvMatricies.length() - 1];
+	}
 	
-	for (j=0; j< out_count; j++)
+	for (j = 0; j < out_count; j++)
 	{
 		outMatrixArrayHandle.jumpToElement(j);
 		MDataHandle h = outMatrixArrayHandle.outputValue(&status);
-		h.setMMatrix(outMatrixArray[i]);
+		h.setMMatrix(outMatrixArray[j]);
 	}
-
-	MDataHandle testH = data.outputValue(test);
-	testH.setDouble(in_count);
 
 	data.setClean(plug);
 
@@ -66,6 +103,7 @@ MStatus MatrixSpline::initialize()
 	MFnNumericAttribute nAttr;
 	MFnMatrixAttribute mAttr;
 	MFnCompoundAttribute cAttr;
+	MFnTypedAttribute tAttr;
 
 	amatrixOut = mAttr.create("matrixOut", "mao");
 	mAttr.setArray(true);
@@ -74,12 +112,6 @@ MStatus MatrixSpline::initialize()
 	mAttr.setWritable(false);
 	addAttribute(amatrixOut);
 
-	test = nAttr.create("test", "test",MFnNumericData::kDouble,0.0);
-	mAttr.setKeyable(false);
-	mAttr.setStorable(false);
-	mAttr.setWritable(false);
-	addAttribute(test);
-
 	amatrixIn = mAttr.create("matrixIn", "mai");
 	mAttr.setArray(true);
 	mAttr.setKeyable(true);
@@ -87,19 +119,12 @@ MStatus MatrixSpline::initialize()
 	mAttr.setWritable(true);
 	addAttribute(amatrixIn);
 	attributeAffects(amatrixIn, amatrixOut);
-	attributeAffects(amatrixIn, test);
 
-	aprimaryAxis = nAttr.createPoint("primary", "pri");
+	aAxis = tAttr.create("axis", "axis", MFnData::kString);
 	nAttr.setStorable(true);
 	nAttr.setWritable(true);
-	addAttribute(aprimaryAxis);
-	attributeAffects(aprimaryAxis, amatrixOut);
-
-	asecondaryAxis = nAttr.createPoint("secondary", "sdi");
-	nAttr.setStorable(true);
-	nAttr.setWritable(true);
-	addAttribute(asecondaryAxis);
-	attributeAffects(asecondaryAxis, amatrixOut);
+	addAttribute(aAxis);
+	attributeAffects(aAxis, amatrixOut);
 
 	return MS::kSuccess;
 }
@@ -147,9 +172,14 @@ vector<Ttype> pointOnCurveWeights(cvTypeName cvs, double t, double degree)
 
 	// Determine which segment the t lies in
 	int segment = degree;
+	vector<int> indexes;
 	for (i = order; i < knots.length() - order; i++)
 	{
-		if (knots[i] <= t_)
+		indexes.push_back(i);
+	}
+	for (i = 0; i < indexes.size(); i++)
+	{
+		if (knots[indexes[i]] <= t_)
 		{
 			segment = i + order;
 		}
@@ -163,11 +193,10 @@ vector<Ttype> pointOnCurveWeights(cvTypeName cvs, double t, double degree)
 
 	// Run a modified version of de Boors algorithm
 	vector<map<int, double>> cvWeights;
-	for (j = 0; j < _cvs_.length(); j++)
+	for (j = 0; j < cvs_.size(); j++)
 	{
 		map<int, double> cvObject;
-		cvObject.insert(map<int, double>::value_type(j, 1.0));
-		//cvObject[j] = 1.0;
+		cvObject.insert(map<int, double>::value_type(cvs_[j], 1.0));
 		cvWeights.push_back(cvObject);
 	}
 
@@ -204,12 +233,14 @@ vector<Ttype> pointOnCurveWeights(cvTypeName cvs, double t, double degree)
 			cvWeights[j] = weights;
 		}
 	}
-	for (i = 0; i < cvWeights[degree].size(); i++)
+	map<int, double> cvWeights_ = cvWeights[degree];
+	for (auto it = cvWeights_.begin(); it != cvWeights_.end(); it++)
 	{
-		double weight = cvWeights[degree][i];
+		int index = it->first;
+		double weight = it->second;
 
 		Ttype arr;
-		arr.mat = cvs[i];
+		arr.mat_num = cvs[index];
 		arr.weight = weight;
 
 		weightsArray.push_back(arr);
@@ -233,9 +264,14 @@ vector<Ttype> tangentOnCurveWeights(cvTypeName cvs, double t, int degree)
 
 	// Determine which segment the t lies in
 	int segment = degree;
+	vector<int> indexes;
 	for (i = order; i < knots.length() - order; i++)
 	{
-		if (knots[i] <= t_)
+		indexes.push_back(i);
+	}
+	for (i = 0; i < indexes.size(); i++)
+	{
+		if (knots[indexes[i]] <= t_)
 		{
 			segment = i + order;
 		}
@@ -291,7 +327,7 @@ vector<Ttype> tangentOnCurveWeights(cvTypeName cvs, double t, int degree)
 	map<int, double> weights_ = qWeights[degree_];
 
 	// Take the lower order weights and match them to our actual cvs
-	vector<weightInfo2> cvWeights;
+	vector<WeightInfo<int>> cvWeights;
 	for (j = 0; j < degree_ + 1; j++)
 	{
 		double weight = weights_[j];
@@ -299,12 +335,12 @@ vector<Ttype> tangentOnCurveWeights(cvTypeName cvs, double t, int degree)
 		int cv1 = j + segment - degree_ - 1;
 		double alpha = weight * (degree_ + 1) / (knots[j + segment + 1] - knots[j + segment - degree_]);
 
-		weightInfo2 info1;
-		info1.num = cvs_[cv0];
+		WeightInfo<int> info1;
+		info1.mat_num = cvs_[cv0];
 		info1.weight = alpha;
 
-		weightInfo2 info2;
-		info2.num = cvs_[cv1];
+		WeightInfo<int> info2;
+		info2.mat_num = cvs_[cv1];
 		info2.weight = -alpha;
 
 		cvWeights.push_back(info1);
@@ -314,10 +350,11 @@ vector<Ttype> tangentOnCurveWeights(cvTypeName cvs, double t, int degree)
 	for (i = 0; i < cvWeights.size(); i++)
 	{
 		double weight = cvWeights[i].weight;
-		int num = cvWeights[i].num;
+		int num = cvWeights[i].mat_num;
+		
 		Ttype weightInfos;
 		MMatrix matrix = cvs[num];
-		weightInfos.mat = matrix;
+		weightInfos.mat_num = matrix;
 		weightInfos.weight = weight;
 		tangentWeights.push_back(weightInfos);
 	}
@@ -326,8 +363,8 @@ vector<Ttype> tangentOnCurveWeights(cvTypeName cvs, double t, int degree)
 }
 
 MMatrixArray MatrixSpline::calculateMatrix(int count, int pCount, int degree,
-													  MMatrixArray cvMatricies, MVector aimAxis,
-													  MVector upAxis)
+	MMatrixArray cvMatricies, MVector aimAxis,
+	MVector upAxis)
 {
 	MMatrixArray result;
 	unsigned i, j;
@@ -335,14 +372,14 @@ MMatrixArray MatrixSpline::calculateMatrix(int count, int pCount, int degree,
 	for (i = 0; i < pCount; i++)
 	{
 		double t = double(i) / double(pCount - 1);
-		vector<WeightInfo> pointMatrixWeights = pointOnCurveWeights<WeightInfo, MMatrixArray>(cvMatricies, t, degree);
-		vector<WeightInfo> tangentMatrixWeights = tangentOnCurveWeights<WeightInfo, MMatrixArray>(cvMatricies, t, degree);
-		
+		vector<WeightInfo<MMatrix>> pointMatrixWeights = pointOnCurveWeights<WeightInfo<MMatrix>, MMatrixArray>(cvMatricies, t, degree);
+		vector<WeightInfo<MMatrix>> tangentMatrixWeights = tangentOnCurveWeights<WeightInfo<MMatrix>, MMatrixArray>(cvMatricies, t, degree);
+
 		// pointMatrix
 		MMatrixArray pointSumArray;
 		for (j = 0; j < pointMatrixWeights.size(); j++)
 		{
-			MMatrix matrix = pointMatrixWeights[j].mat;
+			MMatrix matrix = pointMatrixWeights[j].mat_num;
 			double weight = pointMatrixWeights[j].weight;
 			MMatrix multMat = weight * matrix;
 			pointSumArray.append(multMat);
@@ -366,13 +403,12 @@ MMatrixArray MatrixSpline::calculateMatrix(int count, int pCount, int degree,
 		MMatrixArray tangentSumArray;
 		for (j = 0; j < tangentMatrixWeights.size(); j++)
 		{
-			MMatrix matrix = tangentMatrixWeights[j].mat;
+			MMatrix matrix = tangentMatrixWeights[j].mat_num;
 			double weight = tangentMatrixWeights[j].weight;
 			MMatrix multMat = weight * matrix;
 			tangentSumArray.append(multMat);
 		}
 
-		// do Something like wtAddMatrix node
 		MMatrix aimMat = tangentSumArray[0];
 		if (cvMatricies.length() == 1)
 		{
@@ -388,27 +424,43 @@ MMatrixArray MatrixSpline::calculateMatrix(int count, int pCount, int degree,
 
 		// aimMatrix
 		MVector aimVect = MPxTransformationMatrix(aimMat).translation();
+		MVector pointVec = MPxTransformationMatrix(pointMat).translation();
+		aimVect.normalize();
+
 		MVector U = aimVect.normal();
-		MVector V = MGlobal::upAxis();
-		MVector W = (U^V).normal();
+		U.normalize();
+
+		MVector worldUp = MVector::zAxis;
+		MVector V = worldUp * pointMat;
+		V.normalize();
+
+		MVector W = (U ^ V).normal();
+		W.normalize();
+
 		V = W ^ U;
 		MQuaternion quat;
-		MQuaternion quat_U = MQuaternion(aimAxis, U);
-		quat = quat_U;
+		MQuaternion quat_u(aimAxis, U);
+		quat = quat_u;
+
 		MVector upRotated = upAxis.rotateBy(quat);
 		double angle = acos(upRotated * V);
-		MQuaternion quat_V = MQuaternion(angle, U);
-		if (! V.isEquivalent(upRotated.rotateBy(quat_V), 1.0e-5))
+		MQuaternion quat_v(angle, U);
+
+		if (!V.isEquivalent(upRotated.rotateBy(quat_v), 1.0e-5))
 		{
-			angle = (2*pi) - angle;
-			quat_V = MQuaternion(angle, U);
+			angle = (2 * pi) - angle;
+			quat_v = MQuaternion(angle, U);
 		}
-		quat *= quat_V;
-		MPxTransformationMatrix translate_trMat = MPxTransformationMatrix(pointMat);
-		MTransformationMatrix tr_mat;
-		tr_mat.setTranslation(translate_trMat.translation(), MSpace::kWorld);
-		tr_mat.setRotationQuaternion(quat.x, quat.y, quat.z, quat.w);
-		result.append(tr_mat.asMatrix());
+
+		quat *= quat_v;
+
+		MPxTransformationMatrix point_matrix(pointMat);
+		MTransformationMatrix finalMatrix;
+
+		finalMatrix.setRotationQuaternion(quat.x, quat.y, quat.z, quat.w);
+		finalMatrix.setTranslation(point_matrix.translation(), MSpace::kWorld);
+
+		result.append(finalMatrix.asMatrix());
 	}
 
 	return result;

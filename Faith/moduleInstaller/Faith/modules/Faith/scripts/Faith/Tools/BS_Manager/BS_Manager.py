@@ -7,14 +7,14 @@ import pymel.core as pm,maya.mel as mel,maya.cmds as mc,maya.cmds as cmds
 from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 from PySide2 import QtCore, QtWidgets, QtGui
 # from imp import reload
-from Faith.Tools.BS_Manager.UI import BS_List as listui
-from Faith.Tools.BS_Manager.UI import list_item as itemui
-from Faith.Tools.BS_Manager.UI import item_widget as co_widget
-from Faith.Tools.BS_Manager.UI import BS_clone as cloneui
-from Faith.Tools.BS_Manager.UI import between_item as betweenui
-from Faith.Tools.BS_Manager.UI import driver as drvui
-from Faith.Tools.BS_Manager.UI import MainWin as mainWin
-from Faith.Tools.BS_Manager import corrective
+from Faith.tools.BS_Manager.UI import BS_List as listui
+from Faith.tools.BS_Manager.UI import list_item as itemui
+from Faith.tools.BS_Manager.UI import item_widget as co_widget
+from Faith.tools.BS_Manager.UI import BS_clone as cloneui
+from Faith.tools.BS_Manager.UI import between_item as betweenui
+from Faith.tools.BS_Manager.UI import driver as drvui
+from Faith.tools.BS_Manager.UI import MainWin as mainWin
+from Faith.tools.BS_Manager import corrective
 from Faith.maya_utils import blendShape_utils
 from Faith.Core import aboutUI
 
@@ -119,8 +119,7 @@ class BS_Manager(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         body_layout.setSpacing(3)
         body_layout.setAlignment(QtCore.Qt.AlignTop)
 
-        for widget in widgets:
-            body_layout.addWidget(widget)
+        [body_layout.addWidget(widget) for widget in widgets]
 
         body_scroll_area = QtWidgets.QScrollArea()
         body_scroll_area.setFrameShape(QtWidgets.QFrame.NoFrame)
@@ -291,13 +290,15 @@ class BS_Manager(MayaQWidgetDockableMixin, QtWidgets.QDialog):
             self.BlendNode = ""
 
         if self.BlendNode != "":
+            # self.listUI.add_btn.setEnable
             self.listUI.bs_cb.setItemText(0, self.BlendNode)
             self.targetBlendShape = cmds.listAttr(self.BlendNode + '.weight', multi=True)
             targetInt = cmds.blendShape(self.BlendNode, query=True, wc=True)
 
             if targetInt > 0:
-                for i,target in enumerate(self.targetBlendShape):
-                    self.refreshItem(self.listUI.bs_cb.currentText(), target)
+                [self.refreshItem(self.listUI.bs_cb.currentText(), target)
+                 for i,target in enumerate(self.targetBlendShape)]
+
 
     def refreshItem(self, bsName, targetName):
         """

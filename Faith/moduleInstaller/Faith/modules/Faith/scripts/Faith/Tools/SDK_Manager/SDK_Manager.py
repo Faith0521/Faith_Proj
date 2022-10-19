@@ -6,7 +6,7 @@ import pymel.core as pm,maya.mel as mel
 # ui import
 from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 from PySide2 import QtCore, QtWidgets, QtGui
-from Faith.Tools.SDK_Manager.UI import UI as mui
+from Faith.tools.SDK_Manager.UI import UI as mui
 from Faith.Core import aboutUI,aboutSDK
 from dayu_widgets.message import MMessage
 from dayu_widgets.toast import MToast
@@ -56,7 +56,6 @@ class DockableMainUI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
         self.create_window()
         self.create_layout()
         self.create_connections()
-        # # self.refreshList()
 
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
 
@@ -177,17 +176,15 @@ class DockableMainUI(MayaQWidgetDockableMixin, QtWidgets.QDialog):
             drivenList = []
             if self.mainUI.frnt_rbtn.isChecked():
                 self.allSDKInfo_dict = aboutSDK.getSDKInfoFromNode(node, "front")
-                for animNode, infoDict in self.allSDKInfo_dict.items():
-                    drivenList.extend(infoDict["drivenAttrs"])
-                drivenList = set(drivenList)
-                for obj in drivenList:
-                    model_01.appendRow(QtGui.QStandardItem(obj))
+                [drivenList.extend(infoDict["drivenAttrs"]) for animNode, infoDict in self.allSDKInfo_dict.items()]
+                drivenList = (set(sorted(drivenList)))
+                map(lambda x: model_01.appendRow(QtGui.QStandardItem(x)),drivenList)
+                # [model_01.appendRow(QtGui.QStandardItem(obj)) for obj in drivenList]
                 self.__proxyModel02.setSourceModel(model_01)
             if self.mainUI.after_rbtn.isChecked():
                 self.allSDKInfo_dict = aboutSDK.getSDKInfoFromNode(node, "after")
-                for animNode, infoDict in self.allSDKInfo_dict.items():
-                    driverAttrs.append(infoDict["driverAttr"])
-                driverAttrs = set(driverAttrs)
+                [driverAttrs.append(infoDict["driverAttr"]) for animNode, infoDict in self.allSDKInfo_dict.items()]
+                driverAttrs = set(sorted(driverAttrs))
                 for attr in driverAttrs:
                     model_02.appendRow(QtGui.QStandardItem(attr))
                     self.__proxyModel01.setSourceModel(model_02)

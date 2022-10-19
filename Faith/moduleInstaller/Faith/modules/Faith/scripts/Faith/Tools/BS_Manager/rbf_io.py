@@ -25,8 +25,9 @@ def createRBFNode(driverNode,
     driver_grp = driverNode + "_driverGrp"
     if not mc.objExists(driverNode + "_driverGrp"):
         mc.createNode("transform", name = driverNode + "_driverGrp")
-    mc.rename(driver[0], driverNode + "_WD")
-    mc.parent(driver[0], driver_grp)
+    driver = mc.rename(driver[0], driverNode + "_WD")
+    driverShape = mc.listRelatives(driver, s=True)[0]
+    mc.parent(driver, driver_grp)
 
     dirValues,offsetNode = getPrimaryAxis(driverNode, 0)
 
@@ -69,6 +70,8 @@ def createRBFNode(driverNode,
     mel.eval("setAttr " + driverShape + ".driverList[0].pose[0].cpv -type \"doubleArray\" " + str(len(valueList)-1) + " " + floatArrayToString(valueList[1:], " "))
     mc.setAttr("%s.driverList[0].pose[0].cpro"%driverShape, mc.getAttr(driverNode + ".rotateOrder"))
 
+    return driver
+
 
 def createRbfPose(rbfNode, driverNode):
     """
@@ -78,7 +81,6 @@ def createRbfPose(rbfNode, driverNode):
     @return:
     """
     item = findEmptyMultiIndex("%s.driverList[0].pose"%rbfNode)
-
     mc.setAttr("%s.driverList[0].pose[%d].poseMode" % (rbfNode, item), 1)
 
     # make the connections
@@ -213,6 +215,35 @@ def getJointTranslation(node):
         return node
 
     return result
+
+def getRbfDriverIndices(driver):
+    """
+
+    :param driver:
+    :return:
+    """
+    allIds = mc.getAttr("%s.driverList"%driver, mi=True)
+    ids = []
+    for id in allIds:
+        conn = mc.listConnections("%s.driverList[%d].driverInput"%(driver, id), s=True,d=False)
+        if conn:
+            ids.append(id)
+    return ids
+
+def shapesDriver_getWeightDriverDriver(driver):
+    """
+
+    :param driver:
+    :param ids:
+    :return:
+    """
+    nodes = []
+    ids = getRbfDriverIndices(driver)
+    for id in ids:
+        tmp = mc.listConnections("%s.driverList[%d].driverInput"%(driver, id), p=1)
+        tmp = pm.mel.stringToStringArray(tmp[0], ".")
+        nodes.append(tmp[0])
+    return nodes
 
 def mirrorRbfNode(solver):
     """

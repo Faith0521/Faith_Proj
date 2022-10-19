@@ -52,6 +52,77 @@ def get_all_attributes(object_name=""):
     return cnst_attr.all_attrs.keys()
 
 
+def addAttributes(node,
+                  longName,
+                  type,
+                  value=None,
+                  niceName=None,
+                  shortName=None,
+                  min=None,
+                  max=None,
+                  keyable=True,
+                  readable=True,
+                  storable=True,
+                  writable=True,
+                  channelBox=False):
+    """
+
+    :param node:
+    :param longName:
+    :param type:
+    :param value:
+    :param niceName:
+    :param shortName:
+    :param min:
+    :param max:
+    :param keyable:
+    :param readable:
+    :param storable:
+    :param writable:
+    :param channelBox:
+    :return:
+    """
+    if cmds.attributeQuery(longName, node = node, exists=True):
+        return
+
+    flag_data = {}
+
+    if shortName is not None:
+        flag_data["shortName"] = shortName
+    if niceName is not None:
+        flag_data["niceName"] = niceName
+    if type == "string":
+        flag_data["dataType"] = type
+    else:
+        flag_data["attributeType"] = type
+
+    if min is not None and min is not False:
+        flag_data["minValue"] = min
+    if max is not None and max is not False:
+        flag_data["maxValue"] = max
+
+    flag_data["keyable"] = keyable
+    flag_data["readable"] = readable
+    flag_data["storable"] = storable
+    flag_data["writable"] = writable
+
+    if value is not None and type not in ["string"]:
+        flag_data["defaultValue"] = value
+
+    cmds.addAttr(node, ln = longName, **flag_data)
+
+    if value is not None:
+        if type in ["string"]:
+            cmds.setAttr("%s.%s"%(node, longName), value, type=type)
+        else:
+            cmds.setAttr("%s.%s" % (node, longName), value)
+
+    if channelBox:
+        cmds.setAttr("%s.%s" % (node, longName), channelBox=True)
+
+    return longName
+
+
 class ImmutableDict(dict):
     def __setitem__(self, key, value):
         raise TypeError("%r object does not support item assignment" % type(self).__name__)
@@ -637,5 +708,52 @@ class Attributes:
         except IndexError:
             raise StopIteration
 
+class attrDef_create(object):
 
+    def __init__(self,
+                 name,
+                 type,
+                 value,
+                 niceName=None,
+                 shortName=None,
+                 minimum=None,
+                 maximum=None,
+                 keyable=True,
+                 readable=True,
+                 storable=True,
+                 writable=True
+                 ):
+        self.attr_name = name
+        self.niceName = niceName
+        self.shortName = shortName
+        self.valueType = type
+        self.value = value
+        self.minimum = minimum
+        self.maximum = maximum
+        self.keyable = keyable
+        self.readable = readable
+        self.storable = storable
+        self.writable = writable
+        self.attr_dict = {}
+
+    def add(self, node):
+        """
+
+        :param node:
+        :return:
+        """
+        attr_name = addAttributes(node,
+                                 self.attr_name,
+                                 self.valueType,
+                                 self.value,
+                                 self.niceName,
+                                 self.shortName,
+                                 self.minimum,
+                                 self.maximum,
+                                 self.keyable,
+                                 self.readable,
+                                 self.storable,
+                                 self.writable)
+
+        return node, attr_name
 

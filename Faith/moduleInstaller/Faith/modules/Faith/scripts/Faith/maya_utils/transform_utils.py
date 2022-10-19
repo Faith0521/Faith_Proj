@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: 46314
 # @Date:   2022-09-18 17:14:20
-# @Last Modified by:   46314
-# @Last Modified time: 2022-09-18 17:14:29
+# @Last Modified by:   尹宇飞
+# @Last Modified time: 2022-09-29 19:15:25
 
 # import standard modules
 import math
@@ -10,7 +10,8 @@ import math
 # import maya modules
 from maya import OpenMaya
 from maya import cmds
-
+from pymel.core import datatypes as dt
+from pymel import core as pm
 # import local modules
 from . import object_utils
 
@@ -784,3 +785,59 @@ def mirror_object(control_name="", mirror_obj_name="", invert_rotate=False, keep
         cmds.xform(mirror_obj_name, ro=rotation_values)
     return True
 
+def calculateOffsetMatrix(driverMatrix, drivenMatrix, point=True):
+    """
+
+    :param driverMatrix:
+    :param drivenMatrix:
+    :param point:
+    :return:
+    """
+    driver_trans_matrix = dt.Matrix(
+        (1.0, 0.0, 0.0, 0.0),
+        (0.0, 1.0, 0.0, 0.0),
+        (0.0, 0.0, 1.0, 0.0),
+        (driverMatrix.translate.x, driverMatrix.translate.y, driverMatrix.translate.z, 1.0)
+    )
+
+    driven_trans_matrix = dt.Matrix(
+        (1.0, 0.0, 0.0, 0.0),
+        (0.0, 1.0, 0.0, 0.0),
+        (0.0, 0.0, 1.0, 0.0),
+        (drivenMatrix.translate.x, drivenMatrix.translate.y, drivenMatrix.translate.z, 1.0)
+    )
+
+    if point:
+        offset = driven_trans_matrix * driver_trans_matrix.inverse()
+    else:
+        offset = drivenMatrix * driverMatrix.inverse()
+
+    return offset
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        

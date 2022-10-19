@@ -752,7 +752,7 @@ class Rig(Main):
                     break
 
                 parent_root = parent_root.getParent()
-
+ 
         comp_guide.drawFromUI(parent, showUI)
 
     def drawUpdate(self, oldRoot, parent=None):

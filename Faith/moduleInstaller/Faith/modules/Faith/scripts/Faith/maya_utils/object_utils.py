@@ -9,8 +9,8 @@ import re,collections
 from maya import cmds
 from maya import OpenMaya as om
 from maya import OpenMayaAnim as aom
-# from Faith.maya_utils import attribute_utils
-from Faith.Core.aboutPy import PY2
+from pymel import core as pm
+from .python_utils import PY2
 
 if PY2:
     STR = basestring
@@ -1066,104 +1066,18 @@ def get_m_parent(m_object=None, find_parent='', with_shape='', as_strings=False)
     return return_data
 
 
-def get_m_child(m_object=None, find_child=True, with_type='', with_shape='', transform=False, as_strings=False):
+def findChildren(node, name):
     """
-    finds the child from the maya object provided.
-    :param m_object: <om.MObject> the object to get the parents from.
-    :param find_child: <str> find this child from the object provided.
-    :param with_shape: <str> find a child containing this shape object.
-    :param transform: <bool> get transform objects only.
-    :param as_strings: return objects as strings.
-    :return: <list> found objects.
+    finds the child node.
+    :param node:
+    :param name:
+    :return:
     """
-    fn_object = om.MFnDagNode(m_object)
-    return_data = ()
-    ch_count = fn_object.childCount()
-    if ch_count:
-        m_dag = om.MDagPath()
-        fn_object.getPath(m_dag)
-        m_iter = om.MItDag(om.MItDag.kBreadthFirst)
-        m_iter.reset(m_dag)
 
-        # iterate from the dag path provided
-        while not m_iter.isDone():
-            o_path = om.MDagPath()
-            m_iter.getPath(o_path)
-            ch_node = o_path.node()
-            if as_strings:
-                ch_item = o_path.partialPathName()
-            else:
-                ch_item = ch_node
-
-            # return a child that matches a name
-            if isinstance(find_child, (STR, UNICODE)) and find_child in o_path.partialPathName():
-                # find the shape associated with the node object node.
-                if with_shape:
-                    fn_item = om.MFnDagNode(m_iter.item())
-                    c_count = fn_item.childCount()
-                    if c_count:
-                        for ch_i in range(c_count):
-                            if fn_item.child(ch_i).hasFn(node_types[with_shape]):
-                                return_data += (ch_item,)
-                else:
-                    if transform:
-                        if has_fn(ch_node, 'transform'):
-                            return_data += (ch_item,)
-                    else:
-                        return_data += (ch_item,)
-
-            # return all children
-            else:
-                if transform:
-                    if has_fn(ch_node, 'transform'):
-                        return_data += (ch_item,)
-                else:
-                    return_data += (ch_item,)
-            m_iter.next()
-    return return_data
-
-
-def get_children_obj(object_name, type_name=''):
-    """
-    return all children from this object name.
-    :param object_name: the object to get children objects from.
-    :param type_name: filter only the children of this type.
-    :return: <tuple> child objects.
-    """
-    m_obj = get_m_obj(object_name)
-    children = get_m_child(m_obj, transform=True)
-
-    if not type_name:
-        return children
-
-    proper_children = ()
-    for ch in children:
-        if not has_fn(ch, type_name):
-            continue
-        proper_children += (ch,)
-    return proper_children
-
-
-def get_children_names(object_name, type_name=''):
-    """
-    return all children from this object name.
-    :param object_name: the object to get children objects from.
-    :param type_name: filter only the children of this type.
-    :return: <tuple> child objects.
-    """
-    m_obj = get_m_obj(object_name)
-    children = get_m_child(m_obj, transform=True, as_strings=True)
-
-    if not type_name:
-        return children
-
-    proper_children = ()
-    for ch in children:
-        if not has_fn(get_m_obj(ch), type_name):
-            continue
-        proper_children += (ch,)
-    return proper_children
-
+    for item in cmds.listRelatives(node, allDescendents=True):
+        if item.split("|")[-1] == name:
+            return name
+    return False
 
 def get_parent_name(object_name):
     """

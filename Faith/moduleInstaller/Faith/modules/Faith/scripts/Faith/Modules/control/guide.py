@@ -12,7 +12,7 @@ from pymel import core as pm
 from Faith.modules import library
 reload(library)
 
-TYPE = "control"
+CLASS = "control"
 NAME = "control"
 GUIDE_POSITION = {
     "root": [0.0, 0.0, 0.0]
@@ -20,22 +20,37 @@ GUIDE_POSITION = {
 DESCRIPTION = "Simple controler with space switch and Rot order selection. \n"
 
 class guide(library.guideBase):
-    def __init__(self, userGuideName):
-       self.guideModuleName = TYPE
-       self.name = NAME
-       self.description = DESCRIPTION
-       self.userGuideName = userGuideName
-       self.rigType = TYPE
+
+    def __init__(self, *args, **kwargs):
+        kwargs["CLASS"] = CLASS
+        kwargs["NAME"] = NAME
+        kwargs["DESCRIPTION"] = DESCRIPTION
+        library.guideBase.__init__(self, *args, **kwargs)
 
     def createGuide(self):
-        self.guideNamespace = self.guideModuleName + "__" + self.userGuideName
+        self.root = self.addRoot()
 
-        mc.namespace(setNamespace=":")
-        self.namespaceExists = mc.namespace(exists=self.guideNamespace)
+        mc.select(d = True)
+        self.jointList = []
+        for joint,pos in GUIDE_POSITION.items():
+            jnt = mc.joint(n = self.guideName + joint)
+            mc.xform(jnt, t=pos, ws = True)
+            self.jointList.append(jnt)
 
-        self.guideName = self.guideNamespace + ":"
-        self.root = self.guideName + "Base"
+        mc.parent(self.jointList, self.root)
 
-        if not self.namespaceExists:
-            mc.namespace(add=self.guideNamespace)
-        self.addRoot()
+    def addPrivateAttrs(self):
+        """
+
+        :return:
+        """
+        # self.joints_num = self.addAttr("joint_num", "double", 1)
+        self.primary = self.addAttr("primary_axis", "string", "+x")
+        self.secondary = self.addAttr("secondary_axis", "string", "+y")
+
+    def rigModule(self, *args):
+        """
+
+        :return:
+        """
+        print("rigging.................")

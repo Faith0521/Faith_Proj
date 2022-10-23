@@ -122,6 +122,18 @@ def importFromStandardOrCustomDirectories(directories,
 
     return module
 
+def findAllModules():
+    dirs = getDirectories()
+    pyFilesList = []
+    removeClassList = ["__pycache__", ]
+    for path, fileList in dirs.items():
+        for file in fileList:
+            path_ = path + '//' + file
+            if os.path.isdir(path_) and str(file) not in removeClassList:
+                pyFilesList.append(file)
+
+    return pyFilesList
+
 def findLastNumber(nameList, basename):
     """
 
@@ -173,15 +185,149 @@ def findLastNumber(nameList, basename):
         finalValue = existValue
     return finalValue
 
+def getModulesToBeRigged(instanceList):
+    modulesToBeRiggedList = []
+    allNamespaceList = mc.namespaceInfo(listNamespace=True)
+    for guideModule in instanceList:
+        if guideModule.confirmModules():
+            guideNamespaceName = guideModule.guideNamespace
+            if guideNamespaceName in allNamespaceList:
+                    modulesToBeRiggedList.append(guideModule)
+    return modulesToBeRiggedList
+
+def getRigCollections():
+    data = {}
+    allList = mc.ls(type='transform')
+    for item in allList:
+        if mc.objExists(item + '.guide_base') and mc.getAttr(item + '.guide_base') == 1:
+            # module info
+            guideNamespace      = item[:item.find(':')]
+            guideName           = item[:item.find('__')]
+            guideInstance       = item[item.rfind('__') + 2:item.find(':')]
+            guideCustomName     = mc.getAttr(item + '.prefix_name')
+            guideMirrorAis      = mc.getAttr(item + '.mirror_axis')
+            mirrorName          = mc.getAttr(item + '.mirror_name')
+            guideMirrorName = [mirrorName[0] + "_", mirrorName[len(mirrorName) - 1:] + "_"]
+
+            guideChildrenList = []
+            childrenList = mc.listRelatives(item, allDescendents=True, type='transform')
+            if childrenList:
+                for child in childrenList:
+                    if mc.objExists(child + '.guide_base'):
+                        if mc.getAttr(child + '.guide_base') == 1:
+                            guideChildrenList.append(child)
+            guideParentList = []
+            parentNodeList = []
+            parentNode = ''
+            parentList = mc.listRelatives(item, parent=True, type='transform')
+            if parentList:
+                next_ = True
+                while next_:
+                    if mc.objExists(parentList[0] + '.guide_base') and \
+                        mc.getAttr(parentList[0] + '.guide_base') == 1:
+                        guideParentList.append(parentList[0])
+                        next_ = False
+                    else:
+                        if not parentNodeList:
+                            parentNodeList.append(parentList[0])
+                        parentList = mc.listRelatives(parentList[0], parent=True, type='transform')
+                        if parentList: next_ = True
+                        else: next_ = False
+                
+                if guideParentList:
+                    guideParent         = guideParentList[0]
+                    parentModule        = guideParent[:guideParent.find('__')]
+                    parentInstance      = guideParent[guideParent.rfind('__')+2:guideParent.find(":")] 
+                    parentCustomName    = mc.getAttr(guideParent + '.prefix_name')
+                    parentMirrorAis     = mc.getAttr(guideParent + '.mirror_axis')
+                    mirrorName          = mc.getAttr(guideParent + '.mirror_name')
+                    parentMirrorName    = [mirrorName[0]+"_" , mirrorName[len(mirrorName)-1:]+"_"]
+
+                    # if parentNodeList:
+                    parentGuideEnd = parentNodeList[0][parentNodeList[0].find(':') + 1:]
+                    
+                parentNode = mc.listRelatives(item, parent=True, type='transform')[0]
+
+                # print(guideParentList, guideChildrenList)
+            if guideParentList and guideChildrenList:
+                data[item] = {
+                    "guideNamespace"    : guideNamespace,
+                    "guideName"         : guideName,
+                    "guideInstance"     : guideInstance,
+                    "guideCustomName"   : guideCustomName,
+                    "guideMirrorAis"    : guideMirrorAis,
+                    "guideMirrorName"   : guideMirrorName,
+                    "guideParent"       : guideParent,
+                    "fatherNode"        : parentNodeList[0],
+                    "parentModule"      : parentModule,
+                    "parentInstance"    : parentInstance,
+                    "parentCustomName"  : parentCustomName,
+                    "parentMirrorAis"   : parentMirrorAis,
+                    "parentMirrorName"  : parentMirrorName,
+                    "parentGuideEnd"    : parentGuideEnd,
+                    "parentNode"        : parentNode,
+                    "childrenList"      : guideChildrenList
+                }
+            elif guideParentList:
+                data[item] = {
+                    "guideNamespace"    : guideNamespace,
+                    "guideName"         : guideName,
+                    "guideInstance"     : guideInstance,
+                    "guideCustomName"   : guideCustomName,
+                    "guideMirrorAis"    : guideMirrorAis,
+                    "guideMirrorName"   : guideMirrorName,
+                    "guideParent"       : guideParent,
+                    "fatherNode"        : parentNodeList[0],
+                    "parentModule"      : parentModule,
+                    "parentInstance"    : parentInstance,
+                    "parentCustomName"  : parentCustomName,
+                    "parentMirrorAis"   : parentMirrorAis,
+                    "parentMirrorName"  : parentMirrorName,
+                    "parentGuideEnd"    : parentGuideEnd,
+                    "parentNode"        : parentNode,
+                    "childrenList"      : []
+                }
+            elif guideChildrenList:
+                data[item] = {
+                "guideNamespace"    : guideNamespace,
+                "guideName"         : guideName,
+                "guideInstance"     : guideInstance,
+                "guideCustomName"   : guideCustomName,
+                "guideMirrorAis"    : guideMirrorAis,
+                "guideMirrorName"   : guideMirrorName,
+                "guideParent"       : "",
+                "fatherNode"        : "",
+                "parentModule"      : "",
+                "parentInstance"    : "",
+                "parentCustomName"  : "",
+                "parentMirrorAis"   : "",
+                "parentMirrorName"  : "",
+                "parentGuideEnd"    : "",
+                "parentNode"        : parentNode,
+                "childrenList"      : guideChildrenList
+            }
+            else:
+                data[item] = {
+                "guideNamespace"    : guideNamespace,
+                "guideName"         : guideName,
+                "guideInstance"     : guideInstance,
+                "guideCustomName"   : guideCustomName,
+                "guideMirrorAis"    : guideMirrorAis,
+                "guideMirrorName"   : guideMirrorName,
+                "guideParent"       : "",
+                "fatherNode"        : "",
+                "parentModule"      : "",
+                "parentInstance"    : "",
+                "parentCustomName"  : "",
+                "parentMirrorAis"   : "",
+                "parentMirrorName"  : "",
+                "parentGuideEnd"    : "",
+                "parentNode"        : parentNode,
+                "childrenList"      : []
+            }
 
 
-
-
-
-
-
-
-
+    return  data
 
 
 

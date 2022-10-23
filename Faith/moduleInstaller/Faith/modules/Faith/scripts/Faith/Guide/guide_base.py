@@ -112,13 +112,15 @@ class guideAttributes(object):
 class guideSetup(guideAttributes):
 
     def __init__(self):
-
+        self.instanceList = []
         self.attr_names = []
         self.attr_defs = {}
         self.values = {}
         self.index = []
 
-        self.addRootTagsAttributes()
+        self.allGuidesList = []
+        self.getMoudleInfo()
+        # self.addRootTagsAttributes()
 
     def addRootTagsAttributes(self):
         self.pRigName = self.addAttr("rig_name", "string", "rig")
@@ -151,7 +153,24 @@ class guideSetup(guideAttributes):
         module_guide_class = getattr(module, "guide")
         return module_guide_class
 
-    def setup_new_guide(self, parent, type):
+    def getUserName(self):
+        """
+
+        :return:
+        """
+        mc.namespace(setNamespace=":")
+        namespaceList = mc.namespaceInfo(listOnlyNamespaces=True)
+
+        for i in range(len(namespaceList)):
+            if namespaceList[i].find("__") != -1:
+                namespaceList[i] = namespaceList[i].partition("__")[2]
+
+        newSuffix = util.findLastNumber(namespaceList, "GUIDE_") + 1
+        # print(namespaceList)
+        userGuideName = "GUIDE_" + str(newSuffix)
+        return userGuideName
+
+    def setup_new_guide(self, type):
         """
         创建新的guide
         :param parent: the parent guide
@@ -161,20 +180,81 @@ class guideSetup(guideAttributes):
         guide = self.get_guide(type)
         if not guide:
             return
-        mc.namespace(setNamespace=":")
-        namespaceList = mc.namespaceInfo(listOnlyNamespaces=True)
-
-        for i in range(len(namespaceList)):
-            if namespaceList[i].find("__") != -1:
-                namespaceList[i] = namespaceList[i].partition("__")[2]
-
-        newSuffix = util.findLastNumber(namespaceList, "GUIDE_") + 1
-        print(namespaceList)
-        self.baseName = "GUIDE_" + str(newSuffix)
-
-        guideInstance = guide(self.baseName).createGuide()
+        userGuideName = self.getUserName()
+        guideInstance = guide(userGuideName, type)
         return guideInstance
         # guide.draw(parent)
+
+    def rig(self):
+        """
+
+        :return:
+        """
+        mc.refresh()
+        self.modulesToBeRiggedList = util.getModulesToBeRigged(self.instanceList)
+
+        self.rigModule = {}
+        if self.modulesToBeRiggedList:
+            progressAmount = 0
+            mc.progressWindow(title='GuideRigSystem', progress=progressAmount,
+                              status='Rigging : %0', isInterruptable=False)
+            maxProcess = len(self.modulesToBeRiggedList)
+
+            if mc.objExists('guideMirror_Grp'):
+                mc.delete('guideMirror_Grp')
+
+            for module in self.modulesToBeRiggedList:
+                guideModuleCustomName = mc.getAttr(module.root + '.module_name')
+                progressAmount += 1
+                mc.progressWindow(edit=True, maxValue=maxProcess, progress=progressAmount,
+                                    status=('Rigging : ' + repr(progressAmount) + ' ' + str(guideModuleCustomName)))
+
+                module.rigModule()
+
+            mc.progressWindow(endProgress=True)
+
+    def getMoudleInfo(self):
+        """
+        获取场景中的namespace 存放到列表中为rig做准备
+        :return:
+        """
+        moduleList = util.findAllModules()
+
+        namespaceList = mc.namespaceInfo(listOnlyNamespaces=True)
+
+        for n in namespaceList:
+            divString = n.partition("__")
+            if divString[1] != "":
+                module = divString[0]
+                userSpecName = divString[2]
+                if module in moduleList:
+                    index = moduleList.index(module)
+                    # check if there is this module guide base in the scene:
+                    curGuideName = moduleList[index] + "__" + userSpecName + ":Base"
+                    if mc.objExists(curGuideName):
+                        self.allGuidesList.append([moduleList[index], userSpecName, curGuideName])
+
+        if self.allGuidesList:
+            for module in self.allGuidesList:
+                guide = self.get_guide(module[0])
+                instance = guide(module[1], module[0])
+                self.instanceList.append(instance)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

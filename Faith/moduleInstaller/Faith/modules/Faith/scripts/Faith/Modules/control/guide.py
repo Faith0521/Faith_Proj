@@ -4,7 +4,7 @@
 # @Last Modified by:   尹宇飞
 # @Last Modified time: 2022-10-15 18:40:33
 
-from importlib import reload
+from imp import reload
 from functools import partial
 from maya import cmds as mc
 from pymel import core as pm
@@ -31,13 +31,14 @@ class guide(library.guideBase):
         self.root = self.addRoot()
 
         mc.select(d = True)
-        self.jointList = []
-        for joint,pos in GUIDE_POSITION.items():
-            jnt = mc.joint(n = self.guideName + joint)
-            mc.xform(jnt, t=pos, ws = True)
-            self.jointList.append(jnt)
 
-        mc.parent(self.jointList, self.root)
+        self.jntLoc = self.ctrl.cvJntLoc(self.root, r=0.5)
+
+        self.jointGuide1 = mc.joint(name=self.guideName + "_GuideJointEnd", radius=0.5)
+        mc.setAttr(self.jointGuide1 + ".template", 1)
+
+        mc.parent([self.jntLoc, self.jointGuide1], self.root)
+        mc.parentConstraint(self.jntLoc, self.jointGuide1, maintainOffset=False, name=self.jointGuide1+"_PC")
 
     def addPrivateAttrs(self):
         """
@@ -53,4 +54,31 @@ class guide(library.guideBase):
 
         :return:
         """
-        print("rigging.................")
+        if mc.objExists(self.root):
+            sideList = [""]
+            self.mirrorAxis = mc.getAttr("%s.mirror_axis"%self.root)
+            if self.mirrorAxis != "off":
+                self.mirrorNames = mc.getAttr("%s.mirror_name"%self.root)
+                sideList = [ self.mirrorNames[0]+'_', self.mirrorNames[len(self.mirrorNames)-1]+'_' ]
+
+                for s,side in enumerate(sideList):
+                    duplicated = mc.duplicate(self.root, name=side + self.userGuideName + 'Base')[0]
+                    allGuideList = mc.listRelatives(duplicated, allDescendents=True)
+                    for item in allGuideList:
+                        mc.rename(item, side+self.userGuideName+"_"+item)
+                    self.mirrorGrp = mc.group(name="Guide_Base_Grp", empty=True)
+                    mc.parent(side+self.userGuideName+'Base', self.mirrorGrp, absolute=True)
+                    # re-rename grp:
+                    mc.rename(self.mirrorGrp, side+self.userGuideName+'_'+self.mirrorGrp)
+                    # do a group mirror with negative scaling:
+                    if s == 1:
+                        if mc.getAttr(self.root+".flip") == 0:
+                            for axis in self.mirrorAxis:
+                                gotValue = mc.getAttr(side+self.userGuideName+"Base.translate"+axis)
+                                flipedValue = gotValue*(-2)
+                                mc.setAttr(side+self.userGuideName+'_'+self.mirrorGrp+'.translate'+axis, flipedValue)
+                        else:
+                            for axis in self.mirrorAxis:
+                                mc.setAttr(side+self.userGuideName+'_'+self.mirrorGrp+'.scale'+axis, -1)
+                # joint labelling:
+                jointLabelAdd = 1

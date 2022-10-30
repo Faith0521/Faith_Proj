@@ -195,6 +195,37 @@ def getModulesToBeRigged(instanceList):
                     modulesToBeRiggedList.append(guideModule)
     return modulesToBeRiggedList
 
+def getMirroredParentGuide(nodeName):
+    parentList = mc.listRelatives(nodeName, parent=True, type="transform")
+    if parentList:
+        loop = True
+        while loop:
+            if mc.objExists(parentList[0] + ".guide_base"):
+                return parentList[0]
+                loop = False
+            else:
+                parentList = mc.listRelatives(parentList[0], parent=True, type='transform')
+                if parentList : loop = True
+                else: loop = False
+
+def clearNodeGrp(nodeGrpName='GuideMirror_Grp', attrFind='guide_base_mirror', unparent=False):
+    """ Check if there is any node with the attribute attrFind in the nodeGrpName and then unparent its children and delete it.
+    """
+    if mc.objExists(nodeGrpName):
+        foundChildrenList = []
+        childrenList = mc.listRelatives(nodeGrpName, children=True, type="transform")
+        if childrenList:
+            for child in childrenList:
+                if mc.objExists(child+"."+attrFind) and mc.getAttr(child+"."+attrFind) == 1:
+                    foundChildrenList.append(child)
+        if len(foundChildrenList) != 0:
+            if unparent:
+                for item in foundChildrenList:
+                    mc.parent(item, world=True)
+                mc.delete(nodeGrpName)
+        else:
+            mc.delete(nodeGrpName)
+
 def getRigCollections():
     data = {}
     allList = mc.ls(type='transform')

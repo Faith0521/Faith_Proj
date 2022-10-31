@@ -285,7 +285,7 @@ class guideSetup(guideAttributes):
                                 self.fatherName = sideFatherName + self.prefix + self.fatherInstance
                     
 
-                
+
             mc.progressWindow(endProgress=True)
 
     def getMoudleInfo(self):

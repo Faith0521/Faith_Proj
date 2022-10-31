@@ -185,6 +185,27 @@ def findLastNumber(nameList, basename):
         finalValue = existValue
     return finalValue
 
+def findModuleLastNumber(className, typeName):
+    """ Find the last used number of this type of module.
+        Return its highest number.
+    """
+    # work with rigged modules in the scene:
+    numberList = []
+    guideTypeCount = 0
+    # list all transforms and find the existing value in them names:
+    transformList = mc.ls(selection=False, transforms=True)
+    for transform in transformList:
+        if mc.objExists(transform+"."+typeName):
+            if mc.getAttr(transform+"."+typeName) == className:
+                numberList.append(className)
+        # try check if there is a masterGrp and get its counter:
+        if mc.objExists(transform+".rigGrp") and mc.getAttr(transform+".rigGrp") == 1:
+            guideTypeCount = mc.getAttr(transform+'.'+className+'Count')
+    if(guideTypeCount > len(numberList)):
+        return guideTypeCount
+    else:
+        return len(numberList)
+
 def getModulesToBeRigged(instanceList):
     modulesToBeRiggedList = []
     allNamespaceList = mc.namespaceInfo(listNamespace=True)

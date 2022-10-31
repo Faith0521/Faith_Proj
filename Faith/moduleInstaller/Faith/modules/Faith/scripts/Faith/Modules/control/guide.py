@@ -4,12 +4,15 @@
 # @Last Modified by:   尹宇飞
 # @Last Modified time: 2022-10-15 18:40:33
 
+from ctypes import util
 from imp import reload
 from functools import partial
 from maya import cmds as mc
 from pymel import core as pm
 
 from Faith.modules import library
+from Faith.maya_utils import guide_path_utils as util
+reload(util)
 reload(library)
 
 CLASS = "control"
@@ -48,6 +51,7 @@ class guide(library.guideBase):
         # self.joints_num = self.addAttr("joint_num", "double", 1)
         self.primary = self.addAttr("primary_axis", "string", "+x")
         self.secondary = self.addAttr("secondary_axis", "string", "+y")
+        self.filp = self.addAttr("flip", "bool", 0)
 
     def rigModule(self, *args):
         """
@@ -82,3 +86,25 @@ class guide(library.guideBase):
                                 mc.setAttr(side+self.userGuideName+'_'+self.mirrorGrp+'.scale'+axis, -1)
                 # joint labelling:
                 jointLabelAdd = 1
+            else:
+                duplicated = mc.duplicate(self.root, name=self.userGuideName+'Base')[0]
+                allGuideList = mc.listRelatives(duplicated, allDescendents=True)
+                for item in allGuideList:
+                    mc.rename(item, self.userGuideName+"_"+item)
+                self.mirrorGrp = mc.group(self.userGuideName+'Base', name="Guide_Base_Grp", relative=True)
+                # re-rename grp:
+                mc.rename(self.mirrorGrp, self.userGuideName+'_'+self.mirrorGrp)
+                # joint labelling:
+                jointLabelAdd = 0
+            
+            count = util.findModuleLastNumber(CLASS, "guide_type") + 1
+            for s, side in enumerate(sideList):
+                self.base = side+self.userGuideName+'Base'
+                mc.select(clear=True)
+                # declare guide:
+                self.guide = side+self.userGuideName+"_Guide_JointLoc1"
+                self.cvEndJoint = side+self.userGuideName+"_Guide_JointEnd"
+                self.radiusGuide = side+self.userGuideName+"_Guide_Base_RadiusCtrl"
+                # create a joint:
+                self.jnt = mc.joint(name=side+self.userGuideName+"_Jnt", scaleCompensate=False)
+                mc.addAttr(self.jnt, longName='rig_joint', attributeType='float', keyable=False)

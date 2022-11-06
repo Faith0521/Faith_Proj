@@ -147,7 +147,7 @@ class guideSetup(guideAttributes):
         self.guideModuleList = []
         
         self.ctrl = controlBase()
-
+        self.radius = 1.0
         self.getMoudleInfo()
 
     def get_guide(self, type):
@@ -206,6 +206,7 @@ class guideSetup(guideAttributes):
         self.modulesToBeRiggedList = util.getModulesToBeRigged(self.instanceList)
 
         self.rigModule = {}
+        self.guidesActionsDic = {}
         if self.modulesToBeRiggedList:
             progressAmount = 0
             mc.progressWindow(title='GuideRigSystem', progress=progressAmount,
@@ -229,6 +230,9 @@ class guideSetup(guideAttributes):
                                     status=('Rigging : ' + repr(progressAmount) + ' ' + str(guideModuleCustomName)))
 
                 module.rigModule()
+                mc.refresh()
+                if module.guideActionsDic:
+                    self.guidesActionsDic[module.root] = module.guideActionsDic["module"]
             # print(self.data)
             for guideModule in self.modulesToBeRiggedList:
                 self.itemGuideModule = self.data[guideModule.root]["guideName"]
@@ -243,18 +247,30 @@ class guideSetup(guideAttributes):
                 if self.itemGuideMirrorAxis != "off":
                     self.itemMirrorNameList = self.itemGuideMirrorName
                 
-                for i,side in enumerate(self.itemGuideMirrorName):
+                for i,side in enumerate(self.itemMirrorNameList):
                     if self.itemGuideCustomName:
-                        self.itemGuideName = side + self.prefix + self.itemGuideCustomName
+                        self.itemGuideName = side + self.prefix + self.itemGuideModule + "_0" + self.itemGuideCustomName[-1]
                     else:
-                        self.itemGuideName = side + self.prefix + self.itemGuideInstance
+                        self.itemGuideName = side + self.prefix + self.itemGuideModule + "_0" + self.itemGuideInstance[-1]
                     
                     # get hook groups info:
                     self.itemRiggedGrp = self.itemGuideName + "_Grp"
                     self.staticDataGrp = self.itemRiggedGrp
-            
-                    # riggedChildList = mc.listRelatives(self.itemRiggedGrp, children=True, type='transform')
-
+                    self.ctrlDataGrp = ""
+                    self.scalableDataGrp = ""
+                    self.rootDataGrp = ""
+                    
+                    riggedChildList = mc.listRelatives(self.itemRiggedGrp, children=True, type='transform')
+                    if riggedChildList:
+                        for child in riggedChildList:
+                            if mc.objExists(child+".ctrlData") and mc.getAttr(child+".ctrlData") == 1:
+                                self.ctrlDataGrp = child
+                            elif mc.objExists(child+".scalableData") and mc.getAttr(child+".scalableData") == 1:
+                                self.scalableDataGrp = child
+                            elif mc.objExists(child+".staticData") and mc.getAttr(child+".staticData") == 1:
+                                self.staticDataGrp = child
+                            elif mc.objExists(child+".rootData") and mc.getAttr(child+".rootData") == 1:
+                                self.rootDataGrp = child
                     
                     # get guideModule hierarchy data:
                     self.fatherGuide  = self.data[guideModule.root]['guideParent']
@@ -280,13 +296,46 @@ class guideSetup(guideAttributes):
                         for f, sideFatherName in enumerate(self.fatherMirrorNameList):
                             
                             if self.fatherCustomName:
-                                self.fatherName = sideFatherName + self.prefix + self.fatherCustomName
+                                self.fatherName = sideFatherName + self.prefix + self.fatherModule + "_0" + self.fatherCustomName[-1]
                             else:
-                                self.fatherName = sideFatherName + self.prefix + self.fatherInstance
+                                self.fatherName = sideFatherName + self.prefix + self.fatherModule + "_0" + self.fatherInstance[-1]
                     
+                    elif self.parentNode:
+                        # parent module control to just a node in the scene:
+                        mc.parent(self.ctrlDataGrp, self.parentNode)
+                        # make ctrlHookGrp inactive:
+                        mc.setAttr(self.ctrlDataGrp+".ctrlData", 0)
+                    else:
+                        # parent module control to default masterGrp:
+                        mc.parent(self.ctrlDataGrp, self.ctrlsVisGrp)
+                        # make ctrlHookGrp inactive:
+                        mc.setAttr(self.ctrlDataGrp+".ctrlData", 0)
+                    
+                    if self.rootDataGrp:
+                        # parent module rootHook to rootCtrl:
+                        mc.parent(self.rootDataGrp, self.ctrlsVisGrp)
+                        # make rootHookGrp inactive:
+                        mc.setAttr(self.rootDataGrp+".rootData", 0)
+                    
+                    # put static and scalable groups in dataGrp:
+                    if self.staticDataGrp:
+                        mc.parent(self.staticDataGrp, self.staticGrp)
+                        # make staticHookGrp inative:
+                        mc.setAttr(self.staticDataGrp+".staticData", 0)
+                    if self.scalableDataGrp:
+                        mc.parent(self.scalableDataGrp, self.scaleGrp)
+                        # make scalableHookGrp inative:
+                        mc.setAttr(self.scalableDataGrp+".scalableData", 0)
 
-
+                if self.guidesActionsDic:
+                    pass
             mc.progressWindow(endProgress=True)
+        
+        self.guideMirrorGrp = 'GuideMirror_Grp'
+        if mc.objExists(self.guideMirrorGrp):
+            mc.delete(self.guideMirrorGrp)
+        
+        print("Rigging successfully ! ")
 
     def getMoudleInfo(self):
         """
@@ -382,11 +431,11 @@ class guideSetup(guideAttributes):
             guide_root = guide[-1]
             shapeSizeList.append(mc.getAttr("%s.sx"%guide_root))
         
-        radius = 2.0 * (sum(shapeSizeList)/len(shapeSizeList)) # 计算控制器的大小
+        self.radius = 2.0 * (sum(shapeSizeList)/len(shapeSizeList)) # 计算控制器的大小
 
-        self.global_ctrl = self.getBaseCtrl("root", "global_ctrl", self.prefix + "global_ctrl", radius, "yellow", 2.0)
-        self.local_ctrl = self.getBaseCtrl("circle", "local_ctrl", self.prefix + "local_ctrl", 1.45*radius, "blue", 2.0)
-        self.all_ctrl = self.getBaseCtrl("circle", "all_ctrl", self.prefix + "all_ctrl", 1.45*radius*0.9, "cyan", 2.0)
+        self.global_ctrl = self.getBaseCtrl("root", "global_ctrl", self.prefix + "global_ctrl", self.radius, "yellow", 2.0)
+        self.local_ctrl = self.getBaseCtrl("circle", "local_ctrl", self.prefix + "local_ctrl", 1.45*self.radius, "blue", 2.0)
+        self.all_ctrl = self.getBaseCtrl("circle", "all_ctrl", self.prefix + "all_ctrl", 1.45*self.radius*0.9, "cyan", 2.0)
 
         self.ctrl.LockHide([self.global_ctrl, self.local_ctrl], ['sx', 'sy', 'sz'])
         self.ctrl.LockHide([self.scaleGrp], ['tx', 'ty', 'tz', 'rx', 'ry', 'rz', 'v'])
@@ -478,7 +527,6 @@ class controlBase(guideSetup):
             self.rotX = self.addAttr("rotX", "double", 0.0)
             self.rotY = self.addAttr("rotY", "double", 0.0)
             self.rotZ = self.addAttr("rotZ", "double", 0.0)
-
             self.addAttributes(ctrlTransform)
 
         mc.select(d = True)
@@ -550,6 +598,13 @@ class controlBase(guideSetup):
                     resultList.append(shape)
         return resultList
 
+    def cvLocator(self, ctrlName, r=0.3, *args):
+        locCtrl = self.createCtrl("loc", name=ctrlName, r=r, addAttr=True)
+        self.renameShape([locCtrl])
+        self.addGuideAttrs(locCtrl)
+        mc.select(d=True)
+        return locCtrl
+
     def cvBase(self, ctrlName, r=1, *args):
         """
 
@@ -569,10 +624,10 @@ class controlBase(guideSetup):
         return circle
 
     def cvJntLoc(self, ctrlName, r=0.3, guide=True, *args):
-        locCtrl = self.createCtrl("loc", name=ctrlName + "RootLoc", r=r)
+        locCtrl = self.createCtrl("loc", name=ctrlName, r=r)
         self.colorShape([locCtrl], "cyan")
 
-        self.ball = self.createCtrl("ball", name=ctrlName + "RootLoc", r=r)
+        self.ball = self.createCtrl("ball", name=ctrlName, r=r)
         ballShapeList = mc.listRelatives(self.ball, shapes=True, children=True, fullPath=True)
         for shape in ballShapeList:
             mc.setAttr(shape + ".template", 1)
@@ -589,8 +644,8 @@ class controlBase(guideSetup):
         return locCtrl
 
     def addGuideAttrs(self, ctrlName, *args):
-        mc.addAttr(ctrlName, longName="jnt_index", attributeType='long')
-        mc.setAttr(ctrlName+".jnt_index", 1)
+        mc.addAttr(ctrlName, longName="joint_num", attributeType='long')
+        mc.setAttr(ctrlName+".joint_num", 1)
         # colorize curveShapes:
         self.colorShape([ctrlName], 'cyan')
         # shapeSize setup:

@@ -28,7 +28,11 @@ class guide(library.guideBase):
         kwargs["CLASS"] = CLASS
         kwargs["NAME"] = NAME
         kwargs["DESCRIPTION"] = DESCRIPTION
-        library.guideBase.__init__(self, *args, **kwargs)
+        library.guideBase.__init__(self, *args, **kwargs)\
+        
+        self.jntList = []
+        self.aStaticGrpList = []
+        self.aCtrlGrpList = []
 
     def createGuide(self):
         self.root = self.addRoot()
@@ -84,8 +88,7 @@ class guide(library.guideBase):
                         else:
                             for axis in self.mirrorAxis:
                                 mc.setAttr(side+self.userGuideName+'_'+self.mirrorGrp+'.scale'+axis, -1)
-                # joint labelling:
-                jointLabelAdd = 1
+
             else:
                 duplicated = mc.duplicate(self.root, name=self.userGuideName+'Base')[0]
                 allGuideList = mc.listRelatives(duplicated, allDescendents=True)
@@ -93,9 +96,7 @@ class guide(library.guideBase):
                     mc.rename(item, self.userGuideName+"_"+item)
                 self.mirrorGrp = mc.group(self.userGuideName+'Base', name="Guide_Base_Grp", relative=True)
                 # re-rename grp:
-                mc.rename(self.mirrorGrp, self.userGuideName+'_'+self.mirrorGrp)
-                # joint labelling:
-                jointLabelAdd = 0
+                mc.rename(self.mirrorGrp, self.guideModuleName + "_0" + self.userGuideName[-1] +'_'+self.mirrorGrp)
             
             count = util.findModuleLastNumber(CLASS, "guide_type") + 1
             for s, side in enumerate(sideList):
@@ -106,5 +107,68 @@ class guide(library.guideBase):
                 self.cvEndJoint = side+self.userGuideName+"_Guide_JointEnd"
                 self.radiusGuide = side+self.userGuideName+"_Guide_Base_RadiusCtrl"
                 # create a joint:
-                self.jnt = mc.joint(name=side+self.userGuideName+"_Jnt", scaleCompensate=False)
+                self.jnt = mc.joint(name=side+self.guideModuleName + "_0" + self.userGuideName[-1]+"_Jnt", scaleCompensate=False)
                 mc.addAttr(self.jnt, longName='rig_joint', attributeType='float', keyable=False)
+
+                self.radius = mc.getAttr("%s.shape_size"%self.root)
+                self.controlCtrl = self.ctrl.createCtrl("cube", name=side+self.guideModuleName + "_0" + self.userGuideName[-1]+"_Ctrl", r=self.radius*2.0, color="yellow", addAttr=True)
+                
+                mc.delete(mc.parentConstraint(self.base, self.jnt))
+                mc.delete(mc.parentConstraint(self.base, self.controlCtrl))
+                
+                self.controlGrp = util.zeroGrp([self.controlCtrl])[0]
+
+                mc.setAttr(self.controlCtrl+'.visibility', keyable=False)
+                # fixing flip mirror:
+                if s == 1:
+                    if mc.getAttr(self.root+".flip") == 1:
+                        mc.setAttr(self.controlGrp+".scaleX", -1)
+                        mc.setAttr(self.controlGrp+".scaleY", -1)
+                        mc.setAttr(self.controlGrp+".scaleZ", -1)
+
+                mc.parentConstraint(self.controlCtrl, self.jnt, maintainOffset=False, name=self.jnt+"_PC")
+                mc.scaleConstraint(self.controlCtrl, self.jnt, maintainOffset=False, name=self.jnt+"_SC")
+
+                self.jntList.append(self.jnt)
+
+                self.toCtrlDataGrp = mc.group(self.controlGrp, name=side+self.guideModuleName + "_0" + self.userGuideName[-1]+"_Control_Grp")
+                self.toScalableDataGrp = mc.group(self.jnt, name=side+self.guideModuleName + "_0" + self.userGuideName[-1]+"_Joint_Grp")
+                self.toStaticDataGrp   = mc.group(self.toCtrlDataGrp, self.toScalableDataGrp, name=side+self.guideModuleName + "_0" + self.userGuideName[-1]+"_Grp")
+
+                loc = mc.spaceLocator(name=side+self.guideModuleName + "_0" + self.userGuideName[-1]+"_Static_Loc")[0]
+                mc.parent(loc, self.toStaticDataGrp, absolute=True)
+                mc.setAttr(loc+".visibility", 0)
+                self.ctrl.LockHide([loc], ['tx', 'ty', 'tz', 'rx', 'ry', 'rz', 'sx', 'sy', 'sz', 'v'])
+
+                util.addData(objName=self.toCtrlDataGrp, dataType='ctrlData')
+                util.addData(objName=self.toScalableDataGrp, dataType='scalableData')
+                util.addData(objName=self.toStaticDataGrp, dataType='staticData')
+
+                mc.addAttr(self.toStaticDataGrp, longName="guide_name", dataType="string")
+                mc.addAttr(self.toStaticDataGrp, longName="module_type", dataType="string")
+                mc.setAttr(self.toStaticDataGrp+".guide_name", self.userGuideName, type="string")
+                mc.setAttr(self.toStaticDataGrp+".module_type", CLASS, type="string")
+                self.aStaticGrpList.append(self.toStaticDataGrp)
+                self.aCtrlGrpList.append(self.toCtrlDataGrp)
+                # add module type counter value
+                mc.addAttr(self.toStaticDataGrp, longName='module_count', attributeType='long', keyable=False)
+                mc.setAttr(self.toStaticDataGrp+'.module_count', count)
+                # mc.setAttr(self.toScalableHookGrp+".visibility", 0)
+                # delete duplicated group for side (mirror):
+                mc.delete(self.guideModuleName + "_0" + self.userGuideName[-1] +'_'+self.mirrorGrp)
+
+            # finalize this rig:
+            self.confirmInfo()
+            mc.select(clear=True)
+
+    def confirmInfo(self):
+        library.guideBase.confirmInfo(self)
+        """ This method will create a dictionary with informations about integrations system between modules.
+        """
+        self.guideActionsDic = {
+                                    "module": {
+                                                "jntList"   : self.jntList,
+                                                "staticGrpList" : self.aStaticGrpList,
+                                                "ctrlGrpList"   : self.aCtrlGrpList,
+                                              }
+                                    }

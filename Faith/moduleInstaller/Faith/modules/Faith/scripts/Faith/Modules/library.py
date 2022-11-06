@@ -10,6 +10,7 @@ from imp import reload
 
 from maya import cmds as mc
 from pymel import core as pm
+from pymel.core.datatypes import Vector
 # import module
 from Faith.guide import guide_base
 from Faith.guide import rig_base
@@ -55,6 +56,9 @@ class guideBase(guide_base.guideSetup):
 
     def createGuide(self):
         return
+
+    def confirmInfo(self):
+        self.guideActionsDic = {}
 
     def initializeAttrs(self):
         """
@@ -104,7 +108,6 @@ class guideBase(guide_base.guideSetup):
         if self.confirmModules():
             miiroredParentGuide = util.getMirroredParentGuide(self.root)
 
-
     def deleteModule(self, *args):
         """
 
@@ -124,7 +127,6 @@ class guideBase(guide_base.guideSetup):
             mc.namespace(moveNamespace=(self.guideNamespace, ':'), force=True)
             mc.namespace(removeNamespace=self.guideNamespace, force=True)
 
-
     def addPrivateAttrs(self):
         """
 
@@ -134,6 +136,61 @@ class guideBase(guide_base.guideSetup):
 
     def rigModule(self, *args):
         return
+
+    def updateJointAxis(self, jointList, primary, secondary, *args):
+        axis_dict = {
+            "X" : Vector(1, 0, 0),
+            "Y" : Vector(0, 1, 0),
+            "Z" : Vector(0, 0, 1),
+            "-X" : Vector(-1, 0, 0),
+            "-Y" : Vector(0, -1, 0),
+            "-Z" : Vector(0, 0, -1)
+        }
+        self.axisJntList = []
+        self.jntInfoDict = {}
+
+        for jnt in jointList:
+            if mc.objExists(jnt):
+                self.axisJntList.append(pm.PyNode(jnt))
+
+        self.primary = Vector(1, 0, 0)
+        self.secondary = Vector(1, 0, 0)
+
+        if primary in axis_dict.keys():
+            self.primary = axis_dict[primary]
+        if secondary in axis_dict.keys():
+            self.secondary = axis_dict[secondary]
+        
+        for i,jnt in enumerate(self.axisJntList):
+            parent = jnt.getParent()
+            child = jnt.getChildren()
+            self.jntInfoDict[jnt] = {"parent": parent, "children":child}
+            pm.parent(jnt, w=True)
+        # aimConstraint -aimVector 0 0 1 -upVector -1 0 0 -worldUpType "object" -worldUpObject Hip2
+        self.axisMark = 1
+        for jnt,dictInfo in self.jntInfoDict.items():
+            if dictInfo["children"]:
+                tempTransform = pm.createNode("transform", n="tempTransform")
+                pm.parent(tempTransform, jnt)
+                util.makeZeroObj(tempTransform)
+                if "-" in primary or "-" in secondary:
+                    self.axisMark *= -1
+                if secondary == "X":
+                    mc.setAttr(tempTransform + ".tx", 3.0*self.axisMark)
+                elif secondary == "Y":
+                    mc.setAttr(tempTransform + ".ty", 3.0*self.axisMark)
+                elif secondary == "Z":
+                    mc.setAttr(tempTransform + ".tz", 3.0*self.axisMark)
+                pm.parent(tempTransform, w=True)
+                pm.delete(pm.aimConstraint(dictInfo["children"][0], jnt, aimVector=self.primary, upVector = self.secondary, 
+                                 worldUpType="object", worldUpObject=tempTransform))
+                pm.delete(tempTransform)
+            else:
+                pm.delete(pm.orientConstraint(dictInfo["parent"], jnt))
+            
+            pm.makeIdentity(jnt, apply=True, r=1)
+            if dictInfo["parent"]:
+                pm.parent(jnt, dictInfo["parent"])
 
 
 

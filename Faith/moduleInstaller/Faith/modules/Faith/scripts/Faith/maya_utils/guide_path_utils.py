@@ -229,6 +229,13 @@ def getMirroredParentGuide(nodeName):
                 if parentList : loop = True
                 else: loop = False
 
+def makeZeroObj(nodeName):
+    axisList = ["x", "y", "z"]
+    for axis in axisList:
+        mc.setAttr(nodeName + ".t" + axis, 0)
+        mc.setAttr(nodeName + ".r" + axis, 0)
+        mc.setAttr(nodeName + ".s" + axis, 1)
+
 def clearNodeGrp(nodeGrpName='GuideMirror_Grp', attrFind='guide_base_mirror', unparent=False):
     """ Check if there is any node with the attribute attrFind in the nodeGrpName and then unparent its children and delete it.
     """
@@ -246,6 +253,65 @@ def clearNodeGrp(nodeGrpName='GuideMirror_Grp', attrFind='guide_base_mirror', un
                 mc.delete(nodeGrpName)
         else:
             mc.delete(nodeGrpName)
+
+def addData(objName="", dataType="staticData"):
+    if objName != "":
+        mc.addAttr(objName, longName=dataType, attributeType='bool')
+        mc.setAttr(objName+"."+dataType, 1)
+
+def zeroGrp(transformList=[]):
+    zeroList = []
+    if not transformList:
+        transformList = mc.ls(selection=True)
+    if transformList:
+        for transform in transformList:
+            suffix = "_Zero_0_Grp"
+            transformName = transform
+            if transformName.endswith("_Grp"):
+                transformName = extractSuffix(transformName)
+                if "_Zero_" in transformName:
+                    needAddNumber = True
+                    while needAddNumber:
+                        nodeNumber = str(int(transformName[transformName.rfind("_")+1:])+1)
+                        transformName = (transformName[:transformName.rfind("_")+1])+nodeNumber
+                        suffix = "_Grp"
+                        if not mc.objExists(transformName+suffix):
+                            needAddNumber = False
+            zeroGrp = mc.duplicate(transform, name=transformName+suffix)[0]
+            zeroUserAttrList = mc.listAttr(zeroGrp, userDefined=True)
+            if zeroUserAttrList:
+                for zUserAttr in zeroUserAttrList:
+                    try:
+                        mc.deleteAttr(zeroGrp+"."+zUserAttr)
+                    except:
+                        pass
+            allChildrenList = mc.listRelatives(zeroGrp, allDescendents=True, children=True, fullPath=True)
+            if allChildrenList:
+                mc.delete(allChildrenList)
+            sdkGrp = mc.duplicate(zeroGrp, name=transform+'_Sdk_Grp')[0]
+            offsetGrp = mc.duplicate(zeroGrp, name=transform+'_Offset_Grp')[0]
+            mc.parent(transform, sdkGrp, absolute=True)
+            mc.parent(sdkGrp, offsetGrp, absolute=True)
+            mc.parent(offsetGrp, zeroGrp, absolute=True)
+            
+            zeroList.append(zeroGrp)
+    return zeroList
+
+def extractSuffix(nodeName):
+    """ Remove suffix from a node name and return the base name.
+    """
+    endSuffixList = ["_Mesh", "_Geo", "_Bs", "_Sk", "_Tgt", "_Ctrl", "_Grp", "_Crv"]
+    for endSuffix in endSuffixList:
+        if nodeName.endswith(endSuffix):
+            baseName = nodeName[:nodeName.rfind(endSuffix)]
+            return baseName
+        if nodeName.endswith(endSuffix.lower()):
+            baseName = nodeName[:nodeName.rfind(endSuffix.lower())]
+            return baseName
+        if nodeName.endswith(endSuffix.upper()):
+            baseName = nodeName[:nodeName.rfind(endSuffix.upper())]
+            return baseName
+    return nodeName
 
 def getRigCollections():
     data = {}

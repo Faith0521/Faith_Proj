@@ -8,7 +8,6 @@ import os,sys,re
 
 from maya import cmds as mc
 from Faith import modules
-from . import transform_utils as trans
 
 GUIDE_ENV_KEY = "FAITH_GUIDE_PATH"
 
@@ -260,7 +259,7 @@ def addData(objName="", dataType="staticData"):
         mc.addAttr(objName, longName=dataType, attributeType='bool')
         mc.setAttr(objName+"."+dataType, 1)
 
-def zeroGrp(transformList=[], addLoc=False):
+def zeroGrp(transformList=[]):
     zeroList = []
     if not transformList:
         transformList = mc.ls(selection=True)
@@ -289,10 +288,6 @@ def zeroGrp(transformList=[], addLoc=False):
             allChildrenList = mc.listRelatives(zeroGrp, allDescendents=True, children=True, fullPath=True)
             if allChildrenList:
                 mc.delete(allChildrenList)
-            
-            if addLoc:
-                revLoc = trans.addTransformLoc(transform)
-
             sdkGrp = mc.duplicate(zeroGrp, name=transform+'_Sdk_Grp')[0]
             offsetGrp = mc.duplicate(zeroGrp, name=transform+'_Offset_Grp')[0]
             mc.parent(transform, sdkGrp, absolute=True)

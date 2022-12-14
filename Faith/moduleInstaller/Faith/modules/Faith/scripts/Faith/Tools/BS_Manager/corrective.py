@@ -5,8 +5,7 @@
 # @Last Modified time: 2022-07-19 20:14:06
 import maya.cmds as cmds
 import maya.OpenMaya as OpenMaya
-import pymel.core as pm
-from Faith.maya_utils.python_utils import PY2
+from Faith.Core.aboutPy import PY2
 from Faith.maya_utils import object_utils
 
 if PY2:
@@ -25,7 +24,7 @@ def invert(base=None, name=None, targetName=None,invert=None):
         sel = cmds.ls(sl=True)
         if not sel or len(sel) != 1:
             raise RuntimeError('Must select a mesh.')
-        base = sel[0]
+        base = sel
     if targetName:
         corrective = cmds.duplicate(base, rr=True, n="%s_%s_Sculpt"%(base, targetName))[0]
     else:
@@ -40,19 +39,8 @@ def invert(base=None, name=None, targetName=None,invert=None):
         invertShape = duplicateOrigMesh(base)
     else:
         invertShape = invert
-    bs = findBlendShapeInHistory(base)
-    connections = {}
-    if bs:
-        targetList = cmds.listAttr(bs + '.w', m=True)
-        
-        for target in targetList:
-            index = pm.PyNode(bs + "." + target).index()
-            cns = cmds.listConnections('%s.inputTarget[0].inputTargetGroup[%d].inputTargetItem[6000].inputGeomTarget' % (bs, index),s=1,d=0,plugs=1)
-            if cns:
-                cmds.disconnectAttr(cns[0], '%s.inputTarget[0].inputTargetGroup[%d].inputTargetItem[6000].inputGeomTarget' % (bs, index))
-                connections[cns[0]] = '%s.inputTarget[0].inputTargetGroup[%d].inputTargetItem[6000].inputGeomTarget' % (bs, index)
     # Get the intermediate mesh
-    orig_mesh = get_shape(base, intermediate=True)
+    orig_mesh = cmds.listRelatives(invertShape, shapes=True)[0]
 
     # Get the component offset axes
     orig_points = get_points(orig_mesh)
@@ -123,10 +111,6 @@ def invert(base=None, name=None, targetName=None,invert=None):
     cmds.setAttr(inverted_shapes + ".v", 0)
     cmds.setAttr(base + ".v", 0)
     cmds.undoInfo(closeChunk=True)
-
-    if connections:
-        for target,ipt in connections.items():
-            cmds.connectAttr(target, ipt, force=True)
 
     return [corrective, inverted_shapes, targetGrp]
 

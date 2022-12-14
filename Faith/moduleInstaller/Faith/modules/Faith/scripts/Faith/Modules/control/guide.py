@@ -77,17 +77,17 @@ class guide(library.guideBase):
                     self.mirrorGrp = mc.group(name="Guide_Base_Grp", empty=True)
                     mc.parent(side+self.userGuideName+'Base', self.mirrorGrp, absolute=True)
                     # re-rename grp:
-                    mc.rename(self.mirrorGrp, side+self.guideModuleName + "_0" + self.userGuideName[-1] +'_'+self.mirrorGrp)
+                    mc.rename(self.mirrorGrp, side+self.userGuideName+'_'+self.mirrorGrp)
                     # do a group mirror with negative scaling:
                     if s == 1:
                         if mc.getAttr(self.root+".flip") == 0:
                             for axis in self.mirrorAxis:
                                 gotValue = mc.getAttr(side+self.userGuideName+"Base.translate"+axis)
                                 flipedValue = gotValue*(-2)
-                                mc.setAttr(side+self.guideModuleName + "_0" + self.userGuideName[-1] +'_'+self.mirrorGrp+'.translate'+axis, flipedValue)
+                                mc.setAttr(side+self.userGuideName+'_'+self.mirrorGrp+'.translate'+axis, flipedValue)
                         else:
                             for axis in self.mirrorAxis:
-                                mc.setAttr(side+self.guideModuleName + "_0" + self.userGuideName[-1] +'_'+self.mirrorGrp+'.scale'+axis, -1)
+                                mc.setAttr(side+self.userGuideName+'_'+self.mirrorGrp+'.scale'+axis, -1)
 
             else:
                 duplicated = mc.duplicate(self.root, name=self.userGuideName+'Base')[0]
@@ -98,7 +98,7 @@ class guide(library.guideBase):
                 # re-rename grp:
                 mc.rename(self.mirrorGrp, self.guideModuleName + "_0" + self.userGuideName[-1] +'_'+self.mirrorGrp)
             
-            count = util.findModuleLastNumber(CLASS, "module_type") + 1
+            count = util.findModuleLastNumber(CLASS, "guide_type") + 1
             for s, side in enumerate(sideList):
                 self.base = side+self.userGuideName+'Base'
                 mc.select(clear=True)
@@ -110,7 +110,7 @@ class guide(library.guideBase):
                 self.jnt = mc.joint(name=side+self.guideModuleName + "_0" + self.userGuideName[-1]+"_Jnt", scaleCompensate=False)
                 mc.addAttr(self.jnt, longName='rig_joint', attributeType='float', keyable=False)
 
-                self.radius = mc.getAttr("%s.shape_size"%self.base)
+                self.radius = mc.getAttr("%s.shape_size"%self.root)
                 self.controlCtrl = self.ctrl.createCtrl("cube", name=side+self.guideModuleName + "_0" + self.userGuideName[-1]+"_Ctrl", r=self.radius*2.0, color="yellow", addAttr=True)
                 
                 mc.delete(mc.parentConstraint(self.base, self.jnt))
@@ -155,7 +155,7 @@ class guide(library.guideBase):
                 mc.setAttr(self.toStaticDataGrp+'.module_count', count)
                 # mc.setAttr(self.toScalableHookGrp+".visibility", 0)
                 # delete duplicated group for side (mirror):
-                mc.delete(side + self.guideModuleName + "_0" + self.userGuideName[-1] +'_'+self.mirrorGrp)
+                mc.delete(self.guideModuleName + "_0" + self.userGuideName[-1] +'_'+self.mirrorGrp)
 
             # finalize this rig:
             self.confirmInfo()

@@ -6,18 +6,15 @@
 
 # import standard modules
 import math
-from imp import reload
+
 # import maya modules
 from maya import OpenMaya
 from maya import cmds
 from pymel.core import datatypes as dt
-from pymel.core import datatypes
 from pymel import core as pm
-from pymel import util
 # import local modules
-from . import object_utils,vector_utils
-reload(object_utils)
-reload(vector_utils)
+from . import object_utils
+
 
 def set_to_object_center(object_name, target_name):
     """
@@ -817,183 +814,11 @@ def calculateOffsetMatrix(driverMatrix, drivenMatrix, point=True):
 
     return offset
 
-def getChainTransform(positions, normal, axis, negate=False):
-    transforms = []
-    for i in range(len(positions) - 1):
-        v0 = positions[i - 1]
-        v1 = positions[i]
-        v2 = positions[i + 1]
 
-        # Normal Offset
-        if i > 0:
-            normal = vector_utils.getTransposedVector(
-                normal, [v0, v1], [v1, v2])
-        
-        t = getTransformLookingAt(v1, v2, normal, axis, negate)
-        transforms.append(t)
 
-    return transforms
 
-def setMatrixPosition(in_m, pos):
-    """Set the position for a given matrix
 
-    Arguments:
-        in_m (matrix): The input Matrix.
-        pos (list of float): The position values for xyz
 
-    Returns:
-        matrix: The matrix with the new position
-
-    >>> tnpo = tra.setMatrixPosition(tOld, tra.getPositionFromMatrix(t))
-
-    >>> t = tra.setMatrixPosition(t, self.guide.apos[-1])
-
-    """
-    m = datatypes.Matrix()
-    m[0] = in_m[0]
-    m[1] = in_m[1]
-    m[2] = in_m[2]
-    m[3] = [pos[0], pos[1], pos[2], 1.0]
-
-    return m
-
-def getTransformLookingAt(pos, lookat, normal, axis, negate=False):
-    
-    normal.normalize()
-
-    if negate:
-        a = pos - lookat
-    else:
-        a = lookat - pos
-
-    a.normalize()
-    c = util.cross(a, normal)
-    c.normalize()
-    b = util.cross(c, a)
-    b.normalize()
-
-    if axis == "xy":
-        X = a
-        Y = b
-        Z = c
-    elif axis == "xz":
-        X = a
-        Z = b
-        Y = -c
-    elif axis == "x-z":
-        X = a
-        Z = -b
-        Y = c
-    elif axis == "x-y":
-        X = a
-        Y = -b
-        Z = -c
-    elif axis == "-xy":
-        X = -a
-        Y = b
-        Z = -c
-    elif axis == "-xz":
-        X = -a
-        Z = b
-        Y = c
-    elif axis == "-x-y":
-        X = -a
-        Y = -b
-        Z = c
-    elif axis == "-x-z":
-        X = -a
-        Z = -b
-        Y = -c
-    elif axis == "yx":
-        Y = a
-        X = b
-        Z = -c
-    elif axis == "yz":
-        Y = a
-        Z = b
-        X = c
-    elif axis == "y-x":
-        Y = a
-        X = -b
-        Z = c
-    elif axis == "y-z":
-        Y = a
-        Z = -b
-        X = -c
-    elif axis == "-yx":
-        Y = -a
-        X = b
-        Z = c
-    elif axis == "-yz":
-        Y = -a
-        Z = b
-        X = -c
-    elif axis == "-y-x":
-        Y = -a
-        X = -b
-        Z = -c
-    elif axis == "-y-z":
-        Y = -a
-        Z = -b
-        X = c
-    elif axis == "zx":
-        Z = a
-        X = b
-        Y = c
-    elif axis == "z-x":
-        Z = a
-        X = -b
-        Y = -c
-    elif axis == "zy":
-        Z = a
-        Y = b
-        X = -c
-    elif axis == "z-y":
-        Z = a
-        Y = -b
-        X = c
-    elif axis == "-zx":
-        Z = -a
-        X = b
-        Y = -c
-    elif axis == "-z-x":
-        Z = -a
-        X = -b
-        Y = c
-    elif axis == "-zy":
-        Z = -a
-        Y = b
-        X = c
-    elif axis == "-z-y":
-        Z = -a
-        Y = -b
-        X = -c
-
-    m = datatypes.Matrix()
-    m[0] = [X[0], X[1], X[2], 0.0]
-    m[1] = [Y[0], Y[1], Y[2], 0.0]
-    m[2] = [Z[0], Z[1], Z[2], 0.0]
-    m[3] = [pos[0], pos[1], pos[2], 1.0]
-    
-    return m
-
-def getTranslation(node):
-    """Return the position of the dagNode in worldSpace.
-
-    Arguments:
-        node (dagNode): The dagNode to get the translation
-
-    Returns:
-        matrix: The transformation matrix
-    """
-    return node.getTranslation(space="world")
-
-def addTransformLoc(transform):
-    revLoc = cmds.spaceLocator(n = transform + '_RevLoc')[0]
-    cmds.delete(cmds.parentConstraint(transform, revLoc))
-    cmds.parent(revLoc, transform)
-    cmds.setAttr(revLoc + '.v', 0)
-    return revLoc
 
 
 

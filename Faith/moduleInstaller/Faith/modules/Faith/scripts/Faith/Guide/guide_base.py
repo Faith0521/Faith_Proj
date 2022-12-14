@@ -185,10 +185,6 @@ class guideSetup(guideAttributes):
         :param type: type of the guide
         :return:d
         """
-        upAxis = pm.upAxis(q=True, axis=True)
-        if upAxis == 'z':
-            mc.upAxis(ax='y', rv=True)
-            mc.file(f=True, new=True)
         guide = self.get_guide(type)
         if not guide:
             return
@@ -265,7 +261,6 @@ class guideSetup(guideAttributes):
                     self.rootDataGrp = ""
                     
                     riggedChildList = mc.listRelatives(self.itemRiggedGrp, children=True, type='transform')
-                    print(self.itemRiggedGrp)
                     if riggedChildList:
                         for child in riggedChildList:
                             if mc.objExists(child+".ctrlData") and mc.getAttr(child+".ctrlData") == 1:
@@ -334,17 +329,6 @@ class guideSetup(guideAttributes):
 
                 if self.guidesActionsDic:
                     pass
-
-                for guideType in self.guideModuleList:
-                    typeCounter = 0
-                    newTranformList = mc.ls(selection=False, type="transform")
-                    for transf in newTranformList:
-                        if mc.objExists(transf+'.module_type'):
-                            Type = mc.getAttr(transf+'.module_type')
-                            if ( Type == guideType ):
-                                typeCounter = typeCounter + 1
-                    if ( typeCounter != mc.getAttr(self.masterGrp+'.'+guideType+'Count') ):
-                        mc.setAttr(self.masterGrp+'.'+guideType+'Count', typeCounter)
             mc.progressWindow(endProgress=True)
         
         self.guideMirrorGrp = 'GuideMirror_Grp'
